@@ -1,0 +1,200 @@
+// Package tasks allows you to retrieve, create, update or delete tasks. A task
+// represents a human task that can be assigned by a user to another.
+//
+// +gunk proto.Package("openbank.core.v1.tasks")
+// +gunk java.Package("openbank.core.v1.tasks")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Tasks",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package tasks
+
+import (
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// Status is the state of the task, i.e. whether it still needs to be done or
+// it has been completed.
+type Status int
+
+// Possible values of Status.
+const (
+	Open Status = iota
+	Completed
+)
+
+// LinkedType is the type of entity that is linked to the task.
+type LinkedType int
+
+// Possible values of LinkedType.
+const (
+	None LinkedType = iota
+	Client
+	Group
+	LoanProduct
+	SavingsProduct
+	Centre
+	Branch
+	User
+	LoanAccount
+	DepositAccount
+	IDDocument
+	LineOfCredit
+	GLJournalEntry
+)
+
+// Task is a human task that can be assigned by a user to another. Its initial
+// status is Open.
+type Task struct {
+	// TaskID is the uniquely generated ID of the task.
+	//
+	// +gunk xo.Unique
+	TaskID string `pb:"1" json:"task_id"`
+	// Title is the title of the task.
+	Title string `pb:"2" json:"title"`
+	// Status is the status of the task.
+	Status Status `pb:"3" json:"status"`
+	// Description is the extra context provided by the user for the task.
+	Description string `pb:"4" json:"description"`
+	// AssigneeID is the ID of the user this task is assigned to.
+	//
+	// +gunk xo.Nullable(true)
+	// +gunk xo.Ref{
+	//         TypeSuffix: "users.User",
+	//         FieldName:  "UserID",
+	// }
+	AssigneeID string `pb:"5" json:"assignee_id"`
+	// AssignerFullName is the name of the user that created the task.
+	AssignerFullName string `pb:"6" json:"assigner_full_name"`
+	// AssignerID is the ID of the user that created this task.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "users.User",
+	//         FieldName:  "UserID",
+	// }
+	AssignerID string `pb:"7" json:"assigner_id"`
+	// LinkedID is the ID of the object linked to the task.
+	//
+	// +gunk xo.Nullable(true)
+	LinkedID string `pb:"8" json:"linked_id"`
+	// LinkedType is the type of the object linked to by the task.
+	LinkedType LinkedType `pb:"9" json:"linked_type"`
+	// TemplateID is the ID of the template used to create the task.
+	// TODO: Which table does this have a reference to.
+	TemplateID string `pb:"10" json:"template_id"`
+	// DueTime is the time at which the task has to be completed.
+	DueTime time.Time `pb:"11" json:"due_time"`
+	// CreateTime is the time at which the task was created.
+	CreateTime time.Time `pb:"12" json:"create_time"`
+	// UpdateTime is the time at which the task was last updated.
+	UpdateTime time.Time `pb:"13" json:"update_time"`
+}
+
+// CreateTaskRequest is a request to create a task.
+type CreateTaskRequest struct {
+	// Body is the task to be created.
+	Body Task `pb:"1" json:"body"`
+}
+
+// ListTasksRequest is a request to list tasks.
+type ListTasksRequest struct {
+	// PageToken is the token of the page to be returned.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of tasks to be returned.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order the tasks by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the tasks.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListTasksResponse is the response for listing tasks.
+type ListTasksResponse struct {
+	// Total is the total number of tasks matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of tasks remaining in the list, including the
+	// tasks in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Tasks is the list of tasks.
+	Tasks []Task `pb:"3" json:"tasks"`
+	// NextPageToken is the token of the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetTaskRequest is a request to retrieve a task.
+type GetTaskRequest struct {
+	// TaskID is the ID of the task to retrieve.
+	TaskID string `pb:"1" json:"task_id"`
+}
+
+// UpdateTaskRequest is a request to update a task.
+type UpdateTaskRequest struct {
+	// TaskID is the ID of the task to update.
+	TaskID string `pb:"1" json:"task_id"`
+	// Body is the new value of the task.
+	Body Task `pb:"2" json:"body"`
+}
+
+// DeleteTaskRequest is a request to delete a task.
+type DeleteTaskRequest struct {
+	// TaskID is the ID of the task to delete.
+	TaskID string `pb:"1" json:"task_id"`
+}
+
+// TasksService is a service for managing tasks.
+type TasksService interface {
+	// CreateTask creates a new task.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/tasks",
+	//         Body:   "Body",
+	// }
+	CreateTask(CreateTaskRequest) Task
+
+	// ListTasks lists tasks.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/tasks",
+	// }
+	ListTasks(ListTasksRequest) ListTasksResponse
+
+	// GetTask retrieves a task.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/tasks/{TaskID}",
+	// }
+	GetTask(GetTaskRequest) Task
+
+	// UpdateTask updates an existing task.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/tasks/{TaskID}",
+	//         Body:   "Body",
+	// }
+	UpdateTask(UpdateTaskRequest) Task
+
+	// DeleteTask deletes an existing task.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/tasks/{TaskID}",
+	// }
+	DeleteTask(DeleteTaskRequest)
+}

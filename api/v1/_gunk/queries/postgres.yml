@@ -1,0 +1,27 @@
+db: pg://
+queries:
+  TheQueryName:
+    args:
+      func: TypeDoSomething
+      func-comment: 
+      type: SomeType
+      type-comment: SomeType is something
+      one: true
+      # flat: false
+      # fields: override
+    query: |-
+      SELECT * FROM some_type WHERE foo=bar
+  
+  TheQueryName2:
+    args:
+      func: TypeDoSomething
+      func-comment: 
+      type: SomeType
+      type-comment: SomeType is something
+      one: true
+      # flat: false
+      # fields: override
+    query: |-
+      SELECT * FROM some_type WHERE foo=bar
+  
+  

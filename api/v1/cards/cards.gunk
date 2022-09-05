@@ -1,0 +1,196 @@
+// Package cards defines services for managing card authorization holds, card
+// transactions, and retrieving information about card account balances.
+// It does not manage the creation and deletion of cards. To do so, use the
+// applicable account services (loan accounts/deposit accounts).
+//
+// +gunk proto.Package("openbank.core.v1.cards")
+// +gunk java.Package("openbank.core.v1.cards")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Cards",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package cards
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// Type is the types of a card.
+//
+// TODO: Not well defined.
+type Type int
+
+// Available card types.
+const (
+	Debit Type = iota
+	Credit
+)
+
+// Card is a card associated with an account (deposit/loan). It can be managed
+// with the CardsService but can only be created or deleted with the respective
+// AccountsService.
+type Card struct {
+	// CardID is the ID of the card.
+	//
+	// +gunk xo.Unique
+	CardID string `pb:"1" json:"card_id"`
+	// Type is the type of the card.
+	//
+	// +gunk xo.Index
+	Type Type `pb:"2" json:"type"`
+	// AccountID is the ID of the account associated with the card.
+	AccountID string `pb:"3" json:"account_id"`
+}
+
+// Transaction is a transaction involving a card.
+type Transaction struct {
+	// TransactionID is the ID of the transaction.
+	TransactionID string `pb:"1" json:"transaction_id"`
+	// Advice is true if the request should be accepted without balance
+	// validation.
+	Advice bool `pb:"2" json:"advice"`
+	// Amount is the amount of money to to be withdrawn in the financial
+	// transaction.
+	Amount core.Amount `pb:"3" json:"amount"`
+	// Acceptor is the card acceptor processing the transaction.
+	Acceptor Acceptor `pb:"4" json:"acceptor"`
+	// CardID is the ID of the card used to make the transaction.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "cards.Card",
+	//         FieldName:  "CardID",
+	// }
+	CardID string `pb:"5" json:"card_id"`
+	// AuthorizationID is the ID of the authorization hold.
+	AuthorizationID string `pb:"6" json:"authorization_id"`
+	// TransactionTime is the time of the transaction.
+	TransactionTime time.Time `pb:"7" json:"transaction_time"`
+}
+
+// Acceptor is the details and names of a card acceptor (merchant) in a
+// transaction.
+//
+// +gunk xo.Ignore(true)
+type Acceptor struct {
+	// Name is the name of the card acceptor.
+	Name string `pb:"1" json:"name"`
+	// MCC is the Merchant Category Code of the card acceptor.
+	MCC int `pb:"2" json:"m_c_c"`
+	// Address is the address of the card acceptor.
+	Address core.Address `pb:"3" json:"address"`
+}
+
+// AccountBalance is a representation of a card account balance.
+// It is presented to inquirers such as card processor.
+//
+// +gunk xo.Ignore(true)
+type AccountBalance struct {
+	// AccountID is the ID of the account.
+	AccountID string `pb:"1" json:"account_id"`
+	// Available is the amount of balance available in a deposit or credit
+	// account.
+	Available core.Amount `pb:"2" json:"available"`
+	// Total is the current balance of a deposit account or principal balance
+	// of a revolving credit.
+	Total core.Amount `pb:"3" json:"total"`
+	// CreditLimit is the overdraft limit of a deposit account or the loan
+	// amount in case of a credit account.
+	CreditLimit core.Amount `pb:"4" json:"credit_limit"`
+	// CardType is the tyoe of card of the account.
+	CardType Type `pb:"5" json:"card_type"`
+}
+
+// GetAccountBalanceRequest is a request to retrieve the account balance of a
+// card.
+type GetAccountBalanceRequest struct {
+	// CardID is the ID of the card to retrieve balances for.
+	CardID string `pb:"1" json:"card_id"`
+}
+
+// CardsService is the configuration for creating cards.
+type CardsService interface {
+	// GetAccountBalances retrieves the current account balances of the
+	// specified card.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/cards/{CardID}/balance",
+	// }
+	GetAccountBalances(GetAccountBalanceRequest) AccountBalance
+
+	// CreateHold creates an authorization hold.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/cards/{CardID}/holds",
+	//         Body:   "Body",
+	// }
+	CreateHold(CreateHoldRequest) Hold
+
+	// GetHold retrieves an authorization hold.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/cards/{CardID}/holds/{HoldID}",
+	// }
+	GetHold(GetHoldRequest) Hold
+
+	// UpdateHold updates an authorization hold.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/cards/{CardID}/holds/{HoldID}",
+	//         Body:   "Body",
+	// }
+	UpdateHold(UpdateHoldRequest) Hold
+
+	// AdjustHold adjusts the amount of an authorization hold.
+	// The amount represents the difference, which can be positive or negative.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/cards/{CardID}/holds/{HoldID}:adjust",
+	//         Body:   "Body",
+	// }
+	AdjustHold(AdjustHoldRequest) Hold
+
+	// DeleteHold revokes an authorization hold.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/cards/{CardID}/holds/{HoldID}",
+	// }
+	DeleteHold(DeleteHoldRequest)
+
+	// CreateTransaction creates a financial transaction.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/cards/{CardID}/transactions",
+	//         Body:   "Body",
+	// }
+	CreateTransaction(CreateTransactionRequest) Transaction
+
+	// ReverseTransaction reverses a card transaction.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/cards/{CardID}/transactions/{RefID}/reverse",
+	//         Body:   "Body",
+	// }
+	ReverseTransaction(ReverseTransactionRequest) Transaction
+}

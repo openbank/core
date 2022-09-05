@@ -1,0 +1,39 @@
+#!/bin/sh
+COMMIT=$(git log --no-merges --max-count=1)
+echo $COMMIT
+
+NAME_COUNT=$(echo $COMMIT | grep Author | grep -Po '(?<=Author\:\s).*(?=<)' | wc -w)
+if [ $NAME_COUNT -lt 2 ]; then
+	echo "Author name should be at least first and last name f.e John Doe"
+	exit 1
+else
+	echo "Name OK"
+fi
+
+EMAIL_SUFFIX=$(echo $COMMIT | grep Author | grep -Po '(?<=<).*(?=>)' | grep -Po "(brank.as|brankas.com)$")
+if [ -z $EMAIL_SUFFIX ]; then
+	echo "Author email address has to be a brank.as or brankas.com address"
+	exit 1
+else
+	echo "Email OK"
+fi
+
+TICKET=$(echo $COMMIT | grep -Po "\[CORE\-[0-9]+\]")
+if [ -z $TICKET ]; then
+	echo 'Missing JIRA ticket in commit. Format should be "[CORE-<Number>]" f.e [CORE-123]'
+	exit 1
+fi
+
+TICKET_COUNT=$(git log --no-merges | fgrep -c "$TICKET")
+case ${TICKET_COUNT} in
+1)
+	echo "Commit for ticket $TICKET OK"
+	exit 0
+	;;
+*)
+	echo "Jira Ticket: $TICKET, already used in another commit"
+	echo "One ticket per commit, please."
+	exit 1
+	;;
+esac
+

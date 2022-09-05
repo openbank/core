@@ -1,0 +1,134 @@
+// Package comments allows creating and retrieving comments.
+//
+// +gunk proto.Package("openbank.core.v1.comments")
+// +gunk java.Package("openbank.core.v1.comments")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Clients",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package comments
+
+import (
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// Owner is the type of an entity owning the comment.
+type Owner int
+
+const (
+	Client Owner = iota
+	Group
+	LoanProduct
+	SavingsProduct
+	Centre
+	Branch
+	User
+	LoanAccount
+	DepositAccount
+	IDDocument
+	LineOfCredit
+	GLJournalEntry
+)
+
+// Comment is a comment added to an entity.
+type Comment struct {
+	// CommentID is the ID of the comment.
+	//
+	// +gunk xo.Unique
+	CommentID string `pb:"1" json:"comment_id"`
+	// UserID is the ID of the user.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "users.User",
+	//         FieldName:  "UserID",
+	// }
+	UserID string `pb:"2" json:"user_id"`
+	// OwnerID is the ID of the holder of the comment.
+	OwnerID string `pb:"3" json:"owner_id"`
+	// OwnerType is the type of holder of the document.
+	OwnerType Owner `pb:"4" json:"owner_type"`
+	// Text is the content of the comment.
+	Text string `pb:"5" json:"text"`
+	// CreateTime is when the comment was created.
+	CreateTime time.Time `pb:"6" json:"create_time"`
+	// UpdateTime is the time at which the comment was last updated.
+	UpdateTime time.Time `pb:"7" json:"update_time"`
+}
+
+// CreateCommentRequest is the create comment request.
+type CreateCommentRequest struct {
+	// Body is the comment to be created.
+	Body Comment `pb:"1" json:"body"`
+}
+
+// ListCommentsRequest is the request to list comments.
+type ListCommentsRequest struct {
+	// PageToken is the token of the page to be returned.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of comments to be returned.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order the comments by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the comments.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListCommentsResponse is the response for listing comments.
+type ListCommentsResponse struct {
+	// Total is the total number of comments matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of comments remaining in the list, including the
+	// comments in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Comments is the list of comments.
+	Comments []Comment `pb:"3" json:"comments"`
+	// NextPageToken is the token of the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetCommentRequest is the request to retrieve a comment.
+type GetCommentRequest struct {
+	// CommentID is the ID of the comment to retrieve.
+	CommentID string `pb:"1" json:"comment_id"`
+}
+
+// CommentsService is the service for creating and retrieving comments.
+type CommentsService interface {
+	// CreateComment creates a comment.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/comments",
+	//         Body:   "Body",
+	// }
+	CreateComment(CreateCommentRequest) Comment
+
+	// ListComments lists comments.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/comments",
+	// }
+	ListComments(ListCommentsRequest) ListCommentsResponse
+
+	// GetComment retrieves the specified comment.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/comments/{CommentID}",
+	// }
+	GetComment(GetCommentRequest) Comment
+}

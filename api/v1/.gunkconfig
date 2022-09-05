@@ -1,0 +1,74 @@
+; pin protoc version
+[protoc]
+	version=v3.19.1
+
+[format]
+	reorder_pb=true
+	snake_case_json=true
+	initialisms=gl
+
+; doc
+[generate doc]
+	; output to /docs/content
+	out=../../docs/content
+	config=$PATH/_gunk/docs/.config
+	generate_single=true
+
+; go
+[generate go]
+	json_tag_postproc=true
+[generate go-grpc]
+[generate grpc-gateway]
+
+; swagger/openapiv2
+[generate openapiv2]
+	out=_gunk/gen/json/{{ .Package }}
+
+[generate xo]
+	generate_single=true
+	out=_gunk/gen/xo
+	emit=$PATH/_gunk/gen/sql
+	single={{ .DB }}.sql
+	src=$PATH/../../tools/db/tpl/createdb
+	schema=core
+	createdb-escape=all
+	targets=postgres mysql sqlite3 sqlserver
+
+[generate xo]
+	generate_single=true
+	out=_gunk/gen/xo
+	emit=$PATH/../../tools/db
+	src=$PATH/../../tools/db/tpl/storage
+	schema=core
+	storage-initialism=gl
+	pb-names=true
+	targets=postgres
+
+[generate xo]
+	generate_single=true
+	out=_gunk/gen/xo
+	emit=$PATH/../../tools/db/postgres
+	src=$PATH/../../tools/db/tpl/postgres
+	schema=core
+	postgres-initialism=gl
+	pb-names=true
+	targets=postgres
+
+; other languages
+; [generate java]
+; 	out=_gunk/gen/java
+; 	lite
+; [generate grpc-java]
+; 	out=_gunk/gen/java
+; 	lite
+; [generate js] ; javscript
+; 	out=_gunk/gen/js/{{ .Package }}
+; 	fix_paths_postproc=true
+; 	import_style=commonjs
+; 	binary
+; [generate python]
+; 	out=_gunk/gen/py/{{ .Package }}
+;[generate swift]
+;	out=_gunk/gen/swift/{{ .Package }}
+; [generate ts] ; typescript
+; 	out=_gunk/gen/ts/{{ .Package }}

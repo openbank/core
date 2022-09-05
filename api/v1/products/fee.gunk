@@ -1,0 +1,128 @@
+package products
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// FeeCalculationMethod is the method used to calculate the fee for a
+// disbursement. By default, the fee is a flat amount.
+type FeeCalculationMethod int
+
+const (
+	MethodFlat FeeCalculationMethod = iota
+	MethodLoanAmountPercentage
+	MethodRepaymentPrincipalAmountPercentage
+	MethodLoanAmountPercentageNumberOfInstallments
+	MethodFlatNumberOfInstallments
+)
+
+// FeeApplyDateMethod is the method used to determine when the fee is applied.
+// By default, the fee is applied monthly from the fee was activated.
+type FeeApplyDateMethod int
+
+const (
+	MonthlyFromActivation FeeApplyDateMethod = iota
+	FirstOfEveryMonth
+)
+
+// FeeTrigger is the instance in which the fee is applied.
+type FeeTrigger int
+
+const (
+	Manual FeeTrigger = iota
+	ManualPlanned
+	Disbursement
+	CapitalizedDisbursement
+	UpfrontDisbursement
+	LateRepayment
+	MonthlyFee
+	PaymentDue
+	PaymentDueAppliedOnDueDates
+)
+
+// AmortizationType is the type of profile used for amortization for a fee.
+type AmortizationType int
+
+const (
+	ProfileNone AmortizationType = iota
+	ProfileSumOfYearsDigits
+	ProfileStraightLine
+	ProfileEffectiveInterestRate
+)
+
+// PeriodFrequency is the frequency of the period interval.
+type PeriodFrequency int
+
+const (
+	AccountInstallmentsDueDates PeriodFrequency = iota
+	AccountInstallmentsDueDatesDailyBooking
+	CustomInterval
+)
+
+// IntervalType is the type of the interval used for the period.
+type IntervalType int
+
+const (
+	PredefinedIntervals IntervalType = iota
+	FullTerm
+)
+
+// PeriodIntervalSettings is the settings for a period interval.
+//
+// +gunk xo.Ignore(true)
+type PeriodIntervalSettings struct {
+	// AmortizationType is the type of profile used for amortization for a fee.
+	AmortizationType AmortizationType `pb:"1" json:"amortization_type"`
+	// ContinueAmortization is a flag for signaling if fee amortization should
+	// be continued or finished at account reschedule/refinance.
+	ContinueAmortization bool `pb:"2" json:"continue_amortization"`
+	// Frequency is the frequency settings of the fee amortization.
+	Frequency PeriodFrequency `pb:"3" json:"frequency"`
+	// IntervalType is the type of the interval used for the period.
+	IntervalType IntervalType `pb:"4" json:"interval_type"`
+	// IntervalCount is the total number of intervals for the period.
+	IntervalCount int `pb:"5" json:"interval_count"`
+	// Period is the duration of the period interval.
+	Period time.Duration `pb:"6" json:"period"`
+}
+
+// Fee is an instance of pre-defined fee that can be applied to accounts.
+type Fee struct {
+	// FeeID is the ID of the fee.
+	//
+	// +gunk xo.Unique
+	FeeID string `pb:"1" json:"fee_id"`
+	// Name is the name of the fee that is displayed to the user.
+	Name string `pb:"2" json:"name"`
+	// CalculationMethod is the method used to calculate the fee.
+	// If the method is Flat, the `amount` field is used. Otherwise, the `percent`
+	// field is used in for calculation.
+	CalculationMethod FeeCalculationMethod `pb:"3" json:"calculation_method"`
+	// Required is whether the fee is required when a disburse is applied.
+	Required bool `pb:"4" json:"required"`
+	// Amount is the amount of the fee.
+	Amount core.Amount `pb:"5" json:"amount"`
+	// Percent is the percentage value of a fee. The value is a decimal between
+	// 0 and 1.
+	Percent string `pb:"6" json:"percent"`
+	// ApplyDateMethod is the method used to determine when the fee is applied.
+	ApplyDateMethod FeeApplyDateMethod `pb:"7" json:"apply_date_method"`
+	// Trigger is the event that will trigger the fee to be collected.
+	Trigger FeeTrigger `pb:"8" json:"trigger"`
+	// AccountingRules is a list of rules that are applied to the fee.
+	// If not provided, the default for the product are used.
+	AccountingRules []AccountingRule `pb:"9" json:"accounting_rules"`
+	// AmortizationSettings is period and interval configuration for
+	// amortization.
+	AmortizationSettings PeriodIntervalSettings `pb:"10" json:"amortization_settings"`
+	// IsActive is a flag that indicates if the fee is active.
+	IsActive bool `pb:"11" json:"is_active"`
+	// IsTaxable is a flag that indicates if the fee is taxable.
+	IsTaxable bool `pb:"12" json:"is_taxable"`
+	// CreateTime is the time the fee was created.
+	CreateTime time.Time `pb:"13" json:"create_time"`
+	// UpdateTime is the time the fee was last updated.
+	UpdateTime time.Time `pb:"14" json:"update_time"`
+}

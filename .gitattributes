@@ -1,0 +1,4 @@
+**/*.gunk linguist-language=go
+**/*.pb.go linguist-generated -diff
+**/*.pb.gw.go linguist-generated -diff
+**/*.xo.go linguist-generated

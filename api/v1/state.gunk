@@ -1,0 +1,41 @@
+package core
+
+import (
+	"github.com/gunk/opt/proto"
+)
+
+// State is the state of an entity, like a branch or a centre.
+type State int
+
+// State values
+const (
+	PendingApproval State = iota
+	Inactive
+	Active
+	Exited
+	Blacklisted
+	Rejected
+)
+
+// Status is the status of an asynchronous operation, long-running action, or
+// other processes.
+//
+// FIXME: Review usages of this type, and move to EntityStatus where applicable.
+//
+// All statuses may not be applicable to all situations.
+type Status int
+
+// Possible values for Status.
+const (
+	Error Status = iota
+	Queued
+	InProgress
+	Pending
+	Complete
+	NotFound
+	Cancel
+	ToBeCanceled
+	TimedOut
+	TransientError
+	Overridden
+)

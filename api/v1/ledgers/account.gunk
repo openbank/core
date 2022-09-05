@@ -1,0 +1,66 @@
+package ledgers
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// AccountType is the types of GL accounts.
+type AccountType int
+
+const (
+	Asset AccountType = iota
+	Liability
+	Equity
+	Income
+	Expense
+)
+
+// Usage is the type of usages of GL accounts.
+type Usage int
+
+const (
+	Transactions Usage = iota
+	Grouping
+)
+
+// Account is a general ledger (GL) account.
+type Account struct {
+	// AccountID is the ID of the account.
+	//
+	// +gunk xo.Unique
+	AccountID string `pb:"1" json:"account_id"`
+	// Name is the name of the account.
+	Name string `pb:"2" json:"name"`
+	// Description is the description of the account.
+	Description string `pb:"3" json:"description"`
+	// Amount is the balance of the account.
+	Amount core.Amount `pb:"4" json:"amount"`
+	// Activated is true if the account is active.
+	Activated bool `pb:"5" json:"activated"`
+	// AllowManualEntries is true if manual entries are allowed.
+	AllowManualEntries bool `pb:"6" json:"allow_manual_entries"`
+	// GLCode is the general ledger code used to identify the account type. An
+	// account with code '3201' is considered a subtype of account of type
+	// '3200'.
+	GLCode string `pb:"7" json:"gl_code"`
+	// MigrationEventID is the ID of the migration event that created the
+	// GL account.
+	// TODO: Which table does this have a reference to.
+	MigrationEventID string `pb:"8" json:"migration_event_id"`
+	// StripTrailingZeros is a flag to strip trailing zeros.
+	StripTrailingZeros bool `pb:"9" json:"strip_trailing_zeros"`
+	// Type is the type of the account.
+	Type AccountType `pb:"10" json:"type"`
+	// Usage is the usage of the account.
+	Usage Usage `pb:"11" json:"usage"`
+	// CreateTime is the time at which the account was created.
+	CreateTime time.Time `pb:"12" json:"create_time"`
+	// UpdateTime is the time at which the account was last updated.
+	UpdateTime time.Time `pb:"13" json:"update_time"`
+}

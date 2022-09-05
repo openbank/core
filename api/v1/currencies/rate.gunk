@@ -1,0 +1,211 @@
+// TODO: Clarify the differences between accountingrate and exchangerate
+package currencies
+
+import (
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// AccountingRate is a currency to currency conversion rate.
+// It is from the organization currency to a foreign currency.
+type AccountingRate struct {
+	// RateID is the ID of the accounting rate.
+	//
+	// +gunk xo.Unique
+	RateID string `pb:"1" json:"rate_id"`
+	// Rate is the rate used for accounting conversions.
+	Rate string `pb:"2" json:"rate"`
+	// FromCurrency is the currency code of the currency used in the
+	// organization.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "currencies.Currency",
+	//         FieldName:  "Code",
+	// }
+	FromCurrency string `pb:"3" json:"from_currency"`
+	// ToCurrency is the foreign currency code.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "currencies.Currency",
+	//         FieldName:  "Code",
+	// }
+	ToCurrency string `pb:"4" json:"to_currency"`
+	// StartTime is the time the rate becomes valid.
+	StartTime time.Time `pb:"5" json:"start_time"`
+	// EndTime is the time the rate becomes invalid.
+	EndTime time.Time `pb:"6" json:"end_time"`
+}
+
+// ExchangeRate is the exchange rate configuration.
+type ExchangeRate struct {
+	// RateID is the ID of the exchange rate.
+	//
+	// +gunk xo.Unique
+	RateID string `pb:"1" json:"rate_id"`
+	// BuyRate is the buying rate for the exchange rate.
+	BuyRate float64 `pb:"2" json:"buy_rate"`
+	// SellRate is the selling rate for the exchange rate.
+	SellRate float64 `pb:"3" json:"sell_rate"`
+	// FromCurrency is the currency code of the currency used in the
+	// organization.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "currencies.Currency",
+	//         FieldName:  "Code",
+	// }
+	FromCurrency string `pb:"4" json:"from_currency"`
+	// ToCurrency is the foreign currency code.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "currencies.Currency",
+	//         FieldName:  "Code",
+	// }
+	ToCurrency string `pb:"5" json:"to_currency"`
+	// StartTime is the time the rate becomes valid.
+	StartTime time.Time `pb:"6" json:"start_time"`
+	// EndTime is the time the rate becomes invalid.
+	EndTime time.Time `pb:"7" json:"end_time"`
+}
+
+// CreateAccountingRateRequest is the request to create an accounting rate.
+type CreateAccountingRateRequest struct {
+	// Code is the code of the currency to create rate for.
+	Code string `pb:"1" json:"code"`
+	// Body is the new accounting rate information.
+	Body AccountingRate `pb:"2" json:"body"`
+}
+
+// ListAccountingRatesRequest is the request to list accounting rates.
+type ListAccountingRatesRequest struct {
+	// Code is the code of the currency to list rates for.
+	Code string `pb:"1" json:"code"`
+	// PageToken is the pagination token.
+	PageToken string `pb:"2" json:"page_token"`
+	// PageSize is the number of results per page.
+	PageSize int `pb:"3" json:"page_size"`
+	// OrderBy is the field to order by.
+	OrderBy string `pb:"4" json:"order_by"`
+	// Filter is the filter to apply to the results.
+	Filter string `pb:"5" json:"filter"`
+}
+
+// ListAccountingRatesResponse is the response for listing accounting rates.
+type ListAccountingRatesResponse struct {
+	// Total is the total number of rates matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of rates remaining in the list, including the
+	// rates in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Rates is the list of accounting rates.
+	Rates []AccountingRate `pb:"3" json:"rates"`
+	// NextPageToken is the pagination token for the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetAccountingRateRequest is the request to retrieve an accounting rate.
+type GetAccountingRateRequest struct {
+	// Code is the code of the currency to retrieve the rate for.
+	Code string `pb:"1" json:"code"`
+	// RateID is the ID of the accounting rate.
+	RateID string `pb:"2" json:"rate_id"`
+}
+
+// CreateExchangeRateRequest is the request to create an exchange rate.
+type CreateExchangeRateRequest struct {
+	// Code is the code of the currency to create rate for.
+	Code string `pb:"1" json:"code"`
+	// Body is the new exchange rate information.
+	Body ExchangeRate `pb:"2" json:"body"`
+}
+
+// ListExchangeRatesRequest is the request to list exchange rates.
+type ListExchangeRatesRequest struct {
+	// Code is the code of the currency to list rates for.
+	Code string `pb:"1" json:"code"`
+	// PageToken is the pagination token.
+	PageToken string `pb:"2" json:"page_token"`
+	// PageSize is the number of results per page.
+	PageSize int `pb:"3" json:"page_size"`
+	// OrderBy is the field to order by.
+	OrderBy string `pb:"4" json:"order_by"`
+	// Filter is the filter to apply to the results.
+	Filter string `pb:"5" json:"filter"`
+}
+
+// ListExchangeRatesResponse is the response for listing exchange rates.
+type ListExchangeRatesResponse struct {
+	// Total is the total number of rates matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of rates remaining in the list, including the
+	// rates in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Rates is the list of exchange rates.
+	Rates []ExchangeRate `pb:"3" json:"rates"`
+	// NextPageToken is the pagination token for the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetExchangeRateRequest is the request to retrieve an exchange rate.
+type GetExchangeRateRequest struct {
+	// Code is the code of the currency to retrieve the rate for.
+	Code string `pb:"1" json:"code"`
+	// RateID is the ID of the exchange rate.
+	RateID string `pb:"2" json:"rate_id"`
+}
+
+// RatesService is the service for managing accounting and exchange rates.
+type RatesService interface {
+	// CreateAccountingRate creates a new accounting rate.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/currencies/{Code}/accounting_rate",
+	//         Body:   "Body",
+	// }
+	CreateAccountingRate(CreateAccountingRateRequest) AccountingRate
+
+	// ListAccountingRates lists accounting rates.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/currencies/{Code}/accounting_rate",
+	// }
+	ListAccountingRates(ListAccountingRatesRequest) ListAccountingRatesResponse
+
+	// GetAccountingRate returns the accounting rates for the given currency.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/currencies/{Code}/accounting_rate/{RateID}",
+	// }
+	GetAccountingRate(GetAccountingRateRequest) AccountingRate
+
+	// CreateExchangeRate creates a new exchange rate.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/currencies/{Code}/exchange_rate",
+	//         Body:   "Body",
+	// }
+	CreateExchangeRate(CreateExchangeRateRequest) ExchangeRate
+
+	// ListExchangeRates lists exchange rates.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/currencies/{Code}/exchange_rate",
+	// }
+	ListExchangeRates(ListExchangeRatesRequest) ListExchangeRatesResponse
+
+	// GetExchangeRate returns the exchange rates for the given currency.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/currencies/{Code}/exchange_rate/{RateID}",
+	// }
+	GetExchangeRate(GetExchangeRateRequest) ExchangeRate
+}

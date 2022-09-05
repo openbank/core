@@ -1,0 +1,205 @@
+package products
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// InterestRateSource is the source used for interest rate calculation.
+type InterestRateSource int
+
+const (
+	FixedInterestRate InterestRateSource = iota
+	IndexInterestRate
+)
+
+// InterestRateTerms is the terms used for interest rate calculation.
+type InterestRateTerms int
+
+const (
+	Fixed InterestRateTerms = iota
+	Tiered
+	TieredPeriod
+	TieredBand
+)
+
+// InterestRateTier is a tier of interest rates on a deposit account, holding
+// information on the method interest is computed.
+//
+// +gunk xo.Ignore(true)
+type InterestRateTier struct {
+	// EndingBalance is the upper limit for accounts' balance in this tier.
+	EndingBalance core.Amount `pb:"1" json:"ending_balance"`
+	// EndingDay is the upper limit for days since account activation in this
+	// tier.
+	EndingDay int `pb:"2" json:"ending_day"`
+	// InterestRate is the interest rate for this tier.
+	InterestRate float64 `pb:"3" json:"interest_rate"`
+}
+
+// InterestRateSettings is the settings for interest rate calculation.
+//
+// +gunk xo.Ignore(true)
+type InterestRateSettings struct {
+	// AccrueAfterMaturity is a flag indicating whether interest is accrued after
+	// the account maturity date.
+	AccrueAfterMaturity bool `pb:"1" json:"accrue_after_maturity"`
+	// IndexSourceID is the ID of the index rate source.
+	IndexSourceID string `pb:"2" json:"index_source_id"`
+	// Frequency is the period between interest charges.
+	Frequency time.Duration `pb:"3" json:"frequency"`
+	// Constraints is the minimum, maximum and default values for the interest
+	// rate.
+	Constraints DecimalInterval `pb:"4" json:"constraints"`
+	// Ceiling is the maximum amount of interest spread and index interest rate
+	// for index interest rate products.
+	Ceiling float64 `pb:"5" json:"ceiling"`
+	// Floor is the minimum amount of interest spread and index interest rate
+	// for index interest rate products.
+	Floor float64 `pb:"6" json:"floor"`
+	// Source is the source used for interest rate calculation.
+	Source InterestRateSource `pb:"7" json:"source"`
+	// RateReview is the duration between interest rate reviews.
+	RateReview time.Duration `pb:"8" json:"rate_review"`
+	// Terms is the terms used for interest rate calculation.
+	Terms InterestRateTerms `pb:"9" json:"terms"`
+	// Tiers is the list of interest rate tiers for the configuration.
+	Tiers []InterestRateTier `pb:"10" json:"tiers"`
+}
+
+// DaysInYear is the number of days in a year for the purpose of interest
+// calculation.
+type DaysInYear int
+
+const (
+	YearActual365Fixed DaysInYear = iota
+	YearActual364
+	YearActual360
+	YearActualActualIsda
+	YearE30360
+	YearE3042365
+)
+
+// InterestType is the type of the interest.
+type InterestType int
+
+const (
+	Simple InterestType = iota
+	Capitalized
+	Compounding
+)
+
+// InterestApplicationMethod is the method used to apply the interest.
+type InterestApplicationMethod int
+
+const (
+	MethodAfterDisbursement InterestApplicationMethod = iota
+	MethodRepaymentDueDate
+)
+
+// BalanceCalculationMethod is the method used to calculate the balance of the
+// interest.
+type BalanceCalculationMethod int
+
+const (
+	MethodPrincipal BalanceCalculationMethod = iota
+	MethodPrincipalAndInterest
+)
+
+// InterestCalculationMethod is the method used to calculate the interest.
+type InterestCalculationMethod int
+
+const (
+	MethodFlatInterest InterestCalculationMethod = iota
+	MethodDecliningBalance
+	MethodDecliningBalanceDiscounted
+)
+
+// DaysCountMethod is the method used to count the days.
+type DaysCountMethod int
+
+const (
+	// MethodRepaymentPeriodicity is the method that counts the day up to the
+	// most recent repayment date.
+	MethodRepaymentPeriodicity DaysCountMethod = iota
+	// MethodActualDayCount is the method that counts the actual number of days.
+	MethodActualDayCount
+)
+
+// InterestCalculationBalance is the balance used for interest calculation.
+type InterestCalculationBalance int
+
+const (
+	BalanceMinimum InterestCalculationBalance = iota
+	BalanceAverage
+	BalanceEndOfDay
+	BalanceMinimumToEndOfDay
+)
+
+// DepositInterestSettings is the settings for deposit interest calculation.
+//
+// +gunk xo.Ignore(true)
+type DepositInterestSettings struct {
+	// CollectInterestWhenLocked is a flag indicating whether interest is
+	// collected when the account is locked.
+	CollectInterestWhenLocked bool `pb:"1" json:"collect_interest_when_locked"`
+	// DaysInYear is the number of days in a year for the purpose of interest
+	// calculation.
+	DaysInYear DaysInYear `pb:"2" json:"days_in_year"`
+	// CalculationBalance is the balance used for interest calculation.
+	CalculationBalance InterestCalculationBalance `pb:"3" json:"calculation_balance"`
+	// PaidIntoAccount is a flag indicating whether interest is paid into the
+	// account directly.
+	PaidIntoAccount bool `pb:"4" json:"paid_into_account"`
+	// PaymentSettings is the settings for interest payment.
+	PaymentSettings InterestPaymentSettings `pb:"5" json:"payment_settings"`
+	// RateSettings is the settings for interest rate calculation.
+	RateSettings InterestRateSettings `pb:"6" json:"rate_settings"`
+	// MaximumBalance is the maximum amount of balance used in interest
+	// calculation.
+	MaximumBalance core.Amount `pb:"7" json:"maximum_balance"`
+}
+
+// InterestPaymentSettings is the settings for interest payments on a deposit
+// account.
+//
+// +gunk xo.Ignore(true)
+type InterestPaymentSettings struct {
+	// PaymentDates is a list of dates on which interest payments are to be
+	// made.
+	PaymentDates []time.Time `pb:"1" json:"payment_dates"`
+	// Frequency is the amount of time between interest payment to the account.
+	Frequency time.Duration `pb:"2" json:"frequency"`
+}
+
+// LoanInterestSettings is the settings for interest calculation for loan
+// accounts.
+//
+// +gunk xo.Ignore(true)
+type LoanInterestSettings struct {
+	// AccrueLateInterest is a flag indicating whether late interest should be
+	// accrued.
+	AccrueLateInterest bool `pb:"1" json:"accrue_late_interest"`
+	// CompoundingFrequency is the duration between interest compounding.
+	CompoundingFrequency time.Duration `pb:"2" json:"compounding_frequency"`
+	// DaysInYear is the number of days in a year for the purpose of interest
+	// calculation.
+	DaysInYear DaysInYear `pb:"3" json:"days_in_year"`
+	// IndexRateSettings is the settings for index rate calculation.
+	IndexRateSettings InterestRateSettings `pb:"4" json:"index_rate_settings"`
+	// ApplicationMethod is the method the interest is applied onto the loan.
+	ApplicationMethod InterestApplicationMethod `pb:"5" json:"application_method"`
+	// BalanceCalculationMethod is the method used to calculate the balance the
+	// interest is based on.
+	BalanceCalculationMethod BalanceCalculationMethod `pb:"6" json:"balance_calculation_method"`
+	// CalculationMethod is the method used to calculate the interest.
+	CalculationMethod InterestCalculationMethod `pb:"7" json:"calculation_method"`
+	// RateSettings is the settings for interest rate calculation.
+	RateSettings []InterestRateSettings `pb:"8" json:"rate_settings"`
+	// Type is the type of the interest.
+	Type InterestType `pb:"9" json:"type"`
+	// ScheduleInterestMethod is the method the interest's timespan is
+	// calculated.
+	ScheduleInterestMethod DaysCountMethod `pb:"10" json:"schedule_interest_method"`
+}

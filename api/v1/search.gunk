@@ -1,0 +1,53 @@
+package core
+
+import (
+	"github.com/gunk/opt/proto"
+)
+
+// Operator is the set of operators that can be used to filter results.
+type Operator int
+
+// Available filter operators.
+//
+// | Operator            | Values Needed | Fields available for |
+// |---------------------|---------------|----------------------|
+// | Equals              | 1             | All                  |
+// | EqualsIgnoreCase    | 1             | All                  |
+// | NotEquals           | 1             | Number, Money        |
+// | GreaterThan         | 1             | Number, Money        |
+// | LessThan            | 1             | Date                 |
+// | On                  | 1             | Date                 |
+// | After               | 1             | Date                 |
+// | Before              | 1             | Date                 |
+// | HasPrefix           | 1             | String               |
+// | HasPrefixIgnoreCase | 1             | String               |
+// | LastDays            | 1             | Number               |
+// | Between             | 2             | Number, Money, Date  |
+// | In                  | List          | Enum, ID             |
+// | Today               | 0             | Date                 |
+// | ThisWeek            | 0             | Date                 |
+// | ThisMonth           | 0             | Date                 |
+// | ThisYear            | 0             | Date                 |
+// | Empty               | 0             | All                  |
+// | NotEmpty            | 0             | All                  |
+const (
+	OpEquals Operator = iota
+	OpEqualsIgnoreCase
+	OpNotEquals
+	OpGreaterThan
+	OpLessThan
+	OpOn
+	OpAfter
+	OpBefore
+	OpHasPrefix
+	OpHasPrefixIgnoreCase
+	OpLastDays
+	OpBetween
+	OpIn
+	OpToday
+	OpThisWeek
+	OpThisMonth
+	OpThisYear
+	OpEmpty
+	OpNotEmpty
+)

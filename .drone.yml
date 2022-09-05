@@ -1,0 +1,524 @@
+kind: pipeline
+name: default
+
+trigger:
+  branch:
+    exclude: [production]
+
+workspace:
+  base: /root
+  path: ${DRONE_REPO_NAME}
+
+volumes:
+  - name: go-cache
+    host:
+      path: /var/lib/drone-cache/go
+  - name: pnpm-cache
+    host:
+      path: /var/lib/drone-cache/${DRONE_REPO_NAME}/pnpm/node14
+  - name: dockersock
+    temp: {}
+
+image_pull_secrets:
+  - dockerconfigjson
+
+services:
+  - name: postgres
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_PASSWORD: password
+  - name: docker
+    image: docker:dind
+    privileged: true
+    volumes:
+      - name: dockersock
+        path: /var/run
+
+steps:
+  - name: env-setup
+    image: golang:1.18
+    pull: if-not-exists
+    environment:
+      DOCKER_CONFIG_JSON:
+        from_secret: dockerconfigjson
+    commands:
+      # Use https cloning. SSH keys are not set up on drone
+      - git config --global url.https://gitea.brankas.dev:.insteadOf ssh://git@git.brankas.dev
+      - go env -w CGO_ENABLED=0 GOCACHE=/go-cache/buildcache GOBIN=/root/bin GOFLAGS=-mod=readonly
+
+      # checks that the commit is following brankas standards
+      - ./scripts/lint-jira-tag
+
+      # Setup the docker config that all drone docker plugins will use. (includes dockerhub pro account credentials)
+      - mkdir -p /root/.docker
+      - printf "%s" "$DOCKER_CONFIG_JSON" > /root/.docker/config.json
+
+  - name: go-mod-tidy
+    depends_on: [env-setup]
+    image: golang:1.18
+    pull: if-not-exists
+    volumes:
+      - name: go-cache
+        path: /go-cache
+    environment:
+      GOPATH: /go-cache/gopath
+    commands:
+      - go mod tidy
+      - go mod verify
+      - test -z "$(git status --porcelain '*.mod' '*.sum')" || (git status --porcelain '*.mod' '*.sum';git diff '*.mod' '*.sum'; false)
+
+  - name: install-go-tools
+    depends_on: [env-setup]
+    image: golang:1.18
+    pull: if-not-exists
+    volumes:
+      - name: go-cache
+        path: /go-cache
+    environment:
+      GOPATH: /go-cache/gopath
+    commands:
+      - export PATH=$PATH:/root/bin
+      - ./install.sh
+      - ls ~/bin
+
+  - name: install-node-tools
+    depends_on: [env-setup]
+    image: node:14
+    pull: if-not-exists
+    volumes:
+      - name: pnpm-cache
+        path: /pnpm-cache
+    environment:
+      PNPM_CACHE_FOLDER: /pnpm-cache
+      GOPATH: /go-cache/gopath
+    commands:
+      - export PATH=$PATH:/root/bin
+      - npm config set store-dir $PNPM_CACHE_FOLDER
+      - mkdir ~/bin
+      - wget https://search.maven.org/remotecontent?filepath=io/grpc/protoc-gen-grpc-java/1.43.2/protoc-gen-grpc-java-1.43.2-linux-x86_64.exe -O ~/bin/protoc-gen-grpc-java
+      - chmod +x ~/bin/protoc-gen-grpc-java
+      - npm install ts-protoc-gen@0.15.0 -g
+
+  - name: gofumpt-check
+    depends_on: [install-go-tools]
+    image: golang:1.18
+    pull: if-not-exists
+    commands:
+      - ~/bin/gofumpt -version
+      # don't simply run gofumpt on ".", since that may include the cache.
+      - OUT=$(git ls-files '*.go' | xargs ~/bin/gofumpt -d)
+      - test -z "$OUT" || (echo "$OUT"; exit 1)
+
+  - name: gunk-format-and-lint
+    depends_on: [install-go-tools]
+    image: golang:1.18
+    pull: if-not-exists
+    volumes:
+      - name: pnpm-cache
+        path: /pnpm-cache
+      - name: go-cache
+        path: /go-cache
+    environment:
+      PNPM_CACHE_FOLDER: /pnpm-cache
+      GOPATH: /go-cache/gopath
+    commands:
+      - export PATH=$PATH:/root/bin
+      - cd api
+      - gunk format ./...
+      - test -z "$(git status --porcelain .)" || (git status --porcelain .;git diff .; false)
+      - gunk lint ./...
+
+  - name: go-generate
+    depends_on: [install-go-tools, install-node-tools]
+    image: golang:1.18
+    pull: if-not-exists
+    volumes:
+      - name: pnpm-cache
+        path: /pnpm-cache
+      - name: go-cache
+        path: /go-cache
+    environment:
+      PNPM_CACHE_FOLDER: /pnpm-cache
+      GOPATH: /go-cache/gopath
+    commands:
+      - export PATH=$PATH:/root/bin
+      - go generate -x
+      - test -z "$(git status --porcelain .)" || (git status --porcelain .;git diff .; false)
+
+  - name: set-version
+    depends_on: [go-generate]
+    image: golang:1.18
+    pull: if-not-exists
+    commands:
+      - ~/bin/git-buildnumber -year 2019 >.version
+
+  - name: pnpm-build-and-lint
+    depends_on: [go-generate]
+    image: node:17-alpine
+    pull: if-not-exists
+    commands:
+      - cd docs
+      - npm install -g pnpm
+      - pnpm install
+      - pnpm lint
+      - pnpm build
+
+  - name: test-raciness
+    depends_on: [pnpm-build-and-lint]
+    image: golang:1.18
+    pull: if-not-exists
+    volumes:
+      - name: go-cache
+        path: /go-cache
+    environment:
+      GOPATH: /go-cache/gopath
+      DATABASE_CONNECTION: "user=postgres password=password host=postgres port=5432 dbname=postgres sslmode=disable"
+      CGO_ENABLED: 1
+    commands:
+      - export
+      - go test -v -count=1 -race ./...
+
+  - name: go-build-core-gw
+    depends_on: [set-version]
+    image: golang:1.18
+    pull: if-not-exists
+    volumes:
+    - name: go-cache
+      path: /go-cache
+    environment:
+      GOPATH: /go-cache/gopath
+    commands:
+    - VERSION="$(cat .version)"
+    - cd ./cmd/openbank-core-gw
+    - go build -ldflags="-w -s -X main.version=$VERSION" -o core-gw
+
+  - name: docker-build-docs
+    depends_on: [pnpm-build-and-lint]
+    image: google/cloud-sdk:370.0.0
+    pull: if-not-exists
+    volumes:
+      - name: dockersock
+        path: /var/run
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /root/google_creds_deploy.json
+      GOOGLE_CREDENTIALS:
+        from_secret: google_credentials
+    commands:
+      - printf "%s" "$GOOGLE_CREDENTIALS" >$GOOGLE_APPLICATION_CREDENTIALS
+      - DIR=docs
+      - IMAGE_NAME=openbank-core-docs
+      - ./scripts/docker-build $DIR $IMAGE_NAME
+      - ./scripts/docker-push $DIR $IMAGE_NAME
+    when:
+      event: push
+      branch: [master, staging-test]
+
+  - name: docker-build-core-gw
+    depends_on: [go-build-core-gw]
+    image: google/cloud-sdk:370.0.0
+    pull: if-not-exists
+    volumes:
+      - name: dockersock
+        path: /var/run
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /root/google_creds_deploy.json
+      GOOGLE_CREDENTIALS:
+        from_secret: google_credentials
+    commands:
+      - printf "%s" "$GOOGLE_CREDENTIALS" >$GOOGLE_APPLICATION_CREDENTIALS
+      - DIR=cmd/openbank-core-gw
+      - IMAGE_NAME=openbank-core-gw
+      - ./scripts/docker-build $DIR $IMAGE_NAME
+      - ./scripts/docker-push $DIR $IMAGE_NAME
+    when:
+      event: push
+      branch: [master, staging-test]
+
+  - name: go-build-core
+    depends_on: [set-version]
+    image: golang:1.18
+    pull: if-not-exists
+    volumes:
+    - name: go-cache
+      path: /go-cache
+    environment:
+      GOPATH: /go-cache/gopath
+    commands:
+    - VERSION="$(cat .version)"
+    - cd ./cmd/openbank-core
+    - go build -ldflags="-w -s -X main.version=$VERSION" -o core
+
+  - name: docker-build-core
+    depends_on: [go-build-core]
+    image: google/cloud-sdk:370.0.0
+    pull: if-not-exists
+    volumes:
+      - name: dockersock
+        path: /var/run
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /root/google_creds_deploy.json
+      GOOGLE_CREDENTIALS:
+        from_secret: google_credentials
+    commands:
+      - printf "%s" "$GOOGLE_CREDENTIALS" >$GOOGLE_APPLICATION_CREDENTIALS
+      - DIR=cmd/openbank-core
+      - IMAGE_NAME=openbank-core
+      - ./scripts/docker-build $DIR $IMAGE_NAME
+      - ./scripts/docker-push $DIR $IMAGE_NAME
+    when:
+      event: push
+      branch: [master, staging-test]
+
+  - name: staging-deploy
+    depends_on: [docker-build-core,docker-build-core-gw,docker-build-docs]
+    image: alpine:3.15
+    pull: if-not-exists
+    volumes:
+      - name: dockersock
+        path: /var/run
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /root/google_creds_deploy.json
+      DO_ACCESS_TOKEN:
+        from_secret: do_access_token
+    commands:
+      # todo make more efficient
+      - export PATH=$PATH:/root/bin
+      - printf "%s" "$GOOGLE_CREDENTIALS" >$GOOGLE_APPLICATION_CREDENTIALS
+      - wget https://github.com/digitalocean/doctl/releases/download/v1.69.0/doctl-1.69.0-linux-amd64.tar.gz
+      - tar xf doctl-1.69.0-linux-amd64.tar.gz
+      - mv doctl /root/bin
+      - wget https://dl.k8s.io/release/v1.23.0/bin/linux/amd64/kubectl
+      - chmod +x kubectl
+      - mv kubectl /root/bin
+      - doctl auth init --access-token "$DO_ACCESS_TOKEN"
+      - CLUSTER_ID=$(doctl kubernetes cluster get core-staging-01 --format ID --no-header)
+      - doctl kubernetes cluster kubeconfig save $CLUSTER_ID
+      - IMAGE_TAG=$(./scripts/docker-image-tag openbank-core)
+      - kubectl set image deployment/openbank-core openbank-core=$IMAGE_TAG
+      - IMAGE_TAG=$(./scripts/docker-image-tag openbank-core-gw)
+      - kubectl set image deployment/openbank-core-gw openbank-core-gw=$IMAGE_TAG
+      - IMAGE_TAG=$(./scripts/docker-image-tag openbank-core-docs)
+      - kubectl set image deployment/openbank-core-docs-stg openbank-core-docs=$IMAGE_TAG
+    when:
+      event: push
+      branch: [master, staging-test]
+
+  - name: deploy-notify
+    depends_on: [staging-deploy]
+    image: kenshaw/drone-mattermost:latest
+    settings:
+      url: https://mattermost.brankas.dev
+      token:
+        from_secret: mattermost-token
+      team: product
+      channel: core-banking-notifications
+      replace: |-
+        [{
+          "regexp": "\\\\[?(CORE-[0-9]+)\\\\]?",
+          "replace": "[$1](https://brankas.atlassian.net/browse/$1)"
+        }]
+      template: |-
+        **{{#success build.status}}Successfully deployed{{else}}FAILED{{/success}}** {{repo.owner}}/{{repo.name}} [`{{build.branch}}@{{truncate commit 7}}`]({{build.link}}) [[diff]({{commit.link}})]
+        Author: `{{commit.author.username}}`
+        > {{commit.message.title}}{{#if commit.message.body}}
+        >
+        {{{regexReplace "(?m)^" commit.message.body "> "}}}{{/if}}
+    when:
+      event: push
+      status: [success, failure]
+      branch: [master]
+
+---
+kind: pipeline
+name: production
+
+trigger:
+  branch:
+  - production
+
+workspace:
+  base: /root
+  path: ${DRONE_REPO_NAME}
+
+volumes:
+  - name: go-cache
+    host:
+      path: /var/lib/drone-cache/go
+  - name: pnpm-cache
+    host:
+      path: /var/lib/drone-cache/${DRONE_REPO_NAME}/pnpm/node14
+  - name: dockersock
+    temp: {}
+
+image_pull_secrets:
+  - dockerconfigjson
+
+services:
+  - name: postgres
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_PASSWORD: password
+  - name: docker
+    image: docker:dind
+    privileged: true
+    volumes:
+      - name: dockersock
+        path: /var/run
+
+steps:
+  - name: env-setup
+    image: golang:1.18
+    pull: if-not-exists
+    environment:
+      DOCKER_CONFIG_JSON:
+        from_secret: dockerconfigjson
+    commands:
+      # Use https cloning. SSH keys are not set up on drone
+      - git config --global url.https://gitea.brankas.dev:.insteadOf ssh://git@git.brankas.dev
+      - go env -w CGO_ENABLED=0 GOCACHE=/go-cache/buildcache GOBIN=/root/bin GOFLAGS=-mod=readonly
+
+      # checks that the commit is following brankas standards
+      - ./scripts/lint-jira-tag
+
+      # Setup the docker config that all drone docker plugins will use. (includes dockerhub pro account credentials)
+      - mkdir -p /root/.docker
+      - printf "%s" "$DOCKER_CONFIG_JSON" > /root/.docker/config.json
+
+  - name: install-go-tools
+    depends_on: [env-setup]
+    image: golang:1.18
+    pull: if-not-exists
+    volumes:
+      - name: go-cache
+        path: /go-cache
+    environment:
+      GOPATH: /go-cache/gopath
+    commands:
+      - export PATH=$PATH:/root/bin
+      - ./install.sh
+      - ls ~/bin
+
+  - name: install-node-tools
+    depends_on: [env-setup]
+    image: node:14
+    pull: if-not-exists
+    volumes:
+      - name: pnpm-cache
+        path: /pnpm-cache
+    environment:
+      PNPM_CACHE_FOLDER: /pnpm-cache
+      GOPATH: /go-cache/gopath
+    commands:
+      - export PATH=$PATH:/root/bin
+      - npm config set store-dir $PNPM_CACHE_FOLDER
+      - wget https://search.maven.org/remotecontent?filepath=io/grpc/protoc-gen-grpc-java/1.43.2/protoc-gen-grpc-java-1.43.2-linux-x86_64.exe -O ~/bin/protoc-gen-grpc-java
+      - chmod +x ~/bin/protoc-gen-grpc-java
+      - npm install ts-protoc-gen@0.15.0 -g
+
+  - name: go-generate
+    depends_on: [install-go-tools, install-node-tools]
+    image: asia.gcr.io/b-api-production/node-deps-proto:14.8.0-3.12.4-1.16.2
+    pull: if-not-exists
+    volumes:
+      - name: pnpm-cache
+        path: /pnpm-cache
+      - name: go-cache
+        path: /go-cache
+    environment:
+      PNPM_CACHE_FOLDER: /pnpm-cache
+      GOPATH: /go-cache/gopath
+    commands:
+      - export PATH=$PATH:/root/bin
+      - go generate -x
+      - test -z "$(git status --porcelain .)" || (git status --porcelain .;git diff .; false)
+
+  - name: set-version
+    depends_on: [go-generate]
+    image: golang:1.18
+    pull: if-not-exists
+    commands:
+      - ~/bin/git-buildnumber -year 2019 >.version
+
+  - name: pnpm-build-and-lint
+    depends_on: [go-generate]
+    image: node:17-alpine
+    pull: if-not-exists
+    commands:
+      - cd docs
+      - npm install -g pnpm
+      - pnpm install
+      - pnpm lint
+      - pnpm build
+
+  - name: docker-build-docs
+    depends_on: [pnpm-build-and-lint]
+    image: google/cloud-sdk:370.0.0
+    pull: if-not-exists
+    volumes:
+      - name: dockersock
+        path: /var/run
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /root/google_creds_deploy.json
+      GOOGLE_CREDENTIALS:
+        from_secret: google_credentials
+    commands:
+      - printf "%s" "$GOOGLE_CREDENTIALS" >$GOOGLE_APPLICATION_CREDENTIALS
+      - DIR=docs
+      - IMAGE_NAME=openbank-core-docs
+      - ./scripts/docker-build $DIR $IMAGE_NAME
+      - ./scripts/docker-push $DIR $IMAGE_NAME
+    when:
+      event: push
+
+  - name: production-deploy
+    depends_on: [docker-build-docs]
+    image: alpine:3.15
+    pull: if-not-exists
+    volumes:
+      - name: dockersock
+        path: /var/run
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /root/google_creds_deploy.json
+      DO_ACCESS_TOKEN:
+        from_secret: do_access_token
+    commands:
+      - export PATH=$PATH:/root/bin
+      - printf "%s" "$GOOGLE_CREDENTIALS" >$GOOGLE_APPLICATION_CREDENTIALS
+      - wget https://github.com/digitalocean/doctl/releases/download/v1.69.0/doctl-1.69.0-linux-amd64.tar.gz
+      - tar xf doctl-1.69.0-linux-amd64.tar.gz
+      - mv doctl /root/bin
+      - wget https://dl.k8s.io/release/v1.23.0/bin/linux/amd64/kubectl
+      - chmod +x kubectl
+      - mv kubectl /root/bin
+      - doctl auth init --access-token "$DO_ACCESS_TOKEN"
+      - CLUSTER_ID=$(doctl kubernetes cluster get core-staging-01 --format ID --no-header)
+      - doctl kubernetes cluster kubeconfig save $CLUSTER_ID
+      - IMAGE_TAG=$(./scripts/docker-image-tag openbank-core-docs)
+      - kubectl set image deployment/openbank-core-docs openbank-core-docs=$IMAGE_TAG
+    when:
+      event: push
+
+  - name: deploy-notify
+    depends_on: [production-deploy]
+    image: kenshaw/drone-mattermost:latest
+    settings:
+      url: https://mattermost.brankas.dev
+      token:
+        from_secret: mattermost-token
+      team: product
+      channel: core-banking-notifications
+      replace: |-
+        [{
+          "regexp": "\\\\[?(CORE-[0-9]+)\\\\]?",
+          "replace": "[$1](https://brankas.atlassian.net/browse/$1)"
+        }]
+      template: |-
+        **{{#success build.status}}Successfully deployed{{else}}FAILED{{/success}}** {{repo.owner}}/{{repo.name}} [`{{build.branch}}@{{truncate commit 7}}`]({{build.link}}) [[diff]({{commit.link}})]
+        Author: `{{commit.author.username}}`
+        > {{commit.message.title}}{{#if commit.message.body}}
+        >
+        {{{regexReplace "(?m)^" commit.message.body "> "}}}{{/if}}
+    when:
+      event: push
+      status: [success, failure]
+

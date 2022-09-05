@@ -1,0 +1,280 @@
+// Package rates manages index rate (sources) to reflect real-world rates.
+// https://support.mambu.com/docs/customizing-index-rates
+// FIXME: AKA FeeTables
+//
+// +gunk proto.Package("openbank.core.v1.rates")
+// +gunk java.Package("openbank.core.v1.rates")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Index Rates",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package rates
+
+import (
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// SourceType is the type of an index rate source.
+type SourceType int
+
+const (
+	InterestRate SourceType = iota
+	TaxRate
+	WithholdingTaxRate
+	PrincipalTaxRate
+)
+
+// Source is the source for dynamic interest rates. An example is EURIBOR.
+type Source struct {
+	// SourceID is an unique ID of the index rate source.
+	//
+	// +gunk xo.Unique
+	SourceID string `pb:"1" json:"source_id"`
+	// Name is the name of the index rate source.
+	Name string `pb:"2" json:"name"`
+	// Type is the type of the index rate source.
+	Type SourceType `pb:"3" json:"type"`
+	// Notes are custom text associated with the index rate source.
+	Notes string `pb:"4" json:"notes"`
+}
+
+// IndexRate is an entry of an index rate with the time it becomes valid.
+type IndexRate struct {
+	// RateID is the ID of the index rate.
+	//
+	// +gunk xo.Unique
+	RateID string `pb:"1" json:"rate_id"`
+	// SourceID is the ID of the index rate's source.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "rates.Source",
+	//         FieldName:  "SourceID",
+	// }
+	SourceID string `pb:"2" json:"source_id"`
+	// UserID is the ID of the user associated.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "users.User",
+	//         FieldName:  "UserID",
+	// }
+	UserID string `pb:"3" json:"user_id"`
+	// Rate is the index rate value.
+	Rate float64 `pb:"4" json:"rate"`
+	// Notes is the notes for the index rate.
+	Notes string `pb:"5" json:"notes"`
+	// StartTime is the time the source becomes active.
+	StartTime time.Time `pb:"6" json:"start_time"`
+}
+
+// CreateSourceRequest is a request to create an index source.
+type CreateSourceRequest struct {
+	// Body is the index rate source to be created.
+	Body Source `pb:"1" json:"body"`
+}
+
+// ListSourcesRequest is a request to list index sources.
+type ListSourcesRequest struct {
+	// PageToken is the token of the page to be returned.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of index rate sources per page.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order the index rate sources by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the index rate sources.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListSourcesResponse is a response for listing index sources.
+type ListSourcesResponse struct {
+	// Total is the total number of rates matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of rates remaining in the list, including the
+	// rates in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Sources is the list of index rate sources.
+	Sources []Source `pb:"3" json:"sources"`
+	// NextPageToken is the token of the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetSourceRequest is a request to retrieve an index source.
+type GetSourceRequest struct {
+	// SourceID is the ID of the index rate sources to retrieve.
+	SourceID string `pb:"1" json:"source_id"`
+}
+
+// UpdateSourceRequest is the request to update the specified index source.
+type UpdateSourceRequest struct {
+	// SourceID is the ID of the source to update.
+	SourceID string `pb:"1" json:"source_id"`
+	// Body is the new value of the index source.
+	Body Source `pb:"2" json:"body"`
+}
+
+// DeleteSourceRequest is the request to delete the specified index source.
+type DeleteSourceRequest struct {
+	// SourceID is the ID of the source to delete.
+	SourceID string `pb:"1" json:"source_id"`
+}
+
+// CreateIndexRateRequest is a request to create an index rate.
+type CreateIndexRateRequest struct {
+	// SourceID is the ID of the source the new index rate should associate
+	// with.
+	SourceID string `pb:"1" json:"source_id"`
+	// Body is the index rate to be created.
+	Body IndexRate `pb:"2" json:"body"`
+}
+
+// ListIndexRatesRequest is a request to list index rates.
+type ListIndexRatesRequest struct {
+	// SourceID is the ID of the source to list.
+	SourceID string `pb:"1" json:"source_id"`
+	// PageToken is the token of the page to be returned.
+	PageToken string `pb:"2" json:"page_token"`
+	// PageSize is the number of index rates per page.
+	PageSize int `pb:"3" json:"page_size"`
+	// OrderBy is the field to order the index rates by.
+	OrderBy string `pb:"4" json:"order_by"`
+	// Filter is the filter to apply to the index rates.
+	Filter string `pb:"5" json:"filter"`
+}
+
+// ListIndexRatesResponse is a response for listing index rates.
+type ListIndexRatesResponse struct {
+	// Total is the total number of rates matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of rates remaining in the list, including the
+	// rates in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Rates is the list of index rates.
+	Rates []IndexRate `pb:"3" json:"rates"`
+	// NextPageToken is the token of the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetIndexRateRequest is a request to retrieve an index rate.
+type GetIndexRateRequest struct {
+	// SourceID is the ID of the source of the rate.
+	SourceID string `pb:"1" json:"source_id"`
+	// RateID is the ID of the index rate to retrieve.
+	RateID string `pb:"2" json:"rate_id"`
+}
+
+// UpdateIndexRateRequest is a request to update an index rate.
+type UpdateIndexRateRequest struct {
+	// SourceID is the ID the index rate is associated with.
+	SourceID string `pb:"1" json:"source_id"`
+	// RateID is the ID of the index rate to be deleted.
+	RateID string `pb:"2" json:"rate_id"`
+	// Body is the new value of the index rate.
+	Body IndexRate `pb:"3" json:"body"`
+}
+
+// DeleteIndexRateRequest is a request to delete an index rate.
+type DeleteIndexRateRequest struct {
+	// SourceID is the ID the index rate is associated with.
+	SourceID string `pb:"1" json:"source_id"`
+	// RateID is the ID of the index rate to be deleted.
+	RateID string `pb:"2" json:"rate_id"`
+}
+
+// RatesService is a service that manages index rate and its sources.
+type RatesService interface {
+	// CreateSource creates a new index rate source.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/sources",
+	//         Body:   "Body",
+	// }
+	CreateSource(CreateSourceRequest) Source
+
+	// ListSources lists index rate sources.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/sources",
+	// }
+	ListSources(ListSourcesRequest) ListSourcesResponse
+
+	// GetSource retrieves the specified index rate source.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/sources/{SourceID}",
+	// }
+	GetSource(GetSourceRequest) Source
+
+	// UpdateSource updates the specified index rate source.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/sources/{SourceID}",
+	//         Body:   "Body",
+	// }
+	UpdateSource(UpdateSourceRequest) Source
+
+	// DeleteSource deletes the specified index rate source.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/sources/{SourceID}",
+	// }
+	DeleteSource(DeleteSourceRequest)
+
+	// CreateIndexRate creates a new index rate.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/sources/{SourceID}/indexrates",
+	//         Body:   "Body",
+	// }
+	CreateIndexRate(CreateIndexRateRequest) IndexRate
+
+	// ListIndexRates lists index rates.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/sources/{SourceID}/indexrates",
+	// }
+	ListIndexRates(ListIndexRatesRequest) ListIndexRatesResponse
+
+	// GetIndexRate retrieves the specified index rate.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/sources/{SourceID}/indexrates/{RateID}",
+	// }
+	GetIndexRate(GetIndexRateRequest) IndexRate
+
+	// UpdateIndexRate updates the specified index rate.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/sources/{SourceID}/indexrates/{RateID}",
+	//         Body:   "Body",
+	// }
+	UpdateIndexRate(UpdateIndexRateRequest) IndexRate
+
+	// DeleteIndexRate deletes the specified index rate.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/sources/{SourceID}/indexrates/{RateID}",
+	// }
+	DeleteIndexRate(DeleteIndexRateRequest)
+}

@@ -1,0 +1,185 @@
+package ledgers
+
+import (
+	core "bnk.to/core/api/v1"
+	currencies "bnk.to/core/api/v1/currencies"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// ProductType is the type of product.
+type ProductType int
+
+const (
+	Loan ProductType = iota
+	Savings
+)
+
+// EntryType is the type of entry.
+type EntryType int
+
+const (
+	Debit EntryType = iota
+	Credit
+)
+
+// Entry is an entry in a general ledger (GL) journal.
+type Entry struct {
+	// EntryID is the ID of the entry.
+	//
+	// +gunk xo.Unique
+	EntryID string `pb:"1" json:"entry_id"`
+	// AccountID is the ID of the account associated with this entry.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "loans.Account",
+	//         FieldName:  "AccountID",
+	// }
+	AccountID string `pb:"2" json:"account_id"`
+	// BranchID is the ID for the branch that created the entry.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "branches.Branch",
+	//         FieldName:  "BranchID",
+	// }
+	BranchID string `pb:"3" json:"branch_id"`
+	// UserID is the ID of the user that triggered the transaction.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "users.User",
+	//         FieldName:  "UserID",
+	// }
+	UserID string `pb:"4" json:"user_id"`
+	// TransactionID is the ID of the transaction that caused this entry.
+	// TODO: Which table does this have a reference to.
+	TransactionID string `pb:"5" json:"transaction_id"`
+	// Type is the type of the entry.
+	Type EntryType `pb:"6" json:"type"`
+	// ProductID is the ID of the product of the account.
+	// TODO: Which table does this have a reference to.
+	ProductID string `pb:"7" json:"product_id"`
+	// ProductType is the type of product of the account.
+	ProductType ProductType `pb:"8" json:"product_type"`
+	// Amount is the amount in the entry.
+	Amount core.Amount `pb:"9" json:"amount"`
+	// AccountingRate is the accounting rate used for conversion in the
+	// transaction.
+	AccountingRate currencies.AccountingRate `pb:"10" json:"accounting_rate"`
+	// Notes is the extra human-readable notes for the entry.
+	Notes string `pb:"11" json:"notes"`
+	// ReversalEntryID is the ID of the entry that reverses this entry if it
+	// has been reversed.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "ledgers.Entry",
+	//         FieldName:  "EntryID",
+	// }
+	ReversalEntryID string `pb:"12" json:"reversal_entry_id"`
+	// CreateTime is the time the entry was created.
+	CreateTime time.Time `pb:"13" json:"create_time"`
+	// BookTime is the time the entry was recorded into accounting.
+	BookTime time.Time `pb:"14" json:"book_time"`
+}
+
+// EntryAmount is the amount modified by an entry.
+//
+// +gunk xo.Ignore(true)
+type EntryAmount struct {
+	// Amount is the amount that was debited or credited.
+	Amount core.Amount `pb:"1" json:"amount"`
+	// Code is the code for the GL Account that was debited or credited.
+	Code string `pb:"2" json:"code"`
+}
+
+// NewEntries is the list of entries to create.
+//
+// +gunk xo.Ignore(true)
+type NewEntries struct {
+	// TransactionID is the ID of the transaction.
+	TransactionID string `pb:"1" json:"transaction_id"`
+	// BranchID is the ID of the branch that created the entry.
+	BranchID string `pb:"2" json:"branch_id"`
+	// BookTime is the time the entry was recorded into accounting.
+	BookTime time.Time `pb:"3" json:"book_time"`
+	// Credits is a list of credit entries to create.
+	Credits []EntryAmount `pb:"4" json:"credits"`
+	// Debits is a list of debit entries to create.
+	Debits []EntryAmount `pb:"5" json:"debits"`
+	// Notes is the extra human-readable notes for the entries.
+	Notes string `pb:"6" json:"notes"`
+}
+
+// CreateEntriesRequest is the request to create GL Journal entries.
+type CreateEntriesRequest struct {
+	// Body is a list of GL Journal entries to log.
+	Body NewEntries `pb:"1" json:"body"`
+}
+
+// CreateEntriesResponse is the response for creating GL Journal entries.
+type CreateEntriesResponse struct {
+	// Entries is the list of created entries.
+	Entries []Entry `pb:"1" json:"entries"`
+}
+
+// ListEntriesRequest is the request to list GL Journal entries.
+type ListEntriesRequest struct {
+	// PageToken is the token of the page to retrieve.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of items to retrieve per page.
+	PageSize int32 `pb:"2" json:"page_size"`
+	// OrderBy is the field to order the results by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the list.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListEntriesResponse is the response for listing GL Journal entries.
+type ListEntriesResponse struct {
+	// Total is the total number of entries matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of entries remaining in the list, including the
+	// entries in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Entries is the list of entries.
+	Entries []Entry `pb:"3" json:"entries"`
+	// NextPageToken is the token of the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetEntryRequest is the request to retrieve the specified GL Journal entry.
+type GetEntryRequest struct {
+	// EntryID is the ID of the entry to retrieve.
+	EntryID string `pb:"1" json:"entry_id"`
+}
+
+// EntriesService is the service for managing GL Journal entries.
+type EntriesService interface {
+	// CreateEntries creates GL Journal Entries.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/ledgers/entries",
+	//         Body:   "Body",
+	// }
+	CreateEntries(CreateEntriesRequest) CreateEntriesResponse
+
+	// ListEntries lists GL Journal Entries.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/ledgers/entries",
+	// }
+	ListEntries(ListEntriesRequest) ListEntriesResponse
+
+	// GetEntry retrieves the specified GL Journal entry.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/ledgers/entries/{EntryID}",
+	// }
+	GetEntry(GetEntryRequest) Entry
+}

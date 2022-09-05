@@ -1,0 +1,339 @@
+package transactions
+
+import (
+	core "bnk.to/core/api/v1"
+	cards "bnk.to/core/api/v1/cards"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// TransactionBalances is the balances changed in the loan transaction.
+//
+// +gunk xo.Ignore(true)
+type TransactionBalances struct {
+	// AdvancePosition is the advance (prepaid) amount.
+	AdvancePosition core.Amount `pb:"1" json:"advance_position"`
+	// ArrearsPosition is the arrears position amount for the account in
+	// arrears.
+	ArrearsPosition core.Amount `pb:"2" json:"arrears_position"`
+	// ExpectedPrincipalRedraw is the difference between principal balance and
+	// redraw balance after each transaction performed on the loan account.
+	ExpectedPrincipalRedraw core.Amount `pb:"3" json:"expected_principal_redraw"`
+	// Principal is the account redraw balance after the transaction.
+	Principal core.Amount `pb:"4" json:"principal"`
+	// Redraw is the account redraw balance after the transaction
+	// update.
+	Redraw core.Amount `pb:"5" json:"redraw"`
+	// Total is the running balance still owed for the loan.
+	Total core.Amount `pb:"6" json:"total"`
+}
+
+// LoanAffectedAmounts is a collection of amounts affected by the loan transaction.
+//
+// +gunk xo.Ignore(true)
+type LoanAffectedAmounts struct {
+	// DeferredInterest is the amount of pre-paid interest added/removed.
+	DeferredInterest core.Amount `pb:"1" json:"deferred_interest"`
+	// Fees is the amount of fees added/removed.
+	Fees core.Amount `pb:"2" json:"fees"`
+	// FundersInterest is the amount of interest given to investors, in
+	// P2P products.
+	FundersInterest core.Amount `pb:"3" json:"funders_interest"`
+	// OrganizationCommission is the amount of interest paid to the
+	// organization, in P2P products.
+	OrganizationCommission core.Amount `pb:"4" json:"organization_commission"`
+	// Interest is the amount of interest added/removed. Taxes and
+	// DeferredInterest is included.
+	Interest core.Amount `pb:"5" json:"interest"`
+	// InterestFromArrears is the amount of interest from arrears.
+	InterestFromArrears core.Amount `pb:"6" json:"interest_from_arrears"`
+	// PaymentHolidaysInterest is the amount of Payment Holidays interest was added/removed in account.
+	PaymentHolidaysInterest core.Amount `pb:"7" json:"payment_holidays_interest"`
+	// Penalty is the amount of penalties added/removed from the account.
+	Penalty core.Amount `pb:"8" json:"penalty"`
+	// Principal is the amount of principal added/removed.
+	Principal core.Amount `pb:"9" json:"principal"`
+}
+
+// PaymentType is the type of loan payment.
+type PaymentType int
+
+// Possible PaymentType values.
+const (
+	PaymentPrincipal PaymentType = iota
+	PaymentInterest
+	PaymentManualFee
+	PaymentUpfrontDisbursementFee
+	PaymentLateRepaymentFee
+	PaymentPaymentDueFee
+	PaymentPenalty
+)
+
+// CustomPaymentAmount is one instance of custom payment.
+//
+// +gunk xo.Ignore(true)
+type CustomPaymentAmount struct {
+	// Type is the type of the payment.
+	Type PaymentType `pb:"1" json:"type"`
+	// FeeID is the ID of the predefined fee.
+	FeeID string `pb:"2" json:"fee_id"`
+	// Amount is the amount of payment paid in the transaction.
+	Amount core.Amount `pb:"3" json:"amount"`
+	// TaxOnAmount is the amount of taxes paid in the transaction.
+	TaxOnAmount core.Amount `pb:"4" json:"tax_on_amount"`
+}
+
+// CalculationMethod is the type of calculation to be done.
+type CalculationMethod int
+
+// Possible CalculationMethod values.
+const (
+	NoRecalculation CalculationMethod = iota
+	RescheduleRemainingRepayments
+	RecalculateScheduleKeepSameNumberOfTerms
+	RecalculateScheduleKeepSamePrincipalAmount
+	RecalculateScheduleKeepSameTotalRepaymentAmount
+	ReduceAmountPerInstallment
+	ReduceNumberOfInstallments
+	ReduceNumberOfInstallmentsNew
+)
+
+// Taxes is the taxes applied within a transaction.
+//
+// +gunk xo.Ignore(true)
+type Taxes struct {
+	// DeferredTaxOnInterestAmount is the amount of taxes on the interest that
+	// was pre-paid were added/removed in account. It includes deferred tax.
+	DeferredTaxOnInterestAmount core.Amount `pb:"1" json:"deferred_tax_on_interest_amount"`
+	// TaxOnFeesAmount is the amount of taxes on the fees that were paid in
+	// this transaction.
+	TaxOnFeesAmount core.Amount `pb:"2" json:"tax_on_fees_amount"`
+	// TaxOnInterestAmount is the amount of taxes on the interest that was paid
+	// in this transaction.
+	TaxOnInterestAmount core.Amount `pb:"3" json:"tax_on_interest_amount"`
+	// TaxOnInterestFromArrearsAmount is the amount of taxes on the interest
+	// from arrears.
+	TaxOnInterestFromArrearsAmount core.Amount `pb:"4" json:"tax_on_interest_from_arrears_amount"`
+	// TaxOnPaymentHolidaysInterest is the amount of taxes on the Payment
+	// Holidays interest.
+	TaxOnPaymentHolidaysInterest core.Amount `pb:"5" json:"tax_on_payment_holidays_interest"`
+	// TaxOnPenaltyAmount is the amount of taxes on the penalties.
+	TaxOnPenaltyAmount core.Amount `pb:"6" json:"tax_on_penalty_amount"`
+	// TaxRate is the new tax rate on the transaction if it has been changed.
+	TaxRate float64 `pb:"7" json:"tax_rate"`
+}
+
+// TransactionInterestSettings is the settings for the interests and holds all
+// the properties regarding interests.
+//
+// +gunk xo.Ignore(true)
+type TransactionInterestSettings struct {
+	// IndexInterestRate is the rate of index interest.
+	IndexInterestRate float64 `pb:"1" json:"index_interest_rate"`
+	// InterestRate is the rate of interest.
+	// The interest on loans is accrued on a daily basis, which allows charging
+	// the clients only for the days they actually used the loan amount.
+	InterestRate float64 `pb:"2" json:"interest_rate"`
+}
+
+// LoanTerm is the terms of the loan.
+//
+// +gunk xo.Ignore(true)
+type LoanTerm struct {
+	// InterestSettings is the settings for the interests and holds all the
+	// properties regarding interests.
+	InterestSettings TransactionInterestSettings `pb:"1" json:"interest_settings"`
+	// PeriodicPayment is the last known periodic payment value.
+	PeriodicPayment core.Amount `pb:"2" json:"periodic_payment"`
+	// PrincipalPaymentAmount is the last known principal payment flat amount.
+	PrincipalPaymentAmount core.Amount `pb:"3" json:"principal_payment_amount"`
+	// PrincipalPaymentPercentage is the last known principal payment
+	// percentage.
+	PrincipalPaymentPercentage float64 `pb:"4" json:"principal_payment_percentage"`
+}
+
+// LoanType is the type of loan.
+type LoanType int
+
+// Possible LoanType values.
+const (
+	LoanImport LoanType = iota
+	LoanDisbursement
+	LoanDisbursementAdjustment
+	LoanWriteOff
+	LoanWriteOffAdjustment
+	LoanRepayment
+	LoanPaymentMade
+	LoanWithdrawalRedraw
+	LoanWithdrawalRedrawAdjustment
+	LoanFeeApplied
+	LoanFeeCharged
+	LoanFeesDueReduced
+	LoanFeeAdjustment
+	LoanPenaltyApplied
+	LoanPenaltyAdjustment
+	LoanPenaltiesDueReduced
+	LoanRepaymentAdjustment
+	LoanPaymentMadeAdjustment
+	LoanInterestRateChanged
+	LoanTaxRateChanged
+	LoanPenaltyRateChanged
+	LoanInterestApplied
+	LoanInterestAppliedAdjustment
+	LoanInterestDueReduced
+	LoanPenaltyReductionAdjustment
+	LoanFeeReductionAdjustment
+	LoanInterestReductionAdjustment
+	LoanDeferredInterestApplied
+	LoanDeferredInterestAppliedAdjustment
+	LoanDeferredInterestPaid
+	LoanDeferredInterestPaidAdjustment
+	LoanRedrawTransfer
+	LoanRedrawRepayment
+	LoanRedrawTransferAdjustment
+	LoanRedrawRepaymentAdjustment
+	LoanTransfer
+	LoanTransferAdjustment
+	LoanBranchChanged
+	LoanTermsChanged
+	LoanCardTransactionReversal
+	LoanCardTransactionReversalAdjustment
+	LoanDueDateChanged
+	LoanDueDateChangedAdjustment
+	LoanAccountTerminated
+	LoanAccountTerminatedAdjustment
+)
+
+// LoanTransaction is a transaction on a loan account.
+type LoanTransaction struct {
+	// TransactionID is the ID of the transaction.
+	//
+	// +gunk xo.Unique
+	TransactionID string `pb:"1" json:"transaction_id"`
+	// UserID is the ID of the user performing the transaction.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "users.User",
+	//         FieldName:  "UserID",
+	// }
+	UserID string `pb:"2" json:"user_id"`
+	// Type is the type of loan transaction.
+	Type LoanType `pb:"3" json:"type"`
+	// AccountBalances is the balances changed by the transaction.
+	AccountBalances TransactionBalances `pb:"4" json:"account_balances"`
+	// AdjustmentTransactionID is the ID of the transaction adjusted.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "transactions.LoanTransaction",
+	//         FieldName:  "TransactionID",
+	// }
+	AdjustmentTransactionID string `pb:"5" json:"adjustment_transaction_id"`
+	// AffectedAmounts is the amount of money affected by the transaction.
+	AffectedAmounts LoanAffectedAmounts `pb:"6" json:"affected_amounts"`
+	// Amount is the amount of money affected by the transaction.
+	Amount core.Amount `pb:"7" json:"amount"`
+	// CardTransaction is the card transaction that is associated with the
+	// transaction.
+	CardTransaction cards.Transaction `pb:"8" json:"card_transaction"`
+	// BranchID is the ID of the branch the transaction occurred at.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "branches.Branch",
+	//         FieldName:  "BranchID",
+	// }
+	BranchID string `pb:"9" json:"branch_id"`
+	// CentreID is the ID of the centre the transaction occurred at.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "centres.Centre",
+	//         FieldName:  "CentreID",
+	// }
+	CentreID string `pb:"10" json:"centre_id"`
+	// CustomPaymentAmounts is the list of custom payments made by the user.
+	CustomPaymentAmounts []CustomPaymentAmount `pb:"11" json:"custom_payment_amounts"`
+	// Fees are all the fees that have been applied or paid within this
+	// transaction.
+	Fees []TransactionFee `pb:"12" json:"fees"`
+	// InstallmentID is the ID of the installment the transaction is for.
+	// TODO: Which table does this have a reference to.
+	InstallmentID string `pb:"13" json:"installment_id"`
+	// MigrationEventID is the ID of the migration event associated with the
+	// deposit account if it's imported.
+	// TODO: Which table does this have a reference to.
+	MigrationEventID string `pb:"14" json:"migration_event_id"`
+	// Notes is the extra human-readable notes for the transaction.
+	Notes string `pb:"15" json:"notes"`
+	// OriginalAmount is the original amount of money when it was posted in a
+	// foreign currency.
+	OriginalAmount core.Amount `pb:"16" json:"original_amount"`
+	// OriginalTransactionID is the ID of the transaction adjusted if this is
+	// an adjustment transaciton.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "transactions.LoanTransaction",
+	//         FieldName:  "TransactionID",
+	// }
+	OriginalTransactionID string `pb:"17" json:"original_transaction_id"`
+	// ParentAccountID is the ID of the parent loan account.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "loans.Account",
+	//         FieldName:  "AccountID",
+	// }
+	ParentAccountID string `pb:"18" json:"parent_account_id"`
+	// ParentLoanTransactionID is the ID of the parent loan transaction.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "transactions.LoanTransaction",
+	//         FieldName:  "TransactionID",
+	// }
+	ParentLoanTransactionID string `pb:"19" json:"parent_loan_transaction_id"`
+	// RecalculationMethod is the method prepayment recalculation is done.
+	RecalculationMethod CalculationMethod `pb:"20" json:"recalculation_method"`
+	// Taxes is the amount of taxes applied to the transaction.
+	Taxes Taxes `pb:"21" json:"taxes"`
+	// Terms is the terms of the loan.
+	Terms LoanTerm `pb:"22" json:"terms"`
+	// TillID is the ID of the till associated with this transaction.
+	// TODO: Which table does this have a reference to.
+	TillID string `pb:"23" json:"till_id"`
+	// ChannelID is the ID of the associated transaction channel.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "org.Channel",
+	//         FieldName:  "ChannelID",
+	// }
+	ChannelID string `pb:"24" json:"channel_id"`
+	// TransferDetails is the details of the transfer.
+	TransferDetails TransferDetails `pb:"25" json:"transfer_details"`
+	// CreateTime is the time of creation of the transaction.
+	CreateTime time.Time `pb:"26" json:"create_time"`
+	// BookTime is the time when the transaction is logged into accounting.
+	BookTime time.Time `pb:"27" json:"book_time"`
+	// ValueTime is the time when the transaction is executed.
+	ValueTime time.Time `pb:"28" json:"value_time"`
+}
+
+// NewInstallment is the details of a new loan installment.
+//
+// +gunk xo.Ignore(true)
+type NewInstallment struct {
+	// InstallmentID is the ID of the installment.
+	InstallmentID string `pb:"1" json:"installment_id"`
+	// AmountToAdd is the amount to add to the due amount.
+	AmountToAdd core.Amount `pb:"2" json:"amount_to_add"`
+}
+
+// DisbursementFee is the amount of fees applied from a disbursement.
+//
+// +gunk xo.Ignore(true)
+type DisbursementFee struct {
+	// FeeID is the ID of the predefined fee.
+	FeeID string `pb:"1" json:"fee_id"`
+	// Amount is the amount of fees to apply.
+	Amount core.Amount `pb:"2" json:"amount"`
+}

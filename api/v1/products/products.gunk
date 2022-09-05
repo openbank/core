@@ -1,0 +1,213 @@
+// Package products is a package for managing products.
+// TODO: restructure types
+//
+// +gunk proto.Package("openbank.core.v1.products")
+// +gunk java.Package("openbank.core.v1.products")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Products",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package products
+
+import (
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// DurationInterval is a range of duration values. The range is inclusive.
+// The default value is always in the range.
+//
+// +gunk xo.Ignore(true)
+type DurationInterval struct {
+	// Default is the default value of the range.
+	Default time.Duration `pb:"1" json:"default"`
+	// Min is the minimum value of the range.
+	Min time.Duration `pb:"2" json:"min"`
+	// Max is the maximum value of the range.
+	Max time.Duration `pb:"3" json:"max"`
+}
+
+// DecimalInterval is a range of decimal values. The range is inclusive.
+// The default value is always in the range.
+//
+// +gunk xo.Ignore(true)
+type DecimalInterval struct {
+	// Default is the default value of the range.
+	Default float64 `pb:"1" json:"default"`
+	// Max is the maximum value of the range.
+	Max float64 `pb:"2" json:"max"`
+	// Min is the minimum value of the range.
+	Min float64 `pb:"3" json:"min"`
+}
+
+// IntegerInterval is a range of integer values. The range is inclusive.
+// The default value is always in the range.
+//
+// +gunk xo.Ignore(true)
+type IntegerInterval struct {
+	// Default is the default value of the range.
+	Default int `pb:"1" json:"default"`
+	// Max is the maximum value of the range.
+	Max int `pb:"2" json:"max"`
+	// Min is the minimum value of the range.
+	Min int `pb:"3" json:"min"`
+}
+
+// AccountingMethod is the method used to account for the product.
+type AccountingMethod int
+
+const (
+	None AccountingMethod = iota
+	Cash
+	Accrual
+)
+
+// InterestAccrued is the method used to determine when the interest is accrued.
+type InterestAccrued int
+
+const (
+	Never InterestAccrued = iota
+	Daily
+	EndOfMonth
+)
+
+// FinancialResource is a type of resource used to setup the product accounting
+// rule.
+type FinancialResource int
+
+const (
+	ResourcePortfolioControl FinancialResource = iota
+	ResourceFundSource
+	ResourceWriteOffExpense
+	ResourceInterestIncome
+	ResourceTaxesPayable
+	ResourceFeeIncome
+	ResourcePenaltyIncome
+	ResourceNegativeInterestPayableReceivable
+	ResourceNegativeInterestPayable
+	ResourceInterestReceivable
+	ResourceFeeReceivable
+	ResourcePenaltyReceivable
+	ResourceTaxesReceivable
+	ResourceDeferredInterestsIncome
+	ResourceDeferredFeeIncome
+	ResourceDeferredTaxes
+	ResourceDepositReference
+	ResourceSavingsControl
+	ResourceInterestExpense
+	ResourceInterestPayable
+	ResourceNegativeInterestIncome
+	ResourceNegativeInterestReceivable
+	ResourceOverdraftPortfolioControl
+	ResourceOverdraftInterestIncome
+	ResourceOverdraftWriteOffExpense
+	ResourceOverdraftInterestReceivable
+	ResourceInterBranchTransfer
+)
+
+// AccountingRule is the accounting rule for the product, mapping financial
+// resources to a GL account.
+//
+// TODO: Move to package GL.
+//
+// +gunk xo.Ignore(true)
+type AccountingRule struct {
+	// AccountID is the account ID of the general ledger account mapped to the
+	// financial resource.
+	AccountID string `pb:"1" json:"account_id"`
+	// TransactionChannelID is the ID of the transaction channel used.
+	TransactionChannelID string `pb:"2" json:"transaction_channel_id"`
+	// FinancialResource is the financial resource used to setup the accounting
+	// rules for determining the accounts for journal entries.
+	FinancialResource FinancialResource `pb:"3" json:"financial_resource"`
+}
+
+// AccountingSettings is a list of accounting settings for a product.
+//
+// +gunk xo.Ignore(true)
+type AccountingSettings struct {
+	// AccountingRules is a list of accounting rules used for the product.
+	AccountingRules []AccountingRule `pb:"1" json:"accounting_rules"`
+	// InterestAccrued is the method used to determine when the interest is
+	// AccountingMethod is the method used to account for the product.
+	InterestAccrued InterestAccrued `pb:"2" json:"interest_accrued"`
+	// AccountingMethod is the method used to account for the product.
+	AccountingMethod AccountingMethod `pb:"3" json:"accounting_method"`
+	// InterestAccountingMethod is the method used to account for the interest
+	// for the product.
+	InterestAccountingMethod AccountingMethod `pb:"4" json:"interest_accounting_method"`
+}
+
+// AvailableFor is the type of entity that can register for the product.
+type AvailableFor int
+
+const (
+	AvailableForIndividuals AvailableFor = iota
+	AvailableForPureGroups
+	AvailableForSolidarityGroups
+)
+
+// AvailabilitySettings is the settings for the availability of a product.
+//
+// +gunk xo.Ignore(true)
+type AvailabilitySettings struct {
+	// AvailableFor is the type of entity that can register for the product.
+	AvailableFor []AvailableFor `pb:"1" json:"available_for"`
+	// AllBranches is a flag indicating that the product is available for all
+	// branches.
+	AllBranches bool `pb:"2" json:"all_branches"`
+	// BranchIDs is a list of IDs of branches that the product is available for
+	// if allBranches is false.
+	BranchIDs []string `pb:"3" json:"branch_ids"`
+}
+
+// RevolvingAccountRequirement is the requirement settings for assigning a
+// revolving account to a product.
+type RevolvingAccountRequirement int
+
+const (
+	RequirementOptional RevolvingAccountRequirement = iota
+	RequirementRequired
+	RequirementNotRequired
+)
+
+// RevolvingAccountSettings is the settings for the credit arrangement for a
+// product.
+//
+// +gunk xo.Ignore(true)
+type RevolvingAccountSettings struct {
+	// Requirement is the requirement settings for assigning a revolving
+	// account to a product.
+	Requirement RevolvingAccountRequirement `pb:"1" json:"requirement"`
+}
+
+// FeeSettings is the settings for the fees for a product.
+//
+// +gunk xo.Ignore(true)
+type FeeSettings struct {
+	// AllowArbitrary is a flag indicating that the product allows for
+	// arbitrary fees to be added to the account of the product.
+	AllowArbitrary bool `pb:"1" json:"allow_arbitrary"`
+	// Fees is a list of predefined fees for the product.
+	Fees []Fee `pb:"2" json:"fees"`
+}
+
+// OffsetSettings is the settings for the offsets for a product.
+//
+// +gunk xo.Ignore(true)
+type OffsetSettings struct {
+	// AllowOffset is a flag indicating that the product allows for offsets.
+	AllowOffset bool `pb:"1" json:"allow_offset"`
+}

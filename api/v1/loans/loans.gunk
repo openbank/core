@@ -1,0 +1,651 @@
+// Package loans defines services for loans.
+//
+// +gunk proto.Package("openbank.core.v1.loans")
+// +gunk java.Package("openbank.core.v1.loans")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Loans",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package loans
+
+import (
+	core "bnk.to/core/api/v1"
+	products "bnk.to/core/api/v1/products"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// Balances is the balances of a loan account.
+//
+// +gunk xo.Ignore(true)
+type Balances struct {
+	// Fees is the total fee expected to be paid by the client for the loan.
+	Fees core.Amount `pb:"1" json:"fees"`
+	// FeesDue is the total fee due for the account.
+	FeesDue core.Amount `pb:"2" json:"fees_due"`
+	// FeesPaid is the total fee paid by the client for the loan.
+	// The fees paid. Represents the total fees paid for the account.
+	FeesPaid core.Amount `pb:"3" json:"fees_paid"`
+	// Hold is the sum of all authorization hold on the account.
+	Hold core.Amount `pb:"4" json:"hold"`
+	// Interest is the total interest expected to be paid by the client
+	// from now on.
+	Interest core.Amount `pb:"5" json:"interest"`
+	// InterestDue is the total interest due for the account.
+	InterestDue core.Amount `pb:"6" json:"interest_due"`
+	// InterestFromArrears is the interest from arrears owned.
+	InterestFromArrears core.Amount `pb:"7" json:"interest_from_arrears"`
+	// InterestFromArrearsDue is the interest from arrears due.
+	InterestFromArrearsDue core.Amount `pb:"8" json:"interest_from_arrears_due"`
+	// InterestFromArrearsPaid is the interest from arrears paid.
+	InterestFromArrearsPaid core.Amount `pb:"9" json:"interest_from_arrears_paid"`
+	// InterestPaid is the total interest paid into the account.
+	InterestPaid core.Amount `pb:"10" json:"interest_paid"`
+	// Penalty is the total penalty expected to be paid.
+	Penalty core.Amount `pb:"11" json:"penalty"`
+	// PenaltyDue is the total penalty due for the account.
+	PenaltyDue core.Amount `pb:"12" json:"penalty_due"`
+	// PenaltyPaid is the total penalty paid by the client for the loan.
+	PenaltyPaid core.Amount `pb:"13" json:"penalty_paid"`
+	// Principal is the total principal owned by the client.
+	Principal core.Amount `pb:"14" json:"principal"`
+	// PrincipalDue is the total principal due for the account.
+	PrincipalDue core.Amount `pb:"15" json:"principal_due"`
+	// PrincipalPaid is the total principal paid by the client for the loan.
+	PrincipalPaid core.Amount `pb:"16" json:"principal_paid"`
+	// Redraw is the total redraw amount owned.
+	Redraw core.Amount `pb:"17" json:"redraw"`
+}
+
+// CustomPredefinedFee is a custom fee defined that was applied on the
+// disbursement.
+//
+// +gunk xo.Ignore(true)
+type CustomPredefinedFee struct {
+	// FeeID is the ID of the fee predefined.
+	FeeID string `pb:"1" json:"fee_id"`
+	// Amount is the amount of the fee.
+	Amount core.Amount `pb:"2" json:"amount"`
+}
+
+// DisbursementDetails is the details of a disbursement.
+//
+// +gunk xo.Ignore(true)
+type DisbursementDetails struct {
+	// DisburseTime is the time the disbursement was made.
+	DisburseTime time.Time `pb:"1" json:"disburse_time"`
+	// ExpectedDisburseTime is the expected time for disbursement.
+	ExpectedDisburseTime time.Time `pb:"2" json:"expected_disburse_time"`
+	// FirstRepayTime is the time of the first repayment.
+	FirstRepayTime time.Time `pb:"3" json:"first_repay_time"`
+	// Fees is the list of fees applied to the disbursement.
+	Fees []CustomPredefinedFee `pb:"4" json:"fees"`
+	// Transfer is the transfer details of the disbursement.
+	Transfer Transfer `pb:"5" json:"transfer"`
+}
+
+// Asset is an asset that is being used to guarantee a loan account.
+//
+// +gunk xo.Ignore(true)
+type Asset struct {
+	// Amount is the amount of the asset used by the client for the guarantee.
+	Amount core.Amount `pb:"1" json:"amount"`
+	// AssetName is the name of the asset if the type is an asset.
+	AssetName string `pb:"2" json:"asset_name"`
+}
+
+// Guarantor is a client that guarantees a loan account.
+//
+// +gunk xo.Ignore(true)
+type Guarantor struct {
+	// GuarantorID is the ID of the guarantor.
+	GuarantorID string `pb:"1" json:"guarantor_id"`
+	// GuarantorType is the type of the guarantor.
+	GuarantorType core.Entity `pb:"2" json:"guarantor_type"`
+	// DepositAccountID is the ID of the deposit account used as a guarantee.
+	DepositAccountID string `pb:"3" json:"deposit_account_id"`
+	// Amount is the amount of the asset used by the client for the guarantee.
+	Amount core.Amount `pb:"4" json:"amount"`
+}
+
+// InvestorFund is the investor fund associated with a loan account.
+type InvestorFund struct {
+	// FundID is the ID of the investor fund.
+	//
+	// +gunk xo.Unique
+	FundID string `pb:"1" json:"fund_id"`
+	// Amount is the amount of the investor fund.
+	Amount core.Amount `pb:"2" json:"amount"`
+	// InterestCommission is the minimum interest commission.
+	InterestCommission float64 `pb:"3" json:"interest_commission"`
+	// SharePercentage is the percentage shared by the investor fund.
+	SharePercentage float64 `pb:"4" json:"share_percentage"`
+}
+
+// AccountState is the state of an account.
+type AccountState int
+
+const (
+	StatePartialApplication AccountState = iota
+	StatePendingApproval
+	StateApproved
+	StateActive
+	StateActiveInArrears
+	StateClosed
+)
+
+// AccountSubState is the sub-state of an account.
+type AccountSubState int
+
+const (
+	StatePartiallyDisbursed AccountSubState = iota
+	StateLocked
+	StateLockedCapping
+	StateRefinanced
+	StateRescheduled
+	StateWithdrawn
+	StateRepaid
+	StateRejected
+	StateWrittenOff
+	StateTerminated
+)
+
+// AccountFuturePaymentsAcceptance is the acceptance of future payments.
+type AccountFuturePaymentsAcceptance int
+
+const (
+	NoFuturePayments AccountFuturePaymentsAcceptance = iota
+	AcceptFuturePayments
+	AcceptOverpayments
+)
+
+// AccountLatePaymentsRecalculationMethod is the method used to calculate late
+// payments.
+type AccountLatePaymentsRecalculationMethod int
+
+const (
+	MethodOverdueInstallmentsIncrease AccountLatePaymentsRecalculationMethod = iota
+	MethodLastInstallmentIncrease
+)
+
+// AccountPaymentMethod is the method used to pay the account.
+type AccountPaymentMethod int
+
+const (
+	MethodHorizontal AccountPaymentMethod = iota
+	MethodVertical
+)
+
+// LockedOperations is the list of operations that can be locked.
+type LockedOperations int
+
+const (
+	OperationApplyInterest LockedOperations = iota
+	OperationApplyFees
+	OperationApplyPenalties
+)
+
+// Settings is the settings of an account.
+//
+// +gunk xo.Ignore(true)
+type Settings struct {
+	// Arrears is the account's arrears settings.
+	Arrears products.ArrearsSettings `pb:"1" json:"arrears"`
+	// Interest is the account's interest settings.
+	Interest products.LoanInterestSettings `pb:"2" json:"interest"`
+	// Penalty is the account's penalty settings.
+	Penalty products.PenaltySettings `pb:"3" json:"penalty"`
+	// Prepayment is the account's prepayment settings.
+	Prepayment products.PrepaymentSettings `pb:"4" json:"prepayment"`
+	// PrincipalPayment is the account's principal payment settings.
+	PrincipalPayment products.PrincipalPaymentSettings `pb:"5" json:"principal_payment"`
+	// Redraw is the account's redraw settings.
+	Redraw products.RedrawSettings `pb:"6" json:"redraw"`
+	// Schedule is the account's schedule settings.
+	Schedule products.LoanScheduleSettings `pb:"7" json:"schedule"`
+}
+
+// Account is a loan account where the bank lends to a customer.
+type Account struct {
+	// AccountID is the ID of the account.
+	//
+	// +gunk xo.Unique
+	AccountID string `pb:"1" json:"account_id"`
+	// Name is the name of the account.
+	Name string `pb:"2" json:"name"`
+	// HolderID is the ID of the holder of the account.
+	HolderID string `pb:"3" json:"holder_id"`
+	// HolderType is the type of the holder of the account.
+	HolderType core.Entity `pb:"4" json:"holder_type"`
+	// State is the state of the account.
+	State AccountState `pb:"5" json:"state"`
+	// SubState is the sub-state of the account which may contain extra
+	// restrictions.
+	SubState AccountSubState `pb:"6" json:"sub_state"`
+	// AccruedInterest is the amount of interest accrued.
+	AccruedInterest core.Amount `pb:"7" json:"accrued_interest"`
+	// AccruedPenalty is the amount of penalty accrued.
+	AccruedPenalty core.Amount `pb:"8" json:"accrued_penalty"`
+	// ActivationTransactionID is the ID of the transaction that activated the
+	// account.
+	ActivationTransactionID string `pb:"9" json:"activation_transaction_id"`
+	// ArrearsTolerancePeriod is the period of tolerance for arrears.
+	ArrearsTolerancePeriod int `pb:"10" json:"arrears_tolerance_period"`
+	// Assets is a list of assets associated with the account.
+	Assets []Asset `pb:"11" json:"assets"`
+	// Guarantors is a list of guarantors associated with the account.
+	Guarantors []Guarantor `pb:"12" json:"guarantors"`
+	// AssignedBranchID is the ID of the branch the account is assigned to.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "branches.Branch",
+	//         FieldName:  "BranchID",
+	// }
+	AssignedBranchID string `pb:"13" json:"assigned_branch_id"`
+	// AssignedCentreID is the ID of the centre the account is assigned to.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "centres.Centre",
+	//         FieldName:  "CentreID",
+	// }
+	AssignedCentreID string `pb:"14" json:"assigned_centre_id"`
+	// AssignedUserID is the ID of the user the account is assigned to.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "users.User",
+	//         FieldName:  "UserID",
+	// }
+	AssignedUserID string `pb:"15" json:"assigned_user_id"`
+	// Balances is the balance details for this loan account.
+	Balances Balances `pb:"16" json:"balances"`
+	// RevolvingAccountID is the ID of the revolving account the account is
+	// registered to.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "revolving.Account",
+	//         FieldName:  "AccountID",
+	// }
+	RevolvingAccountID string `pb:"17" json:"revolving_account_id"`
+	// CurrencyCode is the currency code of the account.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "currencies.Currency",
+	//         FieldName:  "Code",
+	// }
+	CurrencyCode string `pb:"18" json:"currency_code"`
+	// DaysInArrears is the number of days in arrears.
+	DaysInArrears int `pb:"19" json:"days_in_arrears"`
+	// DaysLate is the number of days payment is late.
+	DaysLate int `pb:"20" json:"days_late"`
+	// DisbursementDetails is the details of the disbursement.
+	DisbursementDetails DisbursementDetails `pb:"21" json:"disbursement_details"`
+	// FuturePaymentsAcceptance is the settings for acceptance of future
+	// payments.
+	FuturePaymentsAcceptance AccountFuturePaymentsAcceptance `pb:"22" json:"future_payments_acceptance"`
+	// InterestCommission is the value of the interest booked by the
+	// organization from the accounts funded by investors.
+	InterestCommission core.Amount `pb:"23" json:"interest_commission"`
+	// InterestFromArrearsAccrued is the amount of interest accrued from
+	// arrears.
+	InterestFromArrearsAccrued core.Amount `pb:"24" json:"interest_from_arrears_accrued"`
+	// LatePaymentsRecalculationMethod is the method used to calculate late
+	// payments.
+	LatePaymentsRecalculationMethod AccountLatePaymentsRecalculationMethod `pb:"25" json:"late_payments_recalculation_method"`
+	// Amount is the amount of loan for the account.
+	Amount core.Amount `pb:"26" json:"amount"`
+	// LockedOperations is the list of operations that are locked.
+	LockedOperations []LockedOperations `pb:"27" json:"locked_operations"`
+	// MigrationEventID is the ID of the migration event that created the
+	// account.
+	MigrationEventID string `pb:"28" json:"migration_event_id"`
+	// Notes is the notes of the account.
+	Notes string `pb:"29" json:"notes"`
+	// OriginalAccountID is the ID of the original account before rescheduling
+	// or refinancing.
+	//
+	// +gunk xo.Nullable(true)
+	// +gunk xo.Ref{
+	//         TypeSuffix: "loans.Account",
+	//         FieldName:  "AccountID",
+	// }
+	OriginalAccountID string `pb:"30" json:"original_account_id"`
+	// PaymentHolidaysAccruedInterest is the amount of interest accrued on
+	// payment holidays.
+	PaymentHolidaysAccruedInterest core.Amount `pb:"31" json:"payment_holidays_accrued_interest"`
+	// PaymentMethod is the payment method of the account.
+	PaymentMethod AccountPaymentMethod `pb:"32" json:"payment_method"`
+	// ProductID is the ID of the product the account is registered to.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "products.LoanProduct",
+	//         FieldName:  "ProductID",
+	// }
+	ProductID string `pb:"33" json:"product_id"`
+	// RescheduledAccountID is the ID of the rescheduled account.
+	//
+	// +gunk xo.Nullable(true)
+	// +gunk xo.Ref{
+	//         TypeSuffix: "loans.Account",
+	//         FieldName:  "AccountID",
+	// }
+	RescheduledAccountID string `pb:"34" json:"rescheduled_account_id"`
+	// Settings is the settings applied to the loan product.
+	Settings Settings `pb:"35" json:"settings"`
+	// SettlementAccountID is the ID of the settlement account.
+	//
+	// +gunk xo.Nullable(true)
+	// +gunk xo.Ref{
+	//         TypeSuffix: "loans.Account",
+	//         FieldName:  "AccountID",
+	// }
+	SettlementAccountID string `pb:"36" json:"settlement_account_id"`
+	// TaxRate is the tax rate of the account.
+	TaxRate float64 `pb:"37" json:"tax_rate"`
+	// Tranches is a list of disbursement tranches available for the account.
+	Tranches []Tranche `pb:"38" json:"tranches"`
+	// ApproveTime is the time the account was approved.
+	ApproveTime time.Time `pb:"39" json:"approve_time"`
+	// CloseTime is the time the account was closed.
+	CloseTime time.Time `pb:"40" json:"close_time"`
+	// CreateTime is the time the account was created.
+	CreateTime time.Time `pb:"41" json:"create_time"`
+	// AppraiseTime is the time the account was last appraised.
+	AppraiseTime time.Time `pb:"42" json:"appraise_time"`
+	// InterestApplyTime is the time interest was last applied.
+	InterestApplyTime time.Time `pb:"43" json:"interest_apply_time"`
+	// InterestReviewTime is the time the interest was last reviewed.
+	InterestReviewTime time.Time `pb:"44" json:"interest_review_time"`
+	// LockTime is the time the account was locked.
+	LockTime time.Time `pb:"45" json:"lock_time"`
+	// UpdateTime is the time the loan was last updated.
+	UpdateTime time.Time `pb:"46" json:"update_time"`
+	// ArrearsSetTime is the time the account was last set to standing.
+	ArrearsSetTime time.Time `pb:"47" json:"arrears_set_time"`
+	// TaxRateReviewTime is the time the tax rate was last reviewed.
+	TaxRateReviewTime time.Time `pb:"48" json:"tax_rate_review_time"`
+	// TerminateTime is the time the account was terminated.
+	TerminateTime time.Time `pb:"49" json:"terminate_time"`
+}
+
+// ActionDetails is a structure that holds details about an action.
+//
+// +gunk xo.Ignore(true)
+type ActionDetails struct {
+	// Notes is the notes associated with the action.
+	Notes string `pb:"1" json:"notes"`
+}
+
+// Tranche is a structure that holds details about a tranche, allowing partial
+// approval of loans and the loan to be extended.
+//
+// +gunk xo.Ignore(true)
+type Tranche struct {
+	// Amount is the amount of the tranche available for disbursement.
+	Amount core.Amount `pb:"1" json:"amount"`
+	// DisbursementDetails is the details of the disbursement.
+	DisbursementDetails TrancheDisbursementDetails `pb:"2" json:"disbursement_details"`
+	// Fees is the list of fees for the tranche.
+	Fees []CustomPredefinedFee `pb:"3" json:"fees"`
+	// TrancheNumber is the index of the tranche.
+	TrancheNumber int `pb:"4" json:"tranche_number"`
+}
+
+// Transfer is a structure that holds details about a transfer.
+//
+// +gunk xo.Ignore(true)
+type Transfer struct {
+	// InternalTransfer is the flag that indicates if the transfer is internal,
+	// between loans and deposit accounts.
+	InternalTransfer bool `pb:"1" json:"internal_transfer"`
+	// TargetDepositAccountID is the ID of the target deposit account.
+	TargetDepositAccountID string `pb:"2" json:"target_deposit_account_id"`
+	// Transaction is the details of the transaction.
+	Transaction Transaction `pb:"3" json:"transaction"`
+}
+
+// PaymentAmounts is a list of amounts paid.
+//
+// +gunk xo.Ignore(true)
+type PaymentAmounts struct {
+	// Fees is the amount of fees paid.
+	Fees core.Amount `pb:"1" json:"fees"`
+	// Interest is the amount of interest paid.
+	Interest core.Amount `pb:"2" json:"interest"`
+	// Penalty is the amount of penalty paid.
+	Penalty core.Amount `pb:"3" json:"penalty"`
+}
+
+// RefinanceDisbursementDetails is the details of the disbursement of a
+// refinanced account.
+//
+// +gunk xo.Ignore(true)
+type RefinanceDisbursementDetails struct {
+	// ExpectedDisburseTime is the expected disbursement time of the refinanced
+	// account.
+	ExpectedDisburseTime time.Time `pb:"1" json:"expected_disburse_time"`
+	// FirstRepayTime is the first repayment time of the refinanced account.
+	FirstRepayTime time.Time `pb:"2" json:"first_repay_time"`
+	// Fees is the list of fees for the refinanced account.
+	Fees []CustomPredefinedFee `pb:"3" json:"fees"`
+}
+
+// RefinanceAccountAction is the refinance action to perform on a loan account.
+//
+// +gunk xo.Ignore(true)
+type RefinanceAccountAction struct {
+	// KeepSameAccountID is the flag to keep the same account ID.
+	KeepSameAccountID bool `pb:"1" json:"keep_same_account_id"`
+	// Account is the settings for the refinanced account.
+	Account RefinanceAccount `pb:"2" json:"account"`
+	// TopUpAmount is the amount to top up.
+	TopUpAmount core.Amount `pb:"3" json:"top_up_amount"`
+	// WriteOffAmounts is the amount to write off.
+	WriteOffAmounts RefinanceWriteOffAmounts `pb:"4" json:"write_off_amounts"`
+}
+
+// RefinanceAccount is the settings for the refinanced account.
+//
+// +gunk xo.Ignore(true)
+type RefinanceAccount struct {
+	// AccountID is the ID of the refinanced account.
+	AccountID string `pb:"1" json:"account_id"`
+	// Name is the name of the refinanced account.
+	Name string `pb:"2" json:"name"`
+	// ProductID is the ID of the product of the refinanced account.
+	ProductID string `pb:"3" json:"product_id"`
+	// AccountArrearsSettings is the settings for the account arrears.
+	AccountArrearsSettings RestructureAccountArrearsSettings `pb:"4" json:"account_arrears_settings"`
+	// DisbursementDetails is the details of the disbursement.
+	DisbursementDetails RefinanceDisbursementDetails `pb:"5" json:"disbursement_details"`
+	// Guarantors is the list of guarantors for the refinanced account.
+	Guarantors []Guarantor `pb:"6" json:"guarantors"`
+	// InterestSettings is the settings for interest.
+	InterestSettings RestructureInterestSettings `pb:"7" json:"interest_settings"`
+	// PenaltySettings is the settings for the penalty.
+	PenaltySettings RestructurePenaltySettings `pb:"8" json:"penalty_settings"`
+	// PrincipalPaymentSettings is the settings for the principal payment.
+	PrincipalPaymentSettings RestructurePrincipalPaymentSettings `pb:"9" json:"principal_payment_settings"`
+	// ScheduleSettings is the settings for the schedule.
+	ScheduleSettings RestructureScheduleSettings `pb:"10" json:"schedule_settings"`
+	// Notes is the notes of the refinanced account.
+	Notes string `pb:"11" json:"notes"`
+}
+
+// RestructureScheduleSettings is the settings for a restructure schedule.
+//
+// +gunk xo.Ignore(true)
+type RestructureScheduleSettings struct {
+	// FixedDaysOfMonth is the list of days of the month to repay.
+	FixedDaysOfMonth []int `pb:"1" json:"fixed_days_of_month"`
+	// GracePeriod is the grace period of the restructure schedule.
+	GracePeriod int `pb:"2" json:"grace_period"`
+	// PeriodicPayment is the amount to periodically pay.
+	PeriodicPayment core.Amount `pb:"3" json:"periodic_payment"`
+	// NumberOfPreviewedInstallments is the number of previewed installments.
+	NumberOfPreviewedInstallments int `pb:"4" json:"number_of_previewed_installments"`
+	// RepaymentInstallments is the number of installments to repay.
+	RepaymentInstallments int `pb:"5" json:"repayment_installments"`
+	// RepaymentPeriod is the duration between repayments.
+	RepaymentPeriod time.Duration `pb:"6" json:"repayment_period"`
+}
+
+// RefinanceWriteOffAmounts is the amount to write off for the refinanced
+// account.
+//
+// +gunk xo.Ignore(true)
+type RefinanceWriteOffAmounts struct {
+	// Fee is the write-off amount for fee.
+	Fee core.Amount `pb:"1" json:"fee"`
+	// Interest is the write-off amount for interest.
+	Interest core.Amount `pb:"2" json:"interest"`
+	// Penalty is the write-off amount for penalty.
+	Penalty core.Amount `pb:"3" json:"penalty"`
+}
+
+// RescheduleDisbursementDetails is the details of the disbursement of a
+// rescheduled account.
+//
+// +gunk xo.Ignore(true)
+type RescheduleDisbursementDetails struct {
+	// FirstRepayTime is the first repayment time of the rescheduled
+	// account.
+	FirstRepayTime time.Time `pb:"1" json:"first_repay_time"`
+}
+
+// RescheduleAccount is the settings for the rescheduled account.
+//
+// +gunk xo.Ignore(true)
+type RescheduleAccount struct {
+	// AccountID is the ID of the rescheduled account.
+	AccountID string `pb:"1" json:"account_id"`
+	// Name is the name of the rescheduled account.
+	Name string `pb:"2" json:"name"`
+	// ProductID is the ID of the product of the rescheduled account.
+	ProductID string `pb:"3" json:"product_id"`
+	// AccountArrearsSettings is the account arrears settings for the
+	// rescheduled account.
+	AccountArrearsSettings RestructureAccountArrearsSettings `pb:"4" json:"account_arrears_settings"`
+	// DisbursementDetails is the details of the disbursement.
+	DisbursementDetails RescheduleDisbursementDetails `pb:"5" json:"disbursement_details"`
+	// Guarantors is the list of guarantors for the rescheduled account.
+	Guarantors []Guarantor `pb:"6" json:"guarantors"`
+	// InterestCommission is the interest commission for the rescheduled
+	// account.
+	InterestCommission core.Amount `pb:"7" json:"interest_commission"`
+	// InterestSettings is the interest settings for the rescheduled
+	// account.
+	InterestSettings RestructureInterestSettings `pb:"8" json:"interest_settings"`
+	// PenaltySettings is the penalty settings for the rescheduled
+	// account.
+	PenaltySettings RestructurePenaltySettings `pb:"9" json:"penalty_settings"`
+	// PrincipalPaymentSettings is the principal payment settings for the
+	// rescheduled account.
+	PrincipalPaymentSettings RestructurePrincipalPaymentSettings `pb:"10" json:"principal_payment_settings"`
+	// ScheduleSettings is the schedule settings for the rescheduled
+	// account.
+	ScheduleSettings RestructureScheduleSettings `pb:"11" json:"schedule_settings"`
+	// Notes is the human-readable notes for the rescheduled loan account.
+	Notes string `pb:"12" json:"notes"`
+}
+
+// RescheduleAccountAction is the action to reschedule a loan account.
+//
+// +gunk xo.Ignore(true)
+type RescheduleAccountAction struct {
+	// KeepSameAccountID is the flag to keep the same account ID.
+	KeepSameAccountID bool `pb:"1" json:"keep_same_account_id"`
+	// Account is the details of rescheduled account.
+	Account RescheduleAccount `pb:"2" json:"account"`
+	// WriteOffAmounts is the amounts written off in the rescheduled loan
+	// account.
+	WriteOffAmounts RescheduleWriteOffAmounts `pb:"3" json:"write_off_amounts"`
+}
+
+// RescheduleWriteOffAmounts is the write-off amounts on the rescheduled loan
+// account.
+//
+// +gunk xo.Ignore(true)
+type RescheduleWriteOffAmounts struct {
+	// Fee is the write-off amount for fee.
+	Fee core.Amount `pb:"1" json:"fee"`
+	// Interest is the write-off amount for interest.
+	Interest core.Amount `pb:"2" json:"interest"`
+	// Penalty is the write-off amount for penalty.
+	Penalty core.Amount `pb:"3" json:"penalty"`
+	// Principal is the write-off amount for principal.
+	Principal core.Amount `pb:"4" json:"principal"`
+}
+
+// RestructureAccountArrearsSettings is the arrears settings on the
+// restructured account.
+//
+// +gunk xo.Ignore(true)
+type RestructureAccountArrearsSettings struct {
+	// TolerancePercentageOfOutstandingPrincipal is the tolerance percentage of
+	// outstanding principal.
+	TolerancePercentageOfOutstandingPrincipal float64 `pb:"1" json:"tolerance_percentage_of_outstanding_principal"`
+	// TolerancePeriod is the arrears tolerance period.
+	TolerancePeriod int `pb:"2" json:"tolerance_period"`
+}
+
+// RestructureInterestSettings is the interest settings on the restructured
+// account.
+//
+// +gunk xo.Ignore(true)
+type RestructureInterestSettings struct {
+	// Rate is the interest rate for the restructured account.
+	Rate float64 `pb:"1" json:"rate"`
+	// Spread is the interest spread for the restructured account.
+	Spread float64 `pb:"2" json:"spread"`
+}
+
+// RestructurePenaltySettings is the penalty settings on the restructured
+// account.
+//
+// +gunk xo.Ignore(true)
+type RestructurePenaltySettings struct {
+	// PenaltyRate is the penalty rate for the restructured loan account.
+	PenaltyRate float64 `pb:"1" json:"penalty_rate"`
+}
+
+// RestructurePrincipalPaymentSettings is the principal payment settings on the
+// restructured account.
+//
+// +gunk xo.Ignore(true)
+type RestructurePrincipalPaymentSettings struct {
+	// Amount is the fixed principal payment amount.
+	Amount core.Amount `pb:"1" json:"amount"`
+	// Percentage is the principal payment percentage.
+	Percentage float64 `pb:"2" json:"percentage"`
+}
+
+// TrancheDisbursementDetails is the disbursement details regarding a loan
+// tranche.
+//
+// +gunk xo.Ignore(true)
+type TrancheDisbursementDetails struct {
+	// TransactionID is the ID of the disbursement transaction.
+	TransactionID string `pb:"1" json:"transaction_id"`
+	// ExpectedDisburseTime is the expected time of disbursement.
+	ExpectedDisburseTime time.Time `pb:"2" json:"expected_disburse_time"`
+}
+
+// Transaction is the details for a loan transaction.
+//
+// +gunk xo.Ignore(true)
+type Transaction struct {
+	// ChannelID is the ID of the channel that the transaction was performed on.
+	ChannelID string `pb:"1" json:"channel_id"`
+}

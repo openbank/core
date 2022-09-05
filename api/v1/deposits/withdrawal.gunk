@@ -1,0 +1,74 @@
+package deposits
+
+import (
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+)
+
+// AccountDetails is the information of the account involved in a transaction.
+//
+// +gunk xo.Ignore(true)
+type AccountDetails struct {
+	// AccountID is the account ID details for the transaction.
+	AccountID string `pb:"1" json:"account_id"`
+	// IDType is the type of the account ID.
+	IDType string `pb:"2" json:"id_type"`
+	// Name is the name of the account.
+	Name string `pb:"3" json:"name"`
+	// CurrencyCode is the ISO3 currency code of the currency being used by the
+	// account.
+	CurrencyCode string `pb:"4" json:"currency_code"`
+	// Bic is the business identification code of the financial institution
+	// servicing the transaction.
+	Bic string `pb:"5" json:"bic"`
+}
+
+// PaymentIdentification is the payment identification details.
+//
+// +gunk xo.Ignore(true)
+type PaymentIdentification struct {
+	// EndToEndID is the ID assigned by the initiating party of the
+	// transaction.
+	EndToEndID string `pb:"1" json:"end_to_end_id"`
+	// InstructionID is the ID of the payment instruction.
+	InstructionID string `pb:"2" json:"instruction_id"`
+	// TransactionID is the ID assigned by the initiating party for the
+	// transaction.
+	TransactionID string `pb:"3" json:"transaction_id"`
+}
+
+// RemittanceInformation is information specifying the payment items intended
+// to esttle.
+//
+// +gunk xo.Ignore(true)
+type RemittanceInformation struct {
+	// Reference is the reference of the creditor's underlying documents.
+	Reference string `pb:"1" json:"reference"`
+	// ReferenceIssuer is the entity that assigns the reference type.
+	ReferenceIssuer string `pb:"2" json:"reference_issuer"`
+	// ReferenceType is the type of the creditor reference.
+	ReferenceType string `pb:"3" json:"reference_type"`
+	// Other is other, unstructured informatino about the payment.
+	Other string `pb:"4" json:"other"`
+}
+
+// Payment is the payment information and account identification details.
+//
+// +gunk xo.Ignore(true)
+type Payment struct {
+	// Creditor is the payment creditor.
+	Creditor AccountDetails `pb:"1" json:"creditor"`
+	// Debtor is the payment debtor.
+	Debtor AccountDetails `pb:"2" json:"debtor"`
+	// Identification is the identifiers for the payment.
+	Identification PaymentIdentification `pb:"3" json:"identification"`
+	// ServiceLevel is the service level under which the transaction should be
+	// processed.
+	ServiceLevel string `pb:"4" json:"service_level"`
+	// Remittance is information about the payment items that are intended to
+	// match the items of the payment.
+	Remittance RemittanceInformation `pb:"5" json:"remittance"`
+}

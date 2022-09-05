@@ -1,0 +1,58 @@
+// Package jobs allows running of EOD (End of Day) and hourly jobs.
+// This service is available only if manual eod processing is enabled.
+//
+// +gunk proto.Package("openbank.core.v1.jobs")
+// +gunk java.Package("openbank.core.v1.jobs")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Jobs",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package jobs
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// Job is a job that has been triggered to be completed asynchronously, such as
+// hourly or at the end of day.
+//
+// +gunk xo.Ignore(true)
+type Job struct {
+	// Status is the status of the job.
+	Status core.Status `pb:"1" json:"status"`
+	// StartTime is the time the job started.
+	StartTime time.Time `pb:"2" json:"start_time"`
+}
+
+// JobsService is the service for recurring jobs.
+type JobsService interface {
+	// RunEOD runs end of day processing jobs.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/jobs/eod",
+	// }
+	RunEOD() Job
+
+	// RunHourly runs hourly processing jobs.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/jobs/hourly",
+	// }
+	RunHourly() Job
+}

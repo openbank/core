@@ -1,0 +1,158 @@
+// Package centres allows retrieving centres information.
+//
+// +gunk proto.Package("openbank.core.v1.centres")
+// +gunk java.Package("openbank.core.v1.centres")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Centres",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package centres
+
+import (
+	core "bnk.to/core/api/v1"
+	org "bnk.to/core/api/v1/org"
+	"encoding/json"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// Centre is a common meeting area that credit officers and the individual
+// and group clients go to. Each centre is assigned to a branch (a branch can
+// have multiple centres) and might have a specific meeting day and location.
+type Centre struct {
+	// CentreID is the ID of the centre.
+	//
+	// +gunk xo.Unique
+	CentreID string `pb:"1" json:"centre_id"`
+	// Info is the contact information of the branch.
+	Info core.ContactInfo `pb:"2" json:"info"`
+	// Notes is extra human-readable notes about this centre.
+	Notes string `pb:"3" json:"notes"`
+	// AssignedBranchID is the ID of the branch this centre is assigned to.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "branches.Branch",
+	//         FieldName:  "BranchID",
+	// }
+	AssignedBranchID string `pb:"4" json:"assigned_branch_id"`
+	// MeetingDay is the day of the week when repayments are collected,
+	// influences repayments schedule, and all repayments are update to this
+	// day of the week.
+	MeetingDay org.Day `pb:"5" json:"meeting_day"`
+	// State is the state of the centre.
+	State core.State `pb:"6" json:"state"`
+	// CreateTime is the time the centre was created.
+	CreateTime time.Time `pb:"7" json:"create_time"`
+	// UpdateTime is the time the centre is last modified.
+	UpdateTime time.Time `pb:"8" json:"update_time"`
+	// Fields is the custom fields for the branch.
+	Fields json.RawMessage `pb:"9" json:"fields"`
+}
+
+// CreateCentreRequest is the request to create a new centre.
+type CreateCentreRequest struct {
+	// Body is the centre to create.
+	Body Centre `pb:"1" json:"body"`
+}
+
+// ListCentresRequest is the request to list centres.
+type ListCentresRequest struct {
+	// PageToken is the page token to use for the next page.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of centres to return.
+	PageSize int `pb:"2" json:"page_size"`
+	// Filter is the filter to apply to the list.
+	Filter string `pb:"3" json:"filter"`
+	// OrderBy is the field to order the list by.
+	OrderBy string `pb:"4" json:"order_by"`
+}
+
+// ListCentresResponse is the response for listing centres.
+type ListCentresResponse struct {
+	// Total is the total number of centres matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of centres remaining in the list, including the
+	// centres in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Centres is the list of centres.
+	Centres []Centre `pb:"3" json:"centres"`
+	// NextPageToken is the page token for the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetCentreRequest is the request to retrieve a centre.
+type GetCentreRequest struct {
+	// CentreID is the ID of the centre to retrieve.
+	CentreID string `pb:"1" json:"centre_id"`
+}
+
+// UpdateCentreRequest is the request to update a centre.
+type UpdateCentreRequest struct {
+	// CentreID is the ID of the centre to update.
+	CentreID string `pb:"1" json:"centre_id"`
+	// Body is the new value of the centre.
+	Body Centre `pb:"2" json:"body"`
+}
+
+// DeleteCentreRequest is the request to delete a centre.
+type DeleteCentreRequest struct {
+	// CentreID is the ID of the centre to delete.
+	CentreID string `pb:"1" json:"centre_id"`
+}
+
+// CentresService is the service for querying centres.
+type CentresService interface {
+	// CreateCentre creates a new centre.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/centres",
+	//         Body:   "Body",
+	// }
+	CreateCentre(CreateCentreRequest) Centre
+
+	// ListCentres lists centres.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/centres",
+	// }
+	ListCentres(ListCentresRequest) ListCentresResponse
+
+	// GetCentre retrieves the specified centre.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/centres/{CentreID}",
+	// }
+	GetCentre(GetCentreRequest) Centre
+
+	// UpdateCentre updates the configuration of a centre.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/centres/{CentreID}",
+	//         Body:   "Body",
+	// }
+	UpdateCentre(UpdateCentreRequest) Centre
+
+	// DeleteCentre deletes the specified centre.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/centres/{CentreID}",
+	// }
+	DeleteCentre(DeleteCentreRequest)
+}

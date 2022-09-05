@@ -1,0 +1,500 @@
+// Package deposits.
+//
+// +gunk proto.Package("openbank.core.v1.deposits")
+// +gunk java.Package("openbank.core.v1.deposits")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Deposits",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package deposits
+
+import (
+	core "bnk.to/core/api/v1"
+	cards "bnk.to/core/api/v1/cards"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// BlockState is the current status of a fund block.
+type BlockState int
+
+const (
+	Pending BlockState = iota
+	Seized
+	Removed
+	PartiallySeized
+)
+
+// FundBlock is a block of funds on a deposit account.
+// These sends can then later be seized.
+type FundBlock struct {
+	// BlockID is the ID of the fund block.
+	//
+	// +gunk xo.Unique
+	BlockID string `pb:"1" json:"block_id"`
+	// AccountID is the ID of the deposit account associated with the blocked
+	// funds.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "deposits.Account",
+	//         FieldName:  "AccountID",
+	// }
+	AccountID string `pb:"2" json:"account_id"`
+	// Amount is the amount of funds that are blocked.
+	Amount core.Amount `pb:"3" json:"amount"`
+	// SeizedAmount is the amount of the blocked funds that have been seized.
+	SeizedAmount core.Amount `pb:"4" json:"seized_amount"`
+	// State is the state of the block fund.
+	State BlockState `pb:"5" json:"state"`
+	// Notes is extra human-readable notes about the block fund.
+	Notes string `pb:"6" json:"notes"`
+	// CreateTime is the time when the block fund was created.
+	CreateTime time.Time `pb:"7" json:"create_time"`
+	// UpdateTime is the time when the block fund was last updated.
+	UpdateTime time.Time `pb:"8" json:"update_time"`
+}
+
+// CreateAccountRequest is the request for creating a new deposit account.
+type CreateAccountRequest struct {
+	// Body is the deposit account to create.
+	Body Account `pb:"1" json:"body"`
+}
+
+// ListAccountsRequest is the request for listing deposit accounts.
+type ListAccountsRequest struct {
+	// PageToken is the page token of the page to retrieve.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of accounts to retrieve per page.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order the results by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the list.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListAccountsResponse is the response for listing deposit accounts.
+type ListAccountsResponse struct {
+	// Total is the total number of accounts matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of accounts remaining in the list, including the
+	// accounts in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Accounts is the list of deposit accounts retrieved.
+	Accounts []Account `pb:"3" json:"accounts"`
+	// NextPageToken is the page token of the next page of results.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetAccountRequest is the request for retrieving a deposit account.
+type GetAccountRequest struct {
+	// AccountID is the ID of the deposit account to retrieve.
+	AccountID string `pb:"1" json:"account_id"`
+}
+
+// UpdateAccountRequest is the request for updating a deposit account.
+type UpdateAccountRequest struct {
+	// AccountID is the ID of the deposit account to update.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the updated deposit account.
+	Body Account `pb:"2" json:"body"`
+}
+
+// CreateFundBlockRequest is the request for creating a new fund block.
+type CreateFundBlockRequest struct {
+	// AccountID is the ID of the deposit account to create the block fund for.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the block fund to create.
+	Body FundBlock `pb:"2" json:"body"`
+}
+
+// ListFundBlocksRequest is the request for listing fund blocks.
+type ListFundBlocksRequest struct {
+	// AccountID is the ID of the deposit account to list the block funds for.
+	AccountID string `pb:"1" json:"account_id"`
+	// PageToken is the page token of the page to retrieve.
+	PageToken string `pb:"2" json:"page_token"`
+	// PageSize is the number of fund blocks to retrieve per page.
+	PageSize int `pb:"3" json:"page_size"`
+	// OrderBy is the field to order the results by.
+	OrderBy string `pb:"4" json:"order_by"`
+	// Filter is the filter to apply to the list.
+	Filter string `pb:"5" json:"filter"`
+}
+
+// UpdateFundBlockRequest is the request for updating a fund block.
+type UpdateFundBlockRequest struct {
+	// AccountID is the ID of the deposit account to update the fund block for.
+	AccountID string `pb:"1" json:"account_id"`
+	// BlockID is the ID of the fund block to update.
+	BlockID string `pb:"2" json:"block_id"`
+	// Body is the updated fund block.
+	Body FundBlock `pb:"3" json:"body"`
+}
+
+// DeleteFundBlockRequest is the request to unblock funds from a deposit
+// account.
+type DeleteFundBlockRequest struct {
+	// AccountID is the ID of the deposit account to unblock funds from.
+	AccountID string `pb:"1" json:"account_id"`
+	// BlockID is the ID of the blocked fund to unblock.
+	BlockID string `pb:"2" json:"block_id"`
+}
+
+// ListFundBlocksResponse is the response for listing fund blocks.
+type ListFundBlocksResponse struct {
+	// Total is the total number of blocks matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of blocks remaining in the list, including the
+	// blocks in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Blocks is the list of fund blocks retrieved.
+	Blocks []FundBlock `pb:"3" json:"blocks"`
+	// NextPageToken is the page token of the next page of results.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetFundBlockRequest is the request for retrieving the specified block funds.
+type GetFundBlockRequest struct {
+	// AccountID is the ID of the deposit account to retrieve block funds for.
+	AccountID string `pb:"1" json:"account_id"`
+	// BlockID is the ID of the fund block to retrieve.
+	BlockID string `pb:"2" json:"block_id"`
+}
+
+// CreateCardRequest is the request for creating a new card.
+type CreateCardRequest struct {
+	// AccountID is the ID of the deposit account to create a card for.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the card to create.
+	Body cards.Card `pb:"2" json:"body"`
+}
+
+// ListCardsRequest is the request for listing cards.
+type ListCardsRequest struct {
+	// AccountID is the ID of the deposit account to list cards for.
+	AccountID string `pb:"1" json:"account_id"`
+	// PageToken is the page token of the page to retrieve.
+	PageToken string `pb:"2" json:"page_token"`
+	// PageSize is the number of cards to retrieve per page.
+	PageSize int `pb:"3" json:"page_size"`
+	// OrderBy is the field to order the results by.
+	OrderBy string `pb:"4" json:"order_by"`
+	// Filter is the filter to apply to the list.
+	Filter string `pb:"5" json:"filter"`
+}
+
+// ListCardsResponse is the response for listing cards.
+type ListCardsResponse struct {
+	// Total is the total number of cards matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of cards remaining in the list, including the
+	// cards in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Cards is the list of cards retrieved.
+	Cards []cards.Card `pb:"3" json:"cards"`
+	// NextPageToken is the page token of the next page of results.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetCardRequest is the request for retrieving a card.
+type GetCardRequest struct {
+	// AccountID is the ID of the deposit account to retrieve a card for.
+	AccountID string `pb:"1" json:"account_id"`
+	// CardID is the ID of the card to retrieve.
+	CardID string `pb:"2" json:"card_id"`
+}
+
+// DeleteCardRequest is the request for deleting a card.
+type DeleteCardRequest struct {
+	// AccountID is the ID of the deposit account to delete the card from.
+	AccountID string `pb:"1" json:"account_id"`
+	// CardID is the ID of the card to delete.
+	CardID string `pb:"2" json:"card_id"`
+}
+
+// GetDocumentRequest is the request for retrieving the deposit account as a
+// document.
+type GetDocumentRequest struct {
+	// AccountID is the ID of the deposit account.
+	AccountID string `pb:"1" json:"account_id"`
+	// TemplateID is the ID of the template to use for the document.
+	TemplateID string `pb:"2" json:"template_id"`
+	// StartTime is the start time of the transactions to generate transaction
+	// history for.
+	StartTime time.Time `pb:"3" json:"start_time"`
+	// EndTime is the end time of the transactions to generate transaction
+	// history for.
+	EndTime time.Time `pb:"4" json:"end_time"`
+}
+
+// GetLoanAccountsRequest is the request for retrieving loans for a deposit account.
+type GetLoanAccountsRequest struct {
+	// AccountID is the ID of the deposit account to retrieve the loans for.
+	AccountID string `pb:"1" json:"account_id"`
+}
+
+// GetLoanAccountsResponse is the response for retrieving loans for a deposit account.
+type GetLoanAccountsResponse struct {
+	// AccountIDs is the list of IDs of associated loan accounts.
+	AccountIDs []string `pb:"1" json:"account_ids"`
+}
+
+// AccruedInterest is the accrued interest information.
+//
+// +gunk xo.Ignore(true)
+type AccruedInterest struct {
+	// IsPaymentHolidays is the flag to indicate that the interest accrues
+	// on payment holidays.
+	IsPaymentHolidays bool `pb:"1" json:"is_payment_holidays"`
+	// PaymentHolidaysRate is the amount of the Payment Holidays interest to
+	// apply.
+	PaymentHolidaysRate float64 `pb:"2" json:"payment_holidays_rate"`
+	// Notes is the extra notes on the accrued interest.
+	Notes string `pb:"3" json:"notes"`
+	// StartTime is the time when the interest begins to accrue.
+	StartTime time.Time `pb:"4" json:"start_time"`
+}
+
+// ApplyInterestRequest is the request for applying a accrued interest to a
+// deposit account.
+type ApplyInterestRequest struct {
+	// AccountID is the ID of the deposit account to apply interest to.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the applied interest information.
+	Body AccruedInterest `pb:"2" json:"body"`
+}
+
+// ReopenDetails is the details for reopening a deposit account.
+//
+// +gunk xo.Ignore(true)
+type ReopenDetails struct {
+	// Notes is the extra notes on the reopening.
+	Notes string `pb:"1" json:"notes"`
+}
+
+// ReopenRequest is the request for reopening a deposit account.
+type ReopenRequest struct {
+	// AccountID is the ID of the deposit account to reopen.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details for reopening the deposit account.
+	Body ReopenDetails `pb:"2" json:"body"`
+}
+
+// NewMaturity is the information for a new deposit account maturity.
+//
+// +gunk xo.Ignore(true)
+type NewMaturity struct {
+	// MatureTime is the time when the deposit account will begin.
+	MatureTime time.Time `pb:"1" json:"mature_time"`
+	// Notes is the extra notes on the maturity.
+	Notes string `pb:"2" json:"notes"`
+}
+
+// MatureRequest is the request for starting the maturity period of a
+// deposit account.
+type MatureRequest struct {
+	// AccountID is the ID of the deposit account.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the information for the new maturity.
+	Body NewMaturity `pb:"2" json:"body"`
+}
+
+// DeleteAccountRequest is the request for deleting a deposit account.
+type DeleteAccountRequest struct {
+	// AccountID is the ID of the deposit account to delete.
+	AccountID string `pb:"1" json:"account_id"`
+}
+
+// UndoMaturityRequest is the request for undoing the maturity of a deposit
+// account.
+type UndoMaturityRequest struct {
+	// AccountID is the ID of the deposit account to undo the maturity for.
+	AccountID string `pb:"1" json:"account_id"`
+}
+
+// DepositsService is the service for managing deposit accounts.
+type DepositsService interface {
+	// CreateAccount creates a new deposit account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/deposits",
+	//         Body:   "Body",
+	// }
+	CreateAccount(CreateAccountRequest) Account
+
+	// ListAccounts lists a list of deposit accounts.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/deposits",
+	// }
+	ListAccounts(ListAccountsRequest) ListAccountsResponse
+
+	// GetAccount retrieves a specified deposit account.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/deposits/{AccountID}",
+	// }
+	GetAccount(GetAccountRequest) Account
+
+	// UpdateAccount updates a deposit account.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/accounts/deposits/{AccountID}",
+	//         Body:   "Body",
+	// }
+	UpdateAccount(UpdateAccountRequest) Account
+
+	// DeleteAccount deletes the deposit account.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/accounts/deposits/{AccountID}",
+	// }
+	DeleteAccount(DeleteAccountRequest)
+
+	// CreateFundBlock creates a new block fund for the deposit acount.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/deposits/{AccountID}/blocks",
+	//         Body:   "Body",
+	// }
+	CreateFundBlock(CreateFundBlockRequest) FundBlock
+
+	// ListFundBlocks lists the fund blocks for the deposit account.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/deposits/{AccountID}/blocks",
+	// }
+	ListFundBlocks(ListFundBlocksRequest) ListFundBlocksResponse
+
+	// GetFundBlock retrieves a specified fund block.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/deposits/{AccountID}/blocks/{BlockID}",
+	// }
+	GetFundBlock(GetFundBlockRequest) FundBlock
+
+	// UpdateFundBlock updates a fund block.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/accounts/deposits/{AccountID}/blocks/{BlockID}",
+	//         Body:   "Body",
+	// }
+	UpdateFundBlock(UpdateFundBlockRequest) FundBlock
+
+	// DeleteFundBlock unblocks a previously blocked fund on a deposit account.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/accounts/deposits/{AccountID}/blocks/{BlockID}",
+	// }
+	DeleteFundBlock(DeleteFundBlockRequest)
+
+	// CreateCard creates a new card for the deposit account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/deposits/{AccountID}/cards",
+	//         Body:   "Body",
+	// }
+	CreateCard(CreateCardRequest) cards.Card
+
+	// ListCards lists the cards for the deposit account.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/deposits/{AccountID}/cards",
+	// }
+	ListCards(ListCardsRequest) ListCardsResponse
+
+	// GetCard retrieves a specified card.
+	// To retrieve other information on the card, use the cards package under
+	// the Services section.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/deposits/{AccountID}/cards/{CardID}",
+	// }
+	GetCard(GetCardRequest) cards.Card
+
+	// DeleteCard deletes the card for the deposit account.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/accounts/deposits/{AccountID}/cards/{CardID}",
+	// }
+	DeleteCard(DeleteCardRequest)
+
+	// GetDocument generates a document for the deposit account with the
+	// specified template.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/deposits/{AccountID}/doc/{TemplateID}",
+	// }
+	GetDocument(GetDocumentRequest) core.File
+
+	// GetFundedAccounts retrieves the loan accounts which are funded by the
+	// deposit account.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/deposits/{AccountID}/funding",
+	// }
+	GetFundedAccounts(GetLoanAccountsRequest) GetLoanAccountsResponse
+
+	// ApplyInterest applies the accrued interest to the deposit account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/deposits/{AccountID}:applyInterest",
+	//         Body:   "Body",
+	// }
+	ApplyInterest(ApplyInterestRequest)
+
+	// ReopenAccount reopens a previously closed deposit account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/deposits/{AccountID}:reopen",
+	//         Body:   "Body",
+	// }
+	ReopenAccount(ReopenRequest)
+
+	// Mature starts the maturity period for the deposit account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/deposits/{AccountID}:mature",
+	//         Body:   "Body",
+	// }
+	Mature(MatureRequest)
+
+	// UndoMaturity undos the maturity period on a deposit account.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/accounts/deposits/{AccountID}:undoMaturity",
+	// }
+	UndoMaturity(UndoMaturityRequest)
+}

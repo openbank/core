@@ -1,0 +1,11 @@
+#!/bin/bash
+
+SRC=$(realpath $(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd))
+
+set -e
+
+pushd $SRC/.. &> /dev/null # Go to repo root
+
+go run ./scripts/oapi-merge -config ./api/v1/_gunk/docs/.config
+
+popd &> /dev/null

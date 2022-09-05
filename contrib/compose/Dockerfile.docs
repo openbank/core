@@ -1,0 +1,15 @@
+# syntax=docker/dockerfile:1
+FROM node:17-alpine
+
+RUN npm install -g pnpm
+
+COPY ./docs /root
+COPY ./api/v1 /root
+
+WORKDIR /root/docs
+
+RUN rm -rf build
+RUN pnpm install
+RUN pnpm build
+
+CMD ["sh", "-c", "pnpm preview"]

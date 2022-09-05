@@ -1,0 +1,181 @@
+// Package documents manages creating, retrieving, and deleting documents.
+//
+// +gunk proto.Package("openbank.core.v1.documents")
+// +gunk java.Package("openbank.core.v1.documents")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Documents",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package documents
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// Owner is the type of an entity owner.
+type Owner int
+
+const (
+	Client Owner = iota
+	Group
+	LoanProduct
+	SavingsProduct
+	Centre
+	Branch
+	User
+	LoanAccount
+	DepositAccount
+	IDDocument
+	LineOfCredit
+	GLJournalEntry
+
+	IDTemplate
+)
+
+// Document is the metadata information for a document created from uploaded
+// attachments.
+type Document struct {
+	// DocumentID is the document ID.
+	//
+	// +gunk xo.Unique
+	DocumentID string `pb:"1" json:"document_id"`
+	// Name is the name of the document.
+	Name string `pb:"2" json:"name"`
+	// Notes is the notes and details of the document.
+	Notes string `pb:"3" json:"notes"`
+	// OwnerID is the ID of the entity that owns this document. The Type of the
+	// entity is specified by the OwnerType field.
+	// TODO: Which table does this have a reference to.
+	OwnerID string `pb:"4" json:"owner_id"`
+	// OwnerType is the type of entity that owns the document.
+	OwnerType Owner `pb:"5" json:"owner_type"`
+	// TemplateID is the ID of the template the document was based on, if any.
+	//
+	// +gunk xo.Nullable(true)
+	TemplateID string `pb:"6" json:"template_id"`
+	// FileName is the original file name.
+	FileName string `pb:"7" json:"file_name"`
+	// Size is the size of the document in bytes.
+	Size int `pb:"8" json:"size"`
+	// CreateTime is the time the document was created.
+	CreateTime time.Time `pb:"9" json:"create_time"`
+	// ExpireTime is the time the document expires or become invalid, if any.
+	ExpireTime time.Time `pb:"10" json:"expire_time"`
+}
+
+// CreateDocumentRequest is a request to create a document.
+type CreateDocumentRequest struct {
+	// File is the file to be attached.
+	File core.File `pb:"1" json:"file"`
+	// OwnerID is the ID of the entity that owns the document.
+	OwnerID string `pb:"2" json:"owner_id"`
+	// Name is the name of the document.
+	Name string `pb:"3" json:"name"`
+	// Notes is the extra details of the document.
+	Notes string `pb:"4" json:"notes"`
+	// OwnerType is the type of the entity that owns the document.
+	OwnerType Owner `pb:"5" json:"owner_type"`
+}
+
+// ListDocumentsRequest is a request to list documents.
+type ListDocumentsRequest struct {
+	// OwnerID is the ID of the entity that owns the document.
+	OwnerID string `pb:"1" json:"owner_id"`
+	// PageToken is the token of the page to be returned.
+	PageToken string `pb:"2" json:"page_token"`
+	// PageSize is the number of documents to be returned.
+	PageSize int `pb:"3" json:"page_size"`
+	// OrderBy is the field to order the documents by.
+	OrderBy string `pb:"4" json:"order_by"`
+	// Filter is the filter to apply to the documents.
+	Filter string `pb:"5" json:"filter"`
+}
+
+// ListDocumentsResponse is the response for listing documents.
+type ListDocumentsResponse struct {
+	// Total is the total number of documents matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of documents remaining in the list, including the
+	// documents in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Documents is a list of metadatas about the documents requested.
+	Documents []Document `pb:"3" json:"documents"`
+	// NextPageToken is the token of the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetDocumentRequest is a request to retrieve a document metadata.
+type GetDocumentRequest struct {
+	// DocumentID is the ID of the document to be retrieved.
+	DocumentID string `pb:"1" json:"document_id"`
+}
+
+// GetFileRequest is a request to retrieve the document file.
+type GetFileRequest struct {
+	// DocumentID is the ID of the document.
+	DocumentID string `pb:"1" json:"document_id"`
+}
+
+// DeleteDocumentRequest is a request to delete a document.
+type DeleteDocumentRequest struct {
+	// DocumentID is the ID of the document.
+	DocumentID string `pb:"1" json:"document_id"`
+}
+
+// DocumentsService is the service for managing documents.
+type DocumentsService interface {
+	// CreateDocument creates a new document.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/docs",
+	//         Body:   "File",
+	// }
+	CreateDocument(CreateDocumentRequest) Document
+
+	// ListDocuments lists document metadatas for the specified owner.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/docs",
+	// }
+	ListDocuments(ListDocumentsRequest) ListDocumentsResponse
+
+	// GetDocument retrieves the metadata of the specified document.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/docs/{DocumentID}",
+	// }
+	GetDocument(GetDocumentRequest) Document
+
+	// GetFile returns the document for the specified document id.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/docs/{DocumentID}/file",
+	// }
+	GetFile(GetFileRequest) core.File
+
+	// DeleteDocument deletes the document with the specified document id.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/docs/{DocumentID}",
+	// }
+	DeleteDocument(DeleteDocumentRequest)
+}

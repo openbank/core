@@ -1,0 +1,213 @@
+// Package branches allows retrieving branches information.
+//
+// +gunk proto.Package("openbank.core.v1.branches")
+// +gunk java.Package("openbank.core.v1.branches")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Branches",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package branches
+
+import (
+	core "bnk.to/core/api/v1"
+	org "bnk.to/core/api/v1/org"
+	"encoding/json"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// Branch is an organization branch.
+//
+// +gunk xo.HasMany{
+//         Name:       "Holidays",
+//         TypeSuffix: "org.Holiday",
+// }
+type Branch struct {
+	// BranchID is the ID of the branch.
+	//
+	// +gunk xo.Unique
+	BranchID string `pb:"1" json:"branch_id"`
+	// Info is the contact information of the branch.
+	Info core.ContactInfo `pb:"2" json:"info"`
+	// Notes is extra human-readable notes about this branch.
+	Notes string `pb:"3" json:"notes"`
+	// State is the current state of the branch.
+	State core.State `pb:"4" json:"state"`
+	// Fields is the custom fields for the branch.
+	Fields json.RawMessage `pb:"5" json:"fields"`
+	// CreateTime is the time the branch was created.
+	CreateTime time.Time `pb:"6" json:"create_time"`
+	// UpdateTime is the time the branch was last updated.
+	UpdateTime time.Time `pb:"7" json:"update_time"`
+}
+
+// CreateBranchRequest is the request to create a branch.
+type CreateBranchRequest struct {
+	// Body is the branch to create.
+	Body Branch `pb:"1" json:"body"`
+}
+
+// ListBranchesRequest is the request to list branches.
+type ListBranchesRequest struct {
+	// PageToken is the token of the page to retrieve.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of items to retrieve per page.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order the results by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the list.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListBranchesResponse is the response for listing branches.
+type ListBranchesResponse struct {
+	// Total is the total number of branches matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of branches remaining in the list, including the
+	// branches in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Branches is the list of branches retrieved.
+	Branches []Branch `pb:"3" json:"branches"`
+	// NextPageToken is the token to use to retrieve the next page of branches.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetBranchRequest is the request to retrieve a branch.
+type GetBranchRequest struct {
+	// BranchID is the ID of the branch to retrieve.
+	BranchID string `pb:"1" json:"branch_id"`
+}
+
+// UpdateBranchRequest is the request to update a branch.
+type UpdateBranchRequest struct {
+	// BranchID is the ID of branch present in Body.
+	BranchID string `pb:"1" json:"branch_id"`
+	// Body is the new branches configuration.
+	Body Branch `pb:"2" json:"body"`
+}
+
+// DeleteBranchRequest is the request to delete a branch.
+type DeleteBranchRequest struct {
+	// BranchID is the ID of branch to delete.
+	BranchID string `pb:"1" json:"branch_id"`
+}
+
+// AddBranchHolidaysRequest is the request to add holidays to a branch.
+type AddBranchHolidaysRequest struct {
+	// BranchID is the ID of the branch to update.
+	BranchID string `pb:"1" json:"branch_id"`
+	// HolidayIDs is the IDs of the holidays to add.
+	HolidayIDs []string `pb:"2" json:"holiday_ids"`
+}
+
+// ListBranchHolidaysRequest is the request to retrieve the holidays for a branch.
+type ListBranchHolidaysRequest struct {
+	// BranchID is the ID of the branch to retrieve holidays for.
+	BranchID string `pb:"1" json:"branch_id"`
+	// PageToken is the token of the page to retrieve.
+	PageToken string `pb:"2" json:"page_token"`
+	// PageSize is the number of items to retrieve per page.
+	PageSize int `pb:"3" json:"page_size"`
+	// OrderBy is the field to order the results by.
+	OrderBy string `pb:"4" json:"order_by"`
+	// Filter is the filter to apply to the list.
+	Filter string `pb:"5" json:"filter"`
+}
+
+// ListBranchHolidaysResponse is the request to retrieve the holidays for a branch.
+type ListBranchHolidaysResponse struct {
+	// Holidays is a list of branch-specific holidays that may not apply to all
+	// branches in the organization.
+	Holidays []org.Holiday `pb:"1" json:"holidays"`
+	// NextPageToken is the token to use to retrieve the next page of branches.
+	NextPageToken string `pb:"2" json:"next_page_token"`
+}
+
+// RemoveBranchHolidaysRequest is the request to remove holidays from a branch.
+type RemoveBranchHolidaysRequest struct {
+	// BranchID is the ID of the branch to update.
+	BranchID string `pb:"1" json:"branch_id"`
+	// HolidayIDs is the IDs of the holidays to remove.
+	HolidayIDs []string `pb:"2" json:"holiday_ids"`
+}
+
+// BranchesService is the service for querying branches.
+type BranchesService interface {
+	// CreateBranch creates a branch.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/branches",
+	//         Body:   "Body",
+	// }
+	CreateBranch(CreateBranchRequest) Branch
+
+	// ListBranches lists branches.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/branches",
+	// }
+	ListBranches(ListBranchesRequest) ListBranchesResponse
+
+	// GetBranch returns the branch with the specified BranchID.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/branches/{BranchID}",
+	// }
+	GetBranch(GetBranchRequest) Branch
+
+	// UpdateBranch updates the specified branch.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/branches/{BranchID}",
+	//         Body:   "Body",
+	// }
+	UpdateBranch(UpdateBranchRequest) Branch
+
+	// DeleteBranch deletes the specified branch.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/branches/{BranchID}",
+	// }
+	DeleteBranch(DeleteBranchRequest)
+
+	// AddBranchHolidays adds the specified holidays to a branch.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/branches/{BranchID}/holidays/{HolidayIDs}",
+	// }
+	AddBranchHolidays(AddBranchHolidaysRequest)
+
+	// ListBranchHolidays lists the holidays of a branch.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/branches/{BranchID}/holidays",
+	// }
+	ListBranchHolidays(ListBranchHolidaysRequest) ListBranchHolidaysResponse
+
+	// RemoveBranchHolidays removes the specified holidays to a branch.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/branches/{BranchID}/holidays/{HolidayIDs}",
+	// }
+	RemoveBranchHolidays(RemoveBranchHolidaysRequest)
+}

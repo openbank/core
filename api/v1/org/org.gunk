@@ -1,0 +1,79 @@
+// Package org allows retrieving and managing the organization's configuration.
+//
+// +gunk proto.Package("openbank.core.v1.org")
+// +gunk java.Package("openbank.core.v1.org")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Organization",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package org
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// Organization is the organization that the instance of Core Banking belongs
+// to.
+type Organization struct {
+	// Info is the contact information for the organization.
+	Info core.ContactInfo `pb:"1" json:"info"`
+	// CurrencyCode is the code of the main currency used by the organization.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "currencies.Currency",
+	//         FieldName:  "Code",
+	// }
+	CurrencyCode string `pb:"2" json:"currency_code"`
+	// DateFormat is the format for date values.
+	DateFormat string `pb:"3" json:"date_format"`
+	// DateTimeFormat is the format for date-time values.
+	DateTimeFormat string `pb:"4" json:"date_time_format"`
+	// Timezone is the timezone for the organization in the format
+	// "Asia/Jakarta".
+	Timezone string `pb:"5" json:"timezone"`
+	// CreateTime is the time the organization is setup.
+	CreateTime time.Time `pb:"6" json:"create_time"`
+	// UpdateTime is the time the organization setup was last updated.
+	UpdateTime time.Time `pb:"7" json:"update_time"`
+}
+
+// UpdateOrganizationRequest is the request to update the configuration of the
+// organization.
+type UpdateOrganizationRequest struct {
+	// Body is the new details of the organization.
+	Body Organization `pb:"1" json:"body"`
+}
+
+// OrganizationService is the service for managing the organization.
+type OrganizationService interface {
+	// GetOrganization retrieves the details of the organization.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/organization",
+	// }
+	GetOrganization() Organization
+
+	// UpdateOrganization updates the details of the organization.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/organization",
+	//         Body:   "Body",
+	// }
+	UpdateOrganization(UpdateOrganizationRequest) Organization
+}

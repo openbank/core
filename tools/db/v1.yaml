@@ -1,0 +1,5202 @@
+name: core
+enums:
+- name: entity
+  values:
+  - Client
+  - Group
+- name: permission
+  values:
+  - PermissionAuditTransactions
+  - PermissionViewComments
+  - PermissionCreateComments
+  - PermissionEditComments
+  - PermissionDeleteComments
+  - PermissionCreateIndexRate
+  - PermissionDownloadBackups
+  - PermissionImportData
+  - PermissionViewExchangeRates
+  - PermissionCreateExchangeRate
+  - PermissionViewCentreDetails
+  - PermissionCreateCentre
+  - PermissionEditCentre
+  - PermissionDeleteCentre
+  - PermissionManageConfigurationAsCode
+  - PermissionViewBranchDetails
+  - PermissionCreateBranch
+  - PermissionEditBranch
+  - PermissionCreateCommunicationTemplates
+  - PermissionEditCommunicationTemplates
+  - PermissionSendManualSms
+  - PermissionSendManualEmail
+  - PermissionViewCommunicationHistory
+  - PermissionResendFailedMessages
+  - PermissionViewTransactionChannels
+  - PermissionCreateTransactionChannels
+  - PermissionEditTransactionChannels
+  - PermissionDeleteTransactionChannels
+  - PermissionManageHolidays
+  - PermissionManageEodProcessing
+  - PermissionManageRiskLevels
+  - PermissionViewLoanProductDetails
+  - PermissionCreateLoanProduct
+  - PermissionEditLoanProduct
+  - PermissionDeleteLoanProducts
+  - PermissionViewSavingsProductDetails
+  - PermissionCreateSavingsProduct
+  - PermissionEditSavingsProduct
+  - PermissionDeleteSavingsProduct
+  - PermissionCreateProductDocumentTemplates
+  - PermissionEditProductDocumentTemplates
+  - PermissionDeleteProductDocumentTemplates
+  - PermissionViewClientDetails
+  - PermissionCreateClient
+  - PermissionEditClient
+  - PermissionDeleteClients
+  - PermissionApproveClient
+  - PermissionRejectClient
+  - PermissionExitClient
+  - PermissionAnonymizeClient
+  - PermissionBlacklistClient
+  - PermissionUndoClientStateChanged
+  - PermissionEditClientID
+  - PermissionEditBlacklistedClientCfv
+  - PermissionEditGroupID
+  - PermissionChangeClientType
+  - PermissionViewGroupDetails
+  - PermissionCreateGroup
+  - PermissionEditGroup
+  - PermissionDeleteGroup
+  - PermissionChangeGroupType
+  - PermissionViewLineOfCreditDetails
+  - PermissionCreateLinesOfCredit
+  - PermissionEditLinesOfCredit
+  - PermissionAddAccountsToLineOfCredit
+  - PermissionRemoveAccountsFromLineOfCredit
+  - PermissionApproveLineOfCredit
+  - PermissionUndoApproveLineOfCredit
+  - PermissionWithdrawLineOfCredit
+  - PermissionUndoWithdrawLineOfCredit
+  - PermissionRejectLineOfCredit
+  - PermissionUndoRejectLineOfCredit
+  - PermissionCloseLinesOfCredit
+  - PermissionDeleteLinesOfCredit
+  - PermissionViewLoanAccountDetails
+  - PermissionCreateLoanAccount
+  - PermissionEditLoanAccount
+  - PermissionDeleteLoanAccount
+  - PermissionEnterRepayment
+  - PermissionEditRepaymentSchedule
+  - PermissionApproveLoans
+  - PermissionRequestLoanApproval
+  - PermissionDiburseLoans
+  - PermissionWithdrawLoanAccounts
+  - PermissionUndoWithdrawLoanAccounts
+  - PermissionSetLoanIncomplete
+  - PermissionRejectLoans
+  - PermissionUndoRejectLoans
+  - PermissionCloseLoanAccounts
+  - PermissionWriteOffLoanAccounts
+  - PermissionTerminateLoanAccounts
+  - PermissionPayOffLoan
+  - PermissionUndoLoanAccountClosure
+  - PermissionReverseLoanAccountWriteOff
+  - PermissionRefinanceLoanAccount
+  - PermissionRescheduleLoanAccount
+  - PermissionApplyAccruedLoanInterest
+  - PermissionApplyLoanFees
+  - PermissionApplyLoanAdjustments
+  - PermissionBackdateLoanTransactions
+  - PermissionLinkAccounts
+  - PermissionCollectGuaranties
+  - PermissionViewSecuritiesDetails
+  - PermissionCreateSecurities
+  - PermissionEditSecurities
+  - PermissionDeleteSecurities
+  - PermissionLockLoanAccounts
+  - PermissionPostTransactionsOnLockedLoanAccounts
+  - PermissionEditLoanTranches
+  - PermissionEditPenaltyRate
+  - PermissionSetDisbursementConditions
+  - PermissionEditLoanTransactions
+  - PermissionBulkLoanCorrections
+  - PermissionEditInterestRate
+  - PermissionEditRepaymentMethodValue
+  - PermissionEditPeriodicPaymentForActiveAccount
+  - PermissionManageLoanAssociation
+  - PermissionMakeWithdrawalRedraw
+  - PermissionViewSavingsAccountDetails
+  - PermissionCreateSavingsAccount
+  - PermissionEditSavingsAccount
+  - PermissionDeleteSavingsAccount
+  - PermissionMakeDeposit
+  - PermissionMakeWithdrawal
+  - PermissionMakeEarlyWithdrawals
+  - PermissionApproveSavings
+  - PermissionActivateMaturity
+  - PermissionUndoMaturity
+  - PermissionCloseSavingsAccounts
+  - PermissionApplySavingsFees
+  - PermissionReopenSavingsAccount
+  - PermissionApplySavingsAdjustments
+  - PermissionLockSavingsAccount
+  - PermissionUnlockSavingsAccount
+  - PermissionReverseSavingsAccountWriteOff
+  - PermissionBackdateSavingsTransactions
+  - PermissionMakeTransfer
+  - PermissionMakeInterClientsTransfers
+  - PermissionPostTransactionsOnDormantAccounts
+  - PermissionApplyAccruedSavingsInterest
+  - PermissionEditSavingsTransactions
+  - PermissionBulkDepositCorrections
+  - PermissionBlockAndSeizeFunds
+  - PermissionWithdrawBlockedFunds
+  - PermissionCreateCards
+  - PermissionViewCards
+  - PermissionDeleteCards
+  - PermissionReverseCardWithdrawalTransaction
+  - PermissionReverseCardTransaction
+  - PermissionCardBalanceInquiry
+  - PermissionCreateAuthorizationHold
+  - PermissionUpdateAuthorizationHold
+  - PermissionViewAuthorizationHold
+  - PermissionCreateCardTransaction
+  - PermissionViewDocuments
+  - PermissionCreateDocuments
+  - PermissionEditDocuments
+  - PermissionDeleteDocuments
+  - PermissionViewTask
+  - PermissionCreateTask
+  - PermissionEditTask
+  - PermissionDeleteTask
+  - PermissionViewIntelligence
+  - PermissionViewReports
+  - PermissionCreateReports
+  - PermissionEditReports
+  - PermissionDeleteReports
+  - PermissionViewChartOfAccounts
+  - PermissionManageAccounts
+  - PermissionViewJournalEntries
+  - PermissionLogJournalEntries
+  - PermissionViewAccountingReports
+  - PermissionMakeAccountingClosure
+  - PermissionApplyAccountingAdjustments
+  - PermissionBookingDateLoansGL
+  - PermissionBookingDateSavingsGL
+  - PermissionRectifyAdjustment
+  - PermissionViewAccountingRates
+  - PermissionCreateAccountingRates
+  - PermissionOpenTill
+  - PermissionCloseTill
+  - PermissionAddCash
+  - PermissionRemoveCash
+  - PermissionPostTransactionsWithoutOpenedTill
+  - PermissionViewInvestorFundsDetails
+  - PermissionCreateInvestorFunds
+  - PermissionEditInvestorFunds
+  - PermissionDeleteInvestorFunds
+  - PermissionSellLoanFraction
+  - PermissionCreateUser
+  - PermissionEditUser
+  - PermissionViewUserDetails
+  - PermissionDeleteUser
+  - PermissionManageClientAssociation
+  - PermissionManageGroupAssociation
+  - PermissionEditPrincipalPaymentActiveRevolvingCredit
+  - PermissionPerformRepaymentsWithCustomAmountsAllocation
+  - PermissionExportToExcel
+  - PermissionViewAdministrationDetails
+  - PermissionManageEventsStreaming
+  - PermissionManageApps
+  - PermissionAdmin
+  - PermissionCreateRole
+  - PermissionEditRole
+  - PermissionDeleteRole
+  - PermissionViewRole
+  - PermissionManageFederatedAuthentication
+  - PermissionManageAccessPreferences
+  - PermissionViewAPIConsumersAndKeys
+  - PermissionCreateAPIConsumersAndKeys
+  - PermissionEditAPIConsumersAndKeys
+  - PermissionDeleteAPIConsumersAndKeys
+  - PermissionViewCustomField
+  - PermissionCreateCustomField
+  - PermissionEditCustomField
+  - PermissionDeleteCustomField
+- name: operator
+  values:
+  - OpEquals
+  - OpEqualsIgnoreCase
+  - OpNotEquals
+  - OpGreaterThan
+  - OpLessThan
+  - OpOn
+  - OpAfter
+  - OpBefore
+  - OpHasPrefix
+  - OpHasPrefixIgnoreCase
+  - OpLastDays
+  - OpBetween
+  - OpIn
+  - OpToday
+  - OpThisWeek
+  - OpThisMonth
+  - OpThisYear
+  - OpEmpty
+  - OpNotEmpty
+- name: state
+  values:
+  - PendingApproval
+  - Inactive
+  - Active
+  - Exited
+  - Blacklisted
+  - Rejected
+- name: status
+  values:
+  - Error
+  - Queued
+  - InProgress
+  - Pending
+  - Complete
+  - NotFound
+  - Cancel
+  - ToBeCanceled
+  - TimedOut
+  - TransientError
+  - Overridden
+- name: cards_type
+  values:
+  - Debit
+  - Credit
+- name: cards_hold_source
+  values:
+  - CardSource
+  - AccountSource
+- name: cards_hold_status
+  values:
+  - HoldPending
+  - HoldReversed
+  - HoldSettled
+  - HoldExpired
+- name: clients_gender
+  values:
+  - Male
+  - Female
+  - Other
+- name: comments_owner
+  values:
+  - Client
+  - Group
+  - LoanProduct
+  - SavingsProduct
+  - Centre
+  - Branch
+  - User
+  - LoanAccount
+  - DepositAccount
+  - IDDocument
+  - LineOfCredit
+  - GLJournalEntry
+- name: consumers_consumer_type
+  values:
+  - TypeStreamingAPI
+  - TypeAuditTrail
+  - TypePayments
+- name: deposits_account_state
+  values:
+  - PendingApproval
+  - Approved
+  - Active
+  - ActiveInArrears
+  - Matured
+  - Locked
+  - Dormant
+  - Closed
+  - ClosedWrittenOff
+  - Withdrawn
+  - ClosedRejected
+- name: deposits_account_type
+  values:
+  - CurrentAccount
+  - RegularSavings
+  - FixedDeposit
+  - SavingsPlan
+  - InvestorAccount
+- name: deposits_interest_rate_type
+  values:
+  - FixedRate
+  - IndexRate
+- name: deposits_block_state
+  values:
+  - Pending
+  - Seized
+  - Removed
+  - PartiallySeized
+- name: documents_owner
+  values:
+  - Client
+  - Group
+  - LoanProduct
+  - SavingsProduct
+  - Centre
+  - Branch
+  - User
+  - LoanAccount
+  - DepositAccount
+  - IDDocument
+  - LineOfCredit
+  - GLJournalEntry
+  - IDTemplate
+- name: fields_type
+  values:
+  - TypeFreeText
+  - TypeParagraph
+  - TypeSelection
+  - TypeNumber
+  - TypeCheckbox
+  - TypeDate
+  - TypeClient
+  - TypeGroup
+  - TypeUser
+- name: fields_available_for
+  values:
+  - ForClient
+  - ForGroup
+  - ForCreditArrangement
+  - ForLoanAccount
+  - ForGuarantor
+  - ForAsset
+  - ForDepositAccount
+  - ForTransactionChannel
+  - ForTransactionType
+  - ForBranch
+  - ForCentre
+  - ForUser
+- name: ledgers_account_type
+  values:
+  - Asset
+  - Liability
+  - Equity
+  - Income
+  - Expense
+- name: ledgers_usage
+  values:
+  - Transactions
+  - Grouping
+- name: ledgers_product_type
+  values:
+  - Loan
+  - Savings
+- name: ledgers_entry_type
+  values:
+  - Debit
+  - Credit
+- name: loans_installment_state
+  values:
+  - InstallmentPending
+  - InstallmentLate
+  - InstallmentPaid
+  - InstallmentPartiallyPaid
+  - InstallmentGrace
+- name: loans_account_state
+  values:
+  - StatePartialApplication
+  - StatePendingApproval
+  - StateApproved
+  - StateActive
+  - StateActiveInArrears
+  - StateClosed
+- name: loans_account_sub_state
+  values:
+  - StatePartiallyDisbursed
+  - StateLocked
+  - StateLockedCapping
+  - StateRefinanced
+  - StateRescheduled
+  - StateWithdrawn
+  - StateRepaid
+  - StateRejected
+  - StateWrittenOff
+  - StateTerminated
+- name: loans_account_future_payments_acceptance
+  values:
+  - NoFuturePayments
+  - AcceptFuturePayments
+  - AcceptOverpayments
+- name: loans_account_late_payments_recalculation_method
+  values:
+  - MethodOverdueInstallmentsIncrease
+  - MethodLastInstallmentIncrease
+- name: loans_account_payment_method
+  values:
+  - MethodHorizontal
+  - MethodVertical
+- name: loans_locked_operations
+  values:
+  - OperationApplyInterest
+  - OperationApplyFees
+  - OperationApplyPenalties
+- name: notifications_event
+  values:
+  - EventManual
+  - EventClientCreated
+  - EventClientApproved
+  - EventGroupActivity
+  - EventGroupCreated
+  - EventLoanCreated
+  - EventInterestRateChanged
+  - EventClientRejected
+  - EventClientActivity
+  - EventLoanRepayment
+  - EventLoanRepaymentReversal
+  - EventFeeApplied
+  - EventFeeAdjusted
+  - EventFeeCharged
+  - EventLoanApproval
+  - EventLoanAccountClosure
+  - EventLoanAccountWriteOff
+  - EventLoanAccountRejection
+  - EventLoanAccountRescheduled
+  - EventLoanAccountRefinanced
+  - EventRepaymentReminder
+  - EventAccountInArrears
+  - EventLoanDisbursement
+  - EventLoanDisbursementReversal
+  - EventLoanAccountActivity
+  - EventLoanAnticipatedDisbursement
+  - EventSavingsCreated
+  - EventSavingsDeposit
+  - EventSavingsDepositReversal
+  - EventSavingsApproval
+  - EventSavingsAccountActivated
+  - EventSavingsAccountClosure
+  - EventSavingsAccountRejection
+  - EventSavingsWithdrawal
+  - EventSavingsWithdrawalReversal
+  - EventSavingsAccountActivity
+  - EventAccountAuthorizationHoldCreated
+  - EventCardsAuthorizationHoldCreated
+  - EventCardsAuthorizationHoldSettled
+  - EventCardsAuthorizationHoldAmountDecreased
+  - EventCardsAuthorizationHoldAmountIncreased
+  - EventCardsAuthorizationHoldExpired
+  - EventCardsAuthorizationHoldReversed
+  - EventPortalActivated
+  - EventPortalPasswordReset
+  - EventEndOfDayProcessingCompleted
+  - EventDataAccessStateChanged
+  - EventRevolvingAccountCreated
+  - EventRevolvingAccountClosed
+  - EventRevolvingAccountApproved
+  - EventRevolvingAccountRejected
+  - EventRevolvingAccountWithdrawn
+  - EventRevolvingAccountDeleted
+  - EventRevolvingAccountAdded
+  - EventRevolvingAccountRemoved
+  - EventRevolvingAccountEdited
+  - EventPaymentOrderActivity
+  - EventCollectionOrderActivity
+  - EventJournalEntryAdded
+  - EventJournalEntryAdjusted
+- name: notifications_failure_reason
+  values:
+  - ReasonUnsupportedEncoding
+  - ReasonEmailServiceNotEnabled
+  - ReasonSMSTooLong
+  - ReasonSMSServiceNotEnabled
+  - ReasonSMSNotSent
+  - ReasonSMSServiceError
+  - ReasonSMSConnectionException
+  - ReasonWebhookNotificationsDisabled
+  - ReasonInvalidHTTPResponse
+  - ReasonHTTPErrorWhileSending
+  - ReasonInvalidJSONBodySyntax
+  - ReasonMissingTemplateID
+  - ReasonUndefinedDestination
+  - ReasonBlacklistedURL
+  - ReasonInvalidSMSGatewayCredentials
+  - ReasonMissingSMSRecipient
+  - ReasonSMSGatewayError
+  - ReasonMissingEmailRecipientAddress
+  - ReasonOther
+- name: notifications_type
+  values:
+  - Email
+  - SMS
+  - Webhook
+  - EventStream
+  - Task
+- name: org_channel_constraint_criteria
+  values:
+  - ChannelConstraintAmount
+  - ChannelConstraintType
+  - ChannelConstraintProduct
+- name: org_channel_constraint_mode
+  values:
+  - MatchAll
+  - MatchAny
+- name: org_day
+  values:
+  - Monday
+  - Tuesday
+  - Wednesday
+  - Thursday
+  - Friday
+  - Saturday
+  - Sunday
+- name: org_assignment_constraint
+  values:
+  - ConstraintBranch
+  - ConstraintCentre
+  - ConstraintCreditOfficer
+  - ConstraintGroup
+- name: org_app_component
+  values:
+  - ComponentLoans
+  - ComponentDeposits
+  - ComponentBranches
+  - ComponentCentres
+  - ComponentClients
+  - ComponentGroups
+  - ComponentAccounting
+  - ComponentCreditOfficers
+- name: org_dashboard_component
+  values:
+  - DashboardLatestActivity
+  - DashboardTasks
+  - DashboardFavoriteViews
+  - DashboardIndicators
+  - DashboardCurrentTills
+  - DashboardClients
+  - DashboardUpcomingRepayments
+  - DashboardNone
+- name: org_decimal_separator
+  values:
+  - Comma
+  - Point
+- name: org_duplicate_item_type
+  values:
+  - FieldLoans
+  - FieldSavings
+  - FieldClient
+  - FieldClientRole
+  - FieldGroup
+  - FieldGroupRole
+  - FieldTransaction
+  - FieldJournalEntry
+  - FieldInterestAccrualBreakdown
+  - FieldBranch
+  - FieldCentre
+  - FieldUser
+  - FieldLoanProduct
+  - FieldSavingsProduct
+  - FieldNotificationMessage
+  - FieldNotificationTemplate
+  - FieldRepayment
+  - FieldRepaymentCollection
+  - FieldActivity
+  - FieldLineOfCredit
+  - FieldIdentificationDocument
+  - FieldAttachment
+  - FieldCurrency
+  - FieldProduct
+  - FieldRevenue
+  - FieldExpense
+  - FieldOutstandingPortfolioAccounts
+  - FieldOutstandingPortfolioAmounts
+  - FieldCreatedAccounts
+  - FieldWrittenOffLoans
+  - FieldDisbursedLoans
+  - FieldLoanGroup
+  - FieldTranche
+  - FieldDisbursementDetails
+  - FieldTransactionDetails
+  - FieldTransactionChannel
+  - FieldCustomPredefinedFee
+  - FieldCustomFieldSelection
+  - FieldPredefinedFee
+  - FieldLoanTransaction
+  - FieldSavingsTransaction
+  - FieldCardTransactionReversal
+  - FieldComposedTransactions
+  - FieldUnionTransactions
+  - FieldInvestorFund
+  - FieldPrincipalPaymentSettings
+  - FieldLoanAccountGuaranty
+  - FieldTask
+  - FieldDocumentTemplate
+  - FieldIndexRate
+  - FieldIndexRateSource
+  - FieldInterestProductSettings
+  - FieldMccExpiration
+  - FieldProductArrearsSettings
+  - FieldDocumentIDAndType
+  - FieldHomePhone
+  - FieldMobilePhone
+  - FieldEmail
+  - FieldFullName
+  - FieldLastNameDOB
+- name: org_constraint_action
+  values:
+  - None
+  - Warning
+  - Error
+- name: org_end_of_day_mode
+  values:
+  - EndOfDayAuto
+  - EndOfDayManual
+- name: org_exposure_type
+  values:
+  - ExposureUnlimited
+  - ExposureSumOfLoans
+  - ExposureSumOfLoansMinusSavings
+- name: org_group_size_limit_type
+  values:
+  - LimitHard
+  - LimitWarning
+  - LimitNone
+- name: products_deposit_product_type
+  values:
+  - TypeCurrentAccount
+  - TypeRegularSavings
+  - TypeFixedDeposit
+  - TypeSavingsPlan
+  - TypeInvestorAccount
+- name: products_deposit_category
+  values:
+  - DepositCategoryPersonalDeposit
+  - DepositCategoryBusinessDeposit
+  - DepositCategoryDailyBankingAccounts
+  - DepositCategoryBusinessBankingAccounts
+  - DepositCategoryStoredValueAccounts
+  - DepositCategoryUncategorized
+- name: products_batch_update_action
+  values:
+  - UpdateInterestSettings
+- name: products_fee_calculation_method
+  values:
+  - MethodFlat
+  - MethodLoanAmountPercentage
+  - MethodRepaymentPrincipalAmountPercentage
+  - MethodLoanAmountPercentageNumberOfInstallments
+  - MethodFlatNumberOfInstallments
+- name: products_fee_apply_date_method
+  values:
+  - MonthlyFromActivation
+  - FirstOfEveryMonth
+- name: products_fee_trigger
+  values:
+  - Manual
+  - ManualPlanned
+  - Disbursement
+  - CapitalizedDisbursement
+  - UpfrontDisbursement
+  - LateRepayment
+  - MonthlyFee
+  - PaymentDue
+  - PaymentDueAppliedOnDueDates
+- name: products_amortization_type
+  values:
+  - ProfileNone
+  - ProfileSumOfYearsDigits
+  - ProfileStraightLine
+  - ProfileEffectiveInterestRate
+- name: products_period_frequency
+  values:
+  - AccountInstallmentsDueDates
+  - AccountInstallmentsDueDatesDailyBooking
+  - CustomInterval
+- name: products_interval_type
+  values:
+  - PredefinedIntervals
+  - FullTerm
+- name: products_interest_rate_source
+  values:
+  - FixedInterestRate
+  - IndexInterestRate
+- name: products_interest_rate_terms
+  values:
+  - Fixed
+  - Tiered
+  - TieredPeriod
+  - TieredBand
+- name: products_days_in_year
+  values:
+  - YearActual365Fixed
+  - YearActual364
+  - YearActual360
+  - YearActualActualIsda
+  - YearE30360
+  - YearE3042365
+- name: products_interest_type
+  values:
+  - Simple
+  - Capitalized
+  - Compounding
+- name: products_interest_application_method
+  values:
+  - MethodAfterDisbursement
+  - MethodRepaymentDueDate
+- name: products_balance_calculation_method
+  values:
+  - MethodPrincipal
+  - MethodPrincipalAndInterest
+- name: products_interest_calculation_method
+  values:
+  - MethodFlatInterest
+  - MethodDecliningBalance
+  - MethodDecliningBalanceDiscounted
+- name: products_days_count_method
+  values:
+  - MethodRepaymentPeriodicity
+  - MethodActualDayCount
+- name: products_interest_calculation_balance
+  values:
+  - BalanceMinimum
+  - BalanceAverage
+  - BalanceEndOfDay
+  - BalanceMinimumToEndOfDay
+- name: products_date_calculation_method
+  values:
+  - DateAccountFirstWentToArrears
+  - DateLastLateRepayment
+  - DateAccountFirstBreachedMaterialityThreshold
+- name: products_tolerance_calculation
+  values:
+  - ArrearsTolerancePeriod
+  - MonthlyArrearsToleranceDay
+- name: products_settlement_method
+  values:
+  - MethodFullDueAmounts
+  - MethodPartialDueAmounts
+  - MethodNoAutomatedTransfers
+- name: products_linked_account_options
+  values:
+  - AutoLinkAccounts
+  - AutoCreateLinkedAccounts
+- name: products_commission_allocation_type
+  values:
+  - TypePercentageOfLoanFunding
+  - TypeFixedInterestCommissions
+- name: products_grace_period_type
+  values:
+  - NoGracePeriod
+  - PayInterestOnly
+  - InterestForgiveness
+- name: products_late_payments_recalculation_method
+  values:
+  - MethodOverdueInstallmentsIncrease
+  - MethodLastInstallmentIncrease
+- name: products_payment_type
+  values:
+  - MethodHorizontal
+  - MethodVertical
+- name: products_repayment_allocation_order
+  values:
+  - OrderPrincipal
+  - OrderInterest
+  - OrderFee
+  - OrderPenalty
+- name: products_elements_recalculation_method
+  values:
+  - MethodPrincipalExpectedFixed
+  - MethodTotalExpectedFixed
+- name: products_future_payments_acceptance
+  values:
+  - NoFuturePayments
+  - AcceptanceAcceptFuturePayments
+  - AcceptanceAcceptOverpayments
+- name: products_prepayment_recalculation_method
+  values:
+  - NoRecalculation
+  - RescheduleRemainingRepayments
+  - RecalculateScheduleKeepSameNumberOfTerms
+  - RecalculateScheduleKeepSamePrincipalAmount
+  - RecalculateScheduleKeepSameTotalRepaymentAmount
+  - ReduceAmountPerInstallment
+  - ReduceNumberOfInstallments
+  - ReduceNumberOfInstallmentsNew
+- name: products_principal_paid_installment_status
+  values:
+  - StatusPartiallyPaid
+  - StatusPaid
+  - StatusOriginalTotalExpectedPaid
+- name: products_principal_payment_method
+  values:
+  - MethodFlatPayment
+  - MethodOutstandingPrincipalPercentage
+  - MethodPrincipalPercentageLastDisb
+  - MethodTotalBalancePercentage
+  - MethodTotalBalanceFlat
+  - MethodTotalPrincipalPercentage
+- name: products_total_due_payment
+  values:
+  - PaymentFlat
+  - PaymentOutstandingPrincipalPercentage
+  - PaymentPrincipalPercentageLastDisb
+  - PaymentTotalBalancePercentage
+  - PaymentTotalBalanceFlat
+  - PaymentTotalPrincipalPercentage
+- name: products_amortization_method
+  values:
+  - MethodStandardPayments
+  - MethodBalloonPayments
+  - MethodOptimizedPayments
+  - MethodPaymentPlan
+- name: products_loan_penalty_calculation_method
+  values:
+  - MethodNoRecalculate
+  - MethodOverdueBalance
+  - MethodOverdueBalanceAndInterest
+  - MethodOutstandingPrincipal
+- name: products_repayment_rescheduling_method
+  values:
+  - NoRescheduleRepayment
+  - NextWorkingDay
+  - PreviousWorkingDay
+  - ExtendSchedule
+- name: products_repayment_schedule_type
+  values:
+  - NoRepaymentSchedule
+  - FixedRepaymentSchedule
+  - DynamicRepaymentSchedule
+- name: products_due_date_schedule_method
+  values:
+  - IntervalDueDates
+  - IntervalFixedDaysOfMonth
+- name: products_month_handling_method
+  values:
+  - LastDayInMonth
+  - FirstDayOfNextMonth
+- name: products_repayment_schedule_edit_options
+  values:
+  - AdjustPaymentDates
+  - AdjustPrincipalPaymentSchedule
+  - AdjustInterestPaymentSchedule
+  - AdjustFeePaymentSchedule
+  - AdjustPenaltyPaymentSchedule
+  - AdjustNumberOfInstallments
+  - AdjustPaymentHolidays
+- name: products_repayment_currency_rounding
+  values:
+  - NoCurrencyRounding
+  - RoundToNearestWholeUnit
+  - RoundUpToNearestWholeUnit
+- name: products_repayment_elements_rounding
+  values:
+  - NoRepaymentRounding
+  - RoundAll
+  - RoundPaymentDue
+- name: products_repayment_schedule_rounding
+  values:
+  - NoScheduleRounding
+  - RoundRemainderIntoLastRepayment
+  - RoundPrincipalAndInterestRemainderIntoLastRepayment
+- name: products_loan_category
+  values:
+  - CategoryPersonalLending
+  - CategoryPurchaseFinancing
+  - CategoryRetailMortgages
+  - CategorySmeLending
+  - CategoryCommercial
+  - CategoryUncategorized
+- name: products_loan_type
+  values:
+  - TypeFixedTermLoan
+  - TypeDynamicTermLoan
+  - TypeInterestFreeLoan
+  - TypeTranchedLoan
+  - TypeRevolvingCredit
+- name: products_capping_constraint_type
+  values:
+  - SoftCap
+  - HardCap
+- name: products_principal_cap_method
+  values:
+  - OutstandingPrincipalPercentage
+  - OriginalPrincipalPercentage
+- name: products_initial_account_state
+  values:
+  - StatePartialApplication
+  - StatePendingApproval
+  - StateApproved
+  - StateActive
+  - StateActiveInArrears
+  - StateClosed
+- name: products_id_generator_type
+  values:
+  - TypeIncrementalNumber
+  - TypeRandomPattern
+- name: products_accounting_method
+  values:
+  - None
+  - Cash
+  - Accrual
+- name: products_interest_accrued
+  values:
+  - Never
+  - Daily
+  - EndOfMonth
+- name: products_financial_resource
+  values:
+  - ResourcePortfolioControl
+  - ResourceFundSource
+  - ResourceWriteOffExpense
+  - ResourceInterestIncome
+  - ResourceTaxesPayable
+  - ResourceFeeIncome
+  - ResourcePenaltyIncome
+  - ResourceNegativeInterestPayableReceivable
+  - ResourceNegativeInterestPayable
+  - ResourceInterestReceivable
+  - ResourceFeeReceivable
+  - ResourcePenaltyReceivable
+  - ResourceTaxesReceivable
+  - ResourceDeferredInterestsIncome
+  - ResourceDeferredFeeIncome
+  - ResourceDeferredTaxes
+  - ResourceDepositReference
+  - ResourceSavingsControl
+  - ResourceInterestExpense
+  - ResourceInterestPayable
+  - ResourceNegativeInterestIncome
+  - ResourceNegativeInterestReceivable
+  - ResourceOverdraftPortfolioControl
+  - ResourceOverdraftInterestIncome
+  - ResourceOverdraftWriteOffExpense
+  - ResourceOverdraftInterestReceivable
+  - ResourceInterBranchTransfer
+- name: products_available_for
+  values:
+  - AvailableForIndividuals
+  - AvailableForPureGroups
+  - AvailableForSolidarityGroups
+- name: products_revolving_account_requirement
+  values:
+  - RequirementOptional
+  - RequirementRequired
+  - RequirementNotRequired
+- name: rates_source_type
+  values:
+  - InterestRate
+  - TaxRate
+  - WithholdingTaxRate
+  - PrincipalTaxRate
+- name: reports_balance_type
+  values:
+  - OpeningBalance
+  - NetChange
+  - ClosingBalance
+- name: revolving_exposure_limit
+  values:
+  - ApprovedAmount
+  - OutstandingAmount
+- name: tasks_status
+  values:
+  - Open
+  - Completed
+- name: tasks_linked_type
+  values:
+  - Client
+  - Group
+  - LoanProduct
+  - SavingsProduct
+  - Centre
+  - Branch
+  - User
+  - LoanAccount
+  - DepositAccount
+  - IDDocument
+  - LineOfCredit
+  - GLJournalEntry
+- name: transactions_deposit_type
+  values:
+  - DepositImport
+  - DepositWriteOff
+  - DepositWriteOffAdjustment
+  - DepositDeposit
+  - DepositAdjustment
+  - DepositWithdrawal
+  - DepositWithdrawalAdjustment
+  - DepositCardTransactionReversal
+  - DepositCardTransactionReversalAdjustment
+  - DepositTransfer
+  - DepositTransferAdjustment
+  - DepositFeeApplied
+  - DepositFeeAdjusted
+  - DepositFeesDueReduced
+  - DepositInterestApplied
+  - DepositInterestAppliedAdjustment
+  - DepositFeeReductionAdjustment
+  - DepositWithholdingTax
+  - DepositWithholdingTaxAdjustment
+  - DepositInterestRateChanged
+  - DepositOverdraftInterestRateChanged
+  - DepositOverdraftLimitChanged
+  - DepositBranchChanged
+  - DepositLoanFunded
+  - DepositLoanFundedAdjustment
+  - DepositLoanRepaid
+  - DepositLoanRepaidAdjustment
+  - DepositLoanFractionBought
+  - DepositLoanFractionBoughtAdjustment
+  - DepositLoanFractionSold
+  - DepositLoanFractionSoldAdjustment
+  - DepositSeizedAmount
+- name: transactions_payment_type
+  values:
+  - PaymentPrincipal
+  - PaymentInterest
+  - PaymentManualFee
+  - PaymentUpfrontDisbursementFee
+  - PaymentLateRepaymentFee
+  - PaymentPaymentDueFee
+  - PaymentPenalty
+- name: transactions_calculation_method
+  values:
+  - NoRecalculation
+  - RescheduleRemainingRepayments
+  - RecalculateScheduleKeepSameNumberOfTerms
+  - RecalculateScheduleKeepSamePrincipalAmount
+  - RecalculateScheduleKeepSameTotalRepaymentAmount
+  - ReduceAmountPerInstallment
+  - ReduceNumberOfInstallments
+  - ReduceNumberOfInstallmentsNew
+- name: transactions_loan_type
+  values:
+  - LoanImport
+  - LoanDisbursement
+  - LoanDisbursementAdjustment
+  - LoanWriteOff
+  - LoanWriteOffAdjustment
+  - LoanRepayment
+  - LoanPaymentMade
+  - LoanWithdrawalRedraw
+  - LoanWithdrawalRedrawAdjustment
+  - LoanFeeApplied
+  - LoanFeeCharged
+  - LoanFeesDueReduced
+  - LoanFeeAdjustment
+  - LoanPenaltyApplied
+  - LoanPenaltyAdjustment
+  - LoanPenaltiesDueReduced
+  - LoanRepaymentAdjustment
+  - LoanPaymentMadeAdjustment
+  - LoanInterestRateChanged
+  - LoanTaxRateChanged
+  - LoanPenaltyRateChanged
+  - LoanInterestApplied
+  - LoanInterestAppliedAdjustment
+  - LoanInterestDueReduced
+  - LoanPenaltyReductionAdjustment
+  - LoanFeeReductionAdjustment
+  - LoanInterestReductionAdjustment
+  - LoanDeferredInterestApplied
+  - LoanDeferredInterestAppliedAdjustment
+  - LoanDeferredInterestPaid
+  - LoanDeferredInterestPaidAdjustment
+  - LoanRedrawTransfer
+  - LoanRedrawRepayment
+  - LoanRedrawTransferAdjustment
+  - LoanRedrawRepaymentAdjustment
+  - LoanTransfer
+  - LoanTransferAdjustment
+  - LoanBranchChanged
+  - LoanTermsChanged
+  - LoanCardTransactionReversal
+  - LoanCardTransactionReversalAdjustment
+  - LoanDueDateChanged
+  - LoanDueDateChangedAdjustment
+  - LoanAccountTerminated
+  - LoanAccountTerminatedAdjustment
+- name: users_state
+  values:
+  - Active
+  - Inactive
+  - Locked
+tables:
+- name: contact_infos
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: full_name
+    type:
+      type: string
+  - name: telephones
+    type:
+      type: string
+      array: true
+  - name: emails
+    type:
+      type: string
+      array: true
+  - name: language
+    type:
+      type: string
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: contact_infos_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: contact_info_addresses_entries
+  columns:
+  - name: contact_info_id
+    type:
+      type: int32
+    is_primary: true
+  - name: address_id
+    type:
+      type: int32
+    is_primary: true
+  primary_keys:
+  - name: contact_info_id
+    type:
+      type: int32
+    is_primary: true
+  - name: address_id
+    type:
+      type: int32
+    is_primary: true
+  indexes:
+  - name: contact_info_addresses_entries_pkey
+    fields:
+    - name: contact_info_id
+      type:
+        type: int32
+      is_primary: true
+    - name: address_id
+      type:
+        type: int32
+      is_primary: true
+    is_unique: true
+    is_primary: true
+  - name: contact_info_addresses_entries_lookup_idx
+    fields:
+    - name: contact_info_id
+      type:
+        type: int32
+      is_primary: true
+  foreign_keys:
+  - name: contact_info_addresses_entries_left_fkey
+    column:
+    - name: contact_info_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: contact_infos
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+  - name: contact_info_addresses_entries_right_fkey
+    column:
+    - name: address_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: addresses
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: addresses
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: extended
+    type:
+      type: string
+  - name: street
+    type:
+      type: string
+  - name: city
+    type:
+      type: string
+  - name: region
+    type:
+      type: string
+  - name: post_code
+    type:
+      type: string
+  - name: country
+    type:
+      type: string
+  - name: latitude
+    type:
+      type: string
+  - name: longitude
+    type:
+      type: string
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: addresses_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: currencies
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: code
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  - name: symbol
+    type:
+      type: string
+  - name: format
+    type:
+      type: string
+  - name: decimals
+    type:
+      type: int32
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: currencies_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: backups
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: backup_id
+    type:
+      type: string
+  - name: status
+    type:
+      type: enum
+      enum_name: status
+  - name: create_time
+    type:
+      type: time
+  - name: complete_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: backups_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: branches
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: branch_id
+    type:
+      type: string
+  - name: info
+    type:
+      type: int32
+  - name: notes
+    type:
+      type: string
+  - name: state
+    type:
+      type: enum
+      enum_name: state
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: branches_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+  foreign_keys:
+  - name: branches_info_fkey
+    column:
+    - name: info
+      type:
+        type: int32
+    ref_table: contact_infos
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: branch_holidays_entries
+  columns:
+  - name: branch_id
+    type:
+      type: int32
+    is_primary: true
+  - name: org_holiday_id
+    type:
+      type: int32
+    is_primary: true
+  primary_keys:
+  - name: branch_id
+    type:
+      type: int32
+    is_primary: true
+  - name: org_holiday_id
+    type:
+      type: int32
+    is_primary: true
+  indexes:
+  - name: branch_holidays_entries_pkey
+    fields:
+    - name: branch_id
+      type:
+        type: int32
+      is_primary: true
+    - name: org_holiday_id
+      type:
+        type: int32
+      is_primary: true
+    is_unique: true
+    is_primary: true
+  - name: branch_holidays_entries_lookup_idx
+    fields:
+    - name: branch_id
+      type:
+        type: int32
+      is_primary: true
+  foreign_keys:
+  - name: branch_holidays_entries_left_fkey
+    column:
+    - name: branch_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: branches
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+  - name: branch_holidays_entries_right_fkey
+    column:
+    - name: org_holiday_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: org_holidays
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: branch_fields_entries
+  columns:
+  - name: branch_id
+    type:
+      type: int32
+    is_primary: true
+  - name: field_id
+    type:
+      type: int32
+    is_primary: true
+  primary_keys:
+  - name: branch_id
+    type:
+      type: int32
+    is_primary: true
+  - name: field_id
+    type:
+      type: int32
+    is_primary: true
+  indexes:
+  - name: branch_fields_entries_pkey
+    fields:
+    - name: branch_id
+      type:
+        type: int32
+      is_primary: true
+    - name: field_id
+      type:
+        type: int32
+      is_primary: true
+    is_unique: true
+    is_primary: true
+  - name: branch_fields_entries_lookup_idx
+    fields:
+    - name: branch_id
+      type:
+        type: int32
+      is_primary: true
+  foreign_keys:
+  - name: branch_fields_entries_left_fkey
+    column:
+    - name: branch_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: branches
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+  - name: branch_fields_entries_right_fkey
+    column:
+    - name: field_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: fields
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: cards
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: card_id
+    type:
+      type: string
+  - name: type
+    type:
+      type: enum
+      enum_name: cards_type
+  - name: account_id
+    type:
+      type: string
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: cards_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+  - name: cards_card_id_idx
+    fields:
+    - name: card_id
+      type:
+        type: string
+    is_unique: true
+  - name: cards_type_idx
+    fields:
+    - name: type
+      type:
+        type: enum
+        enum_name: cards_type
+- name: card_transactions
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: transaction_id
+    type:
+      type: string
+  - name: advice
+    type:
+      type: bool
+  - name: amount
+    type:
+      type: "[]byte"
+  - name: acceptor
+    type:
+      type: "[]byte"
+  - name: card_id
+    type:
+      type: string
+  - name: authorization_id
+    type:
+      type: string
+  - name: transaction_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: card_transactions_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: card_authorization_holds
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: hold_id
+    type:
+      type: string
+  - name: account_id
+    type:
+      type: string
+  - name: advice
+    type:
+      type: bool
+  - name: amount
+    type:
+      type: "[]byte"
+  - name: original_amount
+    type:
+      type: "[]byte"
+  - name: card_acceptor
+    type:
+      type: "[]byte"
+  - name: exchange_rate
+    type:
+      type: float64
+  - name: card_id
+    type:
+      type: string
+  - name: type
+    type:
+      type: enum
+      enum_name: cards_type
+  - name: source
+    type:
+      type: enum
+      enum_name: cards_hold_source
+  - name: status
+    type:
+      type: enum
+      enum_name: cards_hold_status
+  - name: user_transaction_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: card_authorization_holds_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: card_hold_adjustments
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: adjustment_id
+    type:
+      type: string
+  - name: advice
+    type:
+      type: bool
+  - name: change
+    type:
+      type: "[]byte"
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: card_hold_adjustments_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: card_hold_configs
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: merchant_code
+    type:
+      type: string
+  - name: duration
+    type:
+      type: int64
+  - name: description
+    type:
+      type: string
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: card_hold_configs_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: centres
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: centre_id
+    type:
+      type: string
+  - name: info
+    type:
+      type: int32
+  - name: notes
+    type:
+      type: string
+  - name: assigned_branch_id
+    type:
+      type: string
+  - name: meeting_day
+    type:
+      type: enum
+      enum_name: org_day
+  - name: state
+    type:
+      type: enum
+      enum_name: state
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: centres_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+  foreign_keys:
+  - name: centres_info_fkey
+    column:
+    - name: info
+      type:
+        type: int32
+    ref_table: contact_infos
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: centre_fields_entries
+  columns:
+  - name: centre_id
+    type:
+      type: int32
+    is_primary: true
+  - name: field_id
+    type:
+      type: int32
+    is_primary: true
+  primary_keys:
+  - name: centre_id
+    type:
+      type: int32
+    is_primary: true
+  - name: field_id
+    type:
+      type: int32
+    is_primary: true
+  indexes:
+  - name: centre_fields_entries_pkey
+    fields:
+    - name: centre_id
+      type:
+        type: int32
+      is_primary: true
+    - name: field_id
+      type:
+        type: int32
+      is_primary: true
+    is_unique: true
+    is_primary: true
+  - name: centre_fields_entries_lookup_idx
+    fields:
+    - name: centre_id
+      type:
+        type: int32
+      is_primary: true
+  foreign_keys:
+  - name: centre_fields_entries_left_fkey
+    column:
+    - name: centre_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: centres
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+  - name: centre_fields_entries_right_fkey
+    column:
+    - name: field_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: fields
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: clients
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: client_id
+    type:
+      type: string
+  - name: info
+    type:
+      type: int32
+  - name: assigned_branch_id
+    type:
+      type: string
+  - name: assigned_centre_id
+    type:
+      type: string
+  - name: assigned_user_id
+    type:
+      type: string
+  - name: birthday
+    type:
+      type: time
+  - name: role_id
+    type:
+      type: string
+  - name: gender
+    type:
+      type: enum
+      enum_name: clients_gender
+  - name: group_ids
+    type:
+      type: string
+      array: true
+  - name: group_loan_cycle
+    type:
+      type: int32
+  - name: loan_cycle
+    type:
+      type: int32
+  - name: migration_event_id
+    type:
+      type: string
+  - name: portal_settings
+    type:
+      type: "[]byte"
+  - name: profile_picture_id
+    type:
+      type: string
+  - name: profile_signature_id
+    type:
+      type: string
+  - name: state
+    type:
+      type: enum
+      enum_name: state
+  - name: notes
+    type:
+      type: string
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  - name: approve_time
+    type:
+      type: time
+  - name: activate_time
+    type:
+      type: time
+  - name: close_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: clients_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+  foreign_keys:
+  - name: clients_info_fkey
+    column:
+    - name: info
+      type:
+        type: int32
+    ref_table: contact_infos
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: client_documents_entries
+  columns:
+  - name: client_id
+    type:
+      type: int32
+    is_primary: true
+  - name: document_id
+    type:
+      type: int32
+    is_primary: true
+  primary_keys:
+  - name: client_id
+    type:
+      type: int32
+    is_primary: true
+  - name: document_id
+    type:
+      type: int32
+    is_primary: true
+  indexes:
+  - name: client_documents_entries_pkey
+    fields:
+    - name: client_id
+      type:
+        type: int32
+      is_primary: true
+    - name: document_id
+      type:
+        type: int32
+      is_primary: true
+    is_unique: true
+    is_primary: true
+  - name: client_documents_entries_lookup_idx
+    fields:
+    - name: client_id
+      type:
+        type: int32
+      is_primary: true
+  foreign_keys:
+  - name: client_documents_entries_left_fkey
+    column:
+    - name: client_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: clients
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+  - name: client_documents_entries_right_fkey
+    column:
+    - name: document_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: documents
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: comments
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: comment_id
+    type:
+      type: string
+  - name: user_id
+    type:
+      type: string
+  - name: owner_id
+    type:
+      type: string
+  - name: owner_type
+    type:
+      type: enum
+      enum_name: comments_owner
+  - name: text
+    type:
+      type: string
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: comments_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: consumers
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: consumer_id
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  - name: type
+    type:
+      type: enum
+      enum_name: consumers_consumer_type
+  - name: branch_id
+    type:
+      type: string
+  - name: access
+    type:
+      type: "[]byte"
+  - name: role_id
+    type:
+      type: string
+  - name: transaction_limits
+    type:
+      type: "[]byte"
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: consumers_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: currency_accounting_rates
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: rate_id
+    type:
+      type: string
+  - name: rate
+    type:
+      type: string
+  - name: from_currency
+    type:
+      type: string
+  - name: to_currency
+    type:
+      type: string
+  - name: start_time
+    type:
+      type: time
+  - name: end_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: currency_accounting_rates_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: currency_exchange_rates
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: exchange_rate_id
+    type:
+      type: string
+  - name: buy_rate
+    type:
+      type: float64
+  - name: sell_rate
+    type:
+      type: float64
+  - name: from_currency
+    type:
+      type: string
+  - name: to_currency
+    type:
+      type: string
+  - name: start_time
+    type:
+      type: time
+  - name: end_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: currency_exchange_rates_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: deposit_accounts
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: account_id
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  - name: notes
+    type:
+      type: string
+  - name: holder_id
+    type:
+      type: string
+  - name: holder_type
+    type:
+      type: enum
+      enum_name: entity
+  - name: state
+    type:
+      type: enum
+      enum_name: deposits_account_state
+  - name: type
+    type:
+      type: enum
+      enum_name: deposits_account_type
+  - name: accrued_amounts
+    type:
+      type: "[]byte"
+  - name: assigned_branch_id
+    type:
+      type: string
+  - name: assigned_centre_id
+    type:
+      type: string
+  - name: assigned_user_id
+    type:
+      type: string
+  - name: balances
+    type:
+      type: "[]byte"
+  - name: revolving_account_id
+    type:
+      type: string
+  - name: currency_code
+    type:
+      type: string
+  - name: interest_settings
+    type:
+      type: "[]byte"
+  - name: internal_controls
+    type:
+      type: "[]byte"
+  - name: settlement_account_ids
+    type:
+      type: string
+      array: true
+  - name: migration_event_id
+    type:
+      type: string
+  - name: overdraft_rate_settings
+    type:
+      type: "[]byte"
+  - name: overdraft_settings
+    type:
+      type: "[]byte"
+  - name: product_id
+    type:
+      type: string
+  - name: withholding_tax_source_id
+    type:
+      type: string
+  - name: create_time
+    type:
+      type: time
+  - name: approve_time
+    type:
+      type: time
+  - name: activate_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  - name: close_time
+    type:
+      type: time
+  - name: appraise_time
+    type:
+      type: time
+  - name: interest_calculate_time
+    type:
+      type: time
+  - name: interest_store_time
+    type:
+      type: time
+  - name: overdraft_interest_review_time
+    type:
+      type: time
+  - name: arrears_set_time
+    type:
+      type: time
+  - name: lock_time
+    type:
+      type: time
+  - name: mature_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: deposit_accounts_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: deposit_fund_blocks
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: block_id
+    type:
+      type: string
+  - name: account_id
+    type:
+      type: string
+  - name: amount
+    type:
+      type: "[]byte"
+  - name: seized_amount
+    type:
+      type: "[]byte"
+  - name: state
+    type:
+      type: enum
+      enum_name: deposits_block_state
+  - name: notes
+    type:
+      type: string
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: deposit_fund_blocks_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: deposit_accrued_interests
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: is_payment_holidays
+    type:
+      type: bool
+  - name: payment_holidays_rate
+    type:
+      type: float64
+  - name: notes
+    type:
+      type: string
+  - name: start_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: deposit_accrued_interests_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: deposit_reopen_details
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: notes
+    type:
+      type: string
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: deposit_reopen_details_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: documents
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: document_id
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  - name: notes
+    type:
+      type: string
+  - name: owner_id
+    type:
+      type: string
+  - name: owner_type
+    type:
+      type: enum
+      enum_name: documents_owner
+  - name: template_id
+    type:
+      type: string
+  - name: file_name
+    type:
+      type: string
+  - name: size
+    type:
+      type: int32
+  - name: create_time
+    type:
+      type: time
+  - name: expire_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: documents_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: fields
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: field_id
+    type:
+      type: string
+  - name: type
+    type:
+      type: enum
+      enum_name: fields_type
+  - name: name
+    type:
+      type: string
+  - name: description
+    type:
+      type: string
+  - name: options
+    type:
+      type: "[]byte"
+  - name: usage
+    type:
+      type: "[]byte"
+  - name: validation_rule
+    type:
+      type: "[]byte"
+  - name: view_rights
+    type:
+      type: string
+      array: true
+  - name: edit_rights
+    type:
+      type: string
+      array: true
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: fields_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: field_sets
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: set_id
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  - name: description
+    type:
+      type: string
+  - name: allow_duplicates
+    type:
+      type: bool
+  - name: valid_for
+    type:
+      type: enum
+      enum_name: fields_available_for
+  - name: state
+    type:
+      type: enum
+      enum_name: state
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: field_sets_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: field_set_fields_entries
+  columns:
+  - name: field_set_id
+    type:
+      type: int32
+    is_primary: true
+  - name: field_id
+    type:
+      type: int32
+    is_primary: true
+  primary_keys:
+  - name: field_set_id
+    type:
+      type: int32
+    is_primary: true
+  - name: field_id
+    type:
+      type: int32
+    is_primary: true
+  indexes:
+  - name: field_set_fields_entries_pkey
+    fields:
+    - name: field_set_id
+      type:
+        type: int32
+      is_primary: true
+    - name: field_id
+      type:
+        type: int32
+      is_primary: true
+    is_unique: true
+    is_primary: true
+  - name: field_set_fields_entries_lookup_idx
+    fields:
+    - name: field_set_id
+      type:
+        type: int32
+      is_primary: true
+  foreign_keys:
+  - name: field_set_fields_entries_left_fkey
+    column:
+    - name: field_set_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: field_sets
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+  - name: field_set_fields_entries_right_fkey
+    column:
+    - name: field_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: fields
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: group_roles
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: role_id
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: group_roles_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: group_members
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: group_id
+    type:
+      type: string
+  - name: client_id
+    type:
+      type: string
+  - name: role_ids
+    type:
+      type: string
+      array: true
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: group_members_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: groups
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: group_id
+    type:
+      type: string
+  - name: info
+    type:
+      type: int32
+  - name: branch_id
+    type:
+      type: string
+  - name: centre_id
+    type:
+      type: string
+  - name: owner_id
+    type:
+      type: string
+  - name: loan_cycle
+    type:
+      type: int32
+  - name: migration_event_id
+    type:
+      type: string
+  - name: notes
+    type:
+      type: string
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: groups_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+  foreign_keys:
+  - name: groups_info_fkey
+    column:
+    - name: info
+      type:
+        type: int32
+    ref_table: contact_infos
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: group_members_entries
+  columns:
+  - name: group_id
+    type:
+      type: int32
+    is_primary: true
+  - name: group_member_id
+    type:
+      type: int32
+    is_primary: true
+  primary_keys:
+  - name: group_id
+    type:
+      type: int32
+    is_primary: true
+  - name: group_member_id
+    type:
+      type: int32
+    is_primary: true
+  indexes:
+  - name: group_members_entries_pkey
+    fields:
+    - name: group_id
+      type:
+        type: int32
+      is_primary: true
+    - name: group_member_id
+      type:
+        type: int32
+      is_primary: true
+    is_unique: true
+    is_primary: true
+  - name: group_members_entries_lookup_idx
+    fields:
+    - name: group_id
+      type:
+        type: int32
+      is_primary: true
+  foreign_keys:
+  - name: group_members_entries_left_fkey
+    column:
+    - name: group_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: groups
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+  - name: group_members_entries_right_fkey
+    column:
+    - name: group_member_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: group_members
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: group_roles_entries
+  columns:
+  - name: group_id
+    type:
+      type: int32
+    is_primary: true
+  - name: group_role_id
+    type:
+      type: int32
+    is_primary: true
+  primary_keys:
+  - name: group_id
+    type:
+      type: int32
+    is_primary: true
+  - name: group_role_id
+    type:
+      type: int32
+    is_primary: true
+  indexes:
+  - name: group_roles_entries_pkey
+    fields:
+    - name: group_id
+      type:
+        type: int32
+      is_primary: true
+    - name: group_role_id
+      type:
+        type: int32
+      is_primary: true
+    is_unique: true
+    is_primary: true
+  - name: group_roles_entries_lookup_idx
+    fields:
+    - name: group_id
+      type:
+        type: int32
+      is_primary: true
+  foreign_keys:
+  - name: group_roles_entries_left_fkey
+    column:
+    - name: group_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: groups
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+  - name: group_roles_entries_right_fkey
+    column:
+    - name: group_role_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: group_roles
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: imports
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: import_id
+    type:
+      type: string
+  - name: importer_id
+    type:
+      type: string
+  - name: status
+    type:
+      type: enum
+      enum_name: status
+  - name: errors
+    type:
+      type: "[]byte"
+  - name: progress
+    type:
+      type: float64
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: imports_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: ledger_accounts
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: account_id
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  - name: description
+    type:
+      type: string
+  - name: amount
+    type:
+      type: "[]byte"
+  - name: activated
+    type:
+      type: bool
+  - name: allow_manual_entries
+    type:
+      type: bool
+  - name: gl_code
+    type:
+      type: string
+  - name: migration_event_id
+    type:
+      type: string
+  - name: strip_trailing_zeros
+    type:
+      type: bool
+  - name: type
+    type:
+      type: enum
+      enum_name: ledgers_account_type
+  - name: usage
+    type:
+      type: enum
+      enum_name: ledgers_usage
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: ledger_accounts_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: ledger_entries
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: entry_id
+    type:
+      type: string
+  - name: account_id
+    type:
+      type: string
+  - name: branch_id
+    type:
+      type: string
+  - name: user_id
+    type:
+      type: string
+  - name: transaction_id
+    type:
+      type: string
+  - name: type
+    type:
+      type: enum
+      enum_name: ledgers_entry_type
+  - name: product_id
+    type:
+      type: string
+  - name: product_type
+    type:
+      type: enum
+      enum_name: ledgers_product_type
+  - name: amount
+    type:
+      type: "[]byte"
+  - name: accounting_rate
+    type:
+      type: int32
+  - name: notes
+    type:
+      type: string
+  - name: reversal_entry_id
+    type:
+      type: string
+  - name: create_time
+    type:
+      type: time
+  - name: book_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: ledger_entries_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+  foreign_keys:
+  - name: ledger_entries_accounting_rate_fkey
+    column:
+    - name: accounting_rate
+      type:
+        type: int32
+    ref_table: currency_accounting_rates
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: ledger_entry_amounts
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: amount
+    type:
+      type: "[]byte"
+  - name: code
+    type:
+      type: string
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: ledger_entry_amounts_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: loan_funding_sales
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: purchases
+    type:
+      type: "[]byte"
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: loan_funding_sales_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: loan_installments
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: installment_id
+    type:
+      type: string
+  - name: fees
+    type:
+      type: "[]byte"
+  - name: interest
+    type:
+      type: "[]byte"
+  - name: is_payment_holiday
+    type:
+      type: bool
+  - name: pay_time
+    type:
+      type: time
+  - name: order
+    type:
+      type: string
+  - name: parent_account_id
+    type:
+      type: string
+  - name: penalty
+    type:
+      type: "[]byte"
+  - name: principal
+    type:
+      type: "[]byte"
+  - name: due_time
+    type:
+      type: time
+  - name: repay_time
+    type:
+      type: time
+  - name: state
+    type:
+      type: enum
+      enum_name: loans_installment_state
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: loan_installments_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: loan_investor_funds
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: fund_id
+    type:
+      type: string
+  - name: amount
+    type:
+      type: "[]byte"
+  - name: interest_commission
+    type:
+      type: float64
+  - name: share_percentage
+    type:
+      type: float64
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: loan_investor_funds_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: loan_accounts
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: account_id
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  - name: holder_id
+    type:
+      type: string
+  - name: holder_type
+    type:
+      type: enum
+      enum_name: entity
+  - name: state
+    type:
+      type: enum
+      enum_name: loans_account_state
+  - name: sub_state
+    type:
+      type: enum
+      enum_name: loans_account_sub_state
+  - name: accrued_interest
+    type:
+      type: "[]byte"
+  - name: accrued_penalty
+    type:
+      type: "[]byte"
+  - name: activation_transaction_id
+    type:
+      type: string
+  - name: arrears_tolerance_period
+    type:
+      type: int32
+  - name: assets
+    type:
+      type: "[]byte"
+  - name: guarantors
+    type:
+      type: "[]byte"
+  - name: assigned_branch_id
+    type:
+      type: string
+  - name: assigned_centre_id
+    type:
+      type: string
+  - name: assigned_user_id
+    type:
+      type: string
+  - name: balances
+    type:
+      type: "[]byte"
+  - name: revolving_account_id
+    type:
+      type: string
+  - name: currency_id
+    type:
+      type: int32
+  - name: days_in_arrears
+    type:
+      type: int32
+  - name: days_late
+    type:
+      type: int32
+  - name: disbursement_details
+    type:
+      type: "[]byte"
+  - name: future_payments_acceptance
+    type:
+      type: enum
+      enum_name: loans_account_future_payments_acceptance
+  - name: interest_commission
+    type:
+      type: "[]byte"
+  - name: interest_from_arrears_accrued
+    type:
+      type: "[]byte"
+  - name: late_payments_recalculation_method
+    type:
+      type: enum
+      enum_name: loans_account_late_payments_recalculation_method
+  - name: amount
+    type:
+      type: "[]byte"
+  - name: locked_operations
+    type:
+      type: enum
+      array: true
+      enum_name: loans_locked_operations
+  - name: migration_event_id
+    type:
+      type: string
+  - name: notes
+    type:
+      type: string
+  - name: original_account_id
+    type:
+      type: string
+  - name: payment_holidays_accrued_interest
+    type:
+      type: "[]byte"
+  - name: payment_method
+    type:
+      type: enum
+      enum_name: loans_account_payment_method
+  - name: product_id
+    type:
+      type: string
+  - name: rescheduled_account_id
+    type:
+      type: string
+  - name: settings
+    type:
+      type: "[]byte"
+  - name: settlement_account_id
+    type:
+      type: string
+  - name: tax_rate
+    type:
+      type: float64
+  - name: tranches
+    type:
+      type: "[]byte"
+  - name: approve_time
+    type:
+      type: time
+  - name: close_time
+    type:
+      type: time
+  - name: create_time
+    type:
+      type: time
+  - name: appraise_time
+    type:
+      type: time
+  - name: interest_apply_time
+    type:
+      type: time
+  - name: interest_review_time
+    type:
+      type: time
+  - name: lock_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  - name: arrears_set_time
+    type:
+      type: time
+  - name: tax_rate_review_time
+    type:
+      type: time
+  - name: terminate_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: loan_accounts_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+  foreign_keys:
+  - name: loan_accounts_currency_id_fkey
+    column:
+    - name: currency_id
+      type:
+        type: int32
+    ref_table: currencies
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: loan_action_details
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: notes
+    type:
+      type: string
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: loan_action_details_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: notifications
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: notification_id
+    type:
+      type: string
+  - name: user_id
+    type:
+      type: string
+  - name: client_id
+    type:
+      type: string
+  - name: group_id
+    type:
+      type: string
+  - name: deposit_account_id
+    type:
+      type: string
+  - name: loan_account_id
+    type:
+      type: string
+  - name: repayment_id
+    type:
+      type: string
+  - name: type
+    type:
+      type: enum
+      enum_name: notifications_type
+  - name: event
+    type:
+      type: enum
+      enum_name: notifications_event
+  - name: status
+    type:
+      type: enum
+      enum_name: status
+  - name: template_id
+    type:
+      type: string
+  - name: destination
+    type:
+      type: string
+  - name: sender_id
+    type:
+      type: string
+  - name: subject
+    type:
+      type: string
+  - name: body
+    type:
+      type: "[]byte"
+  - name: num_retries
+    type:
+      type: int32
+  - name: create_time
+    type:
+      type: time
+  - name: send_time
+    type:
+      type: time
+  - name: failure_reason
+    type:
+      type: enum
+      enum_name: notifications_failure_reason
+  - name: failure_cause
+    type:
+      type: string
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: notifications_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: notification_resend_date_filters
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: types
+    type:
+      type: enum
+      array: true
+      enum_name: notifications_type
+  - name: start_time
+    type:
+      type: time
+  - name: end_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: notification_resend_date_filters_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: org_channels
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: channel_id
+    type:
+      type: string
+  - name: gl_account
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  - name: loans_constraints
+    type:
+      type: "[]byte"
+  - name: deposit_constraints
+    type:
+      type: "[]byte"
+  - name: state
+    type:
+      type: enum
+      enum_name: state
+  - name: default
+    type:
+      type: bool
+  - name: allowed_users
+    type:
+      type: string
+      array: true
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: org_channels_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: org_holidays
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: holiday_id
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  - name: date
+    type:
+      type: time
+  - name: is_annually_recurring
+    type:
+      type: bool
+  - name: create_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: org_holidays_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: org_non_working_days
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: non_working_days
+    type:
+      type: enum
+      array: true
+      enum_name: org_day
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: org_non_working_days_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: organizations
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: info
+    type:
+      type: int32
+  - name: currency_id
+    type:
+      type: int32
+  - name: date_format
+    type:
+      type: string
+  - name: date_time_format
+    type:
+      type: string
+  - name: timezone
+    type:
+      type: string
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: organizations_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+  foreign_keys:
+  - name: organizations_info_fkey
+    column:
+    - name: info
+      type:
+        type: int32
+    ref_table: contact_infos
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+  - name: organizations_currency_id_fkey
+    column:
+    - name: currency_id
+      type:
+        type: int32
+    ref_table: currencies
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: org_defaults
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: client_role_id
+    type:
+      type: string
+  - name: client_state
+    type:
+      type: enum
+      enum_name: state
+  - name: group_role_id
+    type:
+      type: string
+  - name: line_of_credit_state
+    type:
+      type: enum
+      enum_name: state
+  - name: transaction_channel_id
+    type:
+      type: string
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: org_defaults_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: org_setups
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: accounting_cut_off_time
+    type:
+      type: time
+  - name: arrears_days_before_write_off
+    type:
+      type: int32
+  - name: assignment_constraints
+    type:
+      type: enum
+      array: true
+      enum_name: org_assignment_constraint
+  - name: automated_accounting_closures_interval
+    type:
+      type: int64
+  - name: client_id_format
+    type:
+      type: string
+  - name: group_id_format
+    type:
+      type: string
+  - name: line_of_credit_id_format
+    type:
+      type: string
+  - name: date_formats
+    type:
+      type: "[]byte"
+  - name: enabled_components
+    type:
+      type: enum
+      array: true
+      enum_name: org_app_component
+  - name: dashboard_components
+    type:
+      type: enum
+      array: true
+      enum_name: org_dashboard_component
+  - name: decimal_separator
+    type:
+      type: enum
+      enum_name: org_decimal_separator
+  - name: defaults
+    type:
+      type: int32
+  - name: client_checks
+    type:
+      type: enum
+      array: true
+      enum_name: org_duplicate_item_type
+  - name: client_constraint_action
+    type:
+      type: enum
+      enum_name: org_constraint_action
+  - name: end_of_day_mode
+    type:
+      type: enum
+      enum_name: org_end_of_day_mode
+  - name: exposure_amount
+    type:
+      type: "[]byte"
+  - name: exposure_type
+    type:
+      type: enum
+      enum_name: org_exposure_type
+  - name: min_group_size_limit
+    type:
+      type: int32
+  - name: max_group_size_limit
+    type:
+      type: int32
+  - name: group_size_limit_type
+    type:
+      type: enum
+      enum_name: org_group_size_limit_type
+  - name: inter_branch_transfer_gl_account_id
+    type:
+      type: string
+  - name: max_allowed_id_document_attachments
+    type:
+      type: int32
+  - name: max_allowed_journal_entry_document_attachments
+    type:
+      type: int32
+  - name: max_allowed_undo_closure_period
+    type:
+      type: int32
+  - name: max_client_groups
+    type:
+      type: int32
+  - name: max_loans
+    type:
+      type: int32
+  - name: allow_other_id_documents
+    type:
+      type: bool
+  - name: overdraft_interest_date
+    type:
+      type: time
+  - name: min_disbursal_approval_required
+    type:
+      type: int32
+  - name: min_loan_approval_required
+    type:
+      type: int32
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: org_setups_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+  foreign_keys:
+  - name: org_setups_defaults_fkey
+    column:
+    - name: defaults
+      type:
+        type: int32
+    ref_table: org_defaults
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: product_deposit_products
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: product_id
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  - name: notes
+    type:
+      type: string
+  - name: category
+    type:
+      type: enum
+      enum_name: products_deposit_category
+  - name: controls
+    type:
+      type: "[]byte"
+  - name: settings
+    type:
+      type: "[]byte"
+  - name: active
+    type:
+      type: bool
+  - name: template_ids
+    type:
+      type: string
+      array: true
+  - name: type
+    type:
+      type: enum
+      enum_name: products_deposit_product_type
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: product_deposit_products_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: product_deposit_product_currencies_entries
+  columns:
+  - name: product_deposit_product_id
+    type:
+      type: int32
+    is_primary: true
+  - name: currency_id
+    type:
+      type: int32
+    is_primary: true
+  primary_keys:
+  - name: product_deposit_product_id
+    type:
+      type: int32
+    is_primary: true
+  - name: currency_id
+    type:
+      type: int32
+    is_primary: true
+  indexes:
+  - name: product_deposit_product_currencies_entries_pkey
+    fields:
+    - name: product_deposit_product_id
+      type:
+        type: int32
+      is_primary: true
+    - name: currency_id
+      type:
+        type: int32
+      is_primary: true
+    is_unique: true
+    is_primary: true
+  - name: product_deposit_product_currencies_entries_lookup_idx
+    fields:
+    - name: product_deposit_product_id
+      type:
+        type: int32
+      is_primary: true
+  foreign_keys:
+  - name: product_deposit_product_currencies_entries_left_fkey
+    column:
+    - name: product_deposit_product_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: product_deposit_products
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+  - name: product_deposit_product_currencies_entries_right_fkey
+    column:
+    - name: currency_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: currencies
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: product_fees
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: fee_id
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  - name: calculation_method
+    type:
+      type: enum
+      enum_name: products_fee_calculation_method
+  - name: required
+    type:
+      type: bool
+  - name: amount
+    type:
+      type: "[]byte"
+  - name: percent
+    type:
+      type: string
+  - name: apply_date_method
+    type:
+      type: enum
+      enum_name: products_fee_apply_date_method
+  - name: trigger
+    type:
+      type: enum
+      enum_name: products_fee_trigger
+  - name: accounting_rules
+    type:
+      type: "[]byte"
+  - name: amortization_settings
+    type:
+      type: "[]byte"
+  - name: is_active
+    type:
+      type: bool
+  - name: is_taxable
+    type:
+      type: bool
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: product_fees_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: product_loan_products
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: product_id
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  - name: type
+    type:
+      type: enum
+      enum_name: products_loan_type
+  - name: active
+    type:
+      type: bool
+  - name: notes
+    type:
+      type: string
+  - name: allow_custom_repayment_allocation
+    type:
+      type: bool
+  - name: category
+    type:
+      type: enum
+      enum_name: products_loan_category
+  - name: currency_id
+    type:
+      type: int32
+  - name: internal_controls
+    type:
+      type: "[]byte"
+  - name: template_ids
+    type:
+      type: string
+      array: true
+  - name: settings
+    type:
+      type: "[]byte"
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: product_loan_products_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+  foreign_keys:
+  - name: product_loan_products_currency_id_fkey
+    column:
+    - name: currency_id
+      type:
+        type: int32
+    ref_table: currencies
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: product_risk_levels
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: level_id
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  - name: minimum_days
+    type:
+      type: int32
+  - name: maximum_days
+    type:
+      type: int32
+  - name: provisioning_percent
+    type:
+      type: float64
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: product_risk_levels_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: rate_sources
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: source_id
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  - name: type
+    type:
+      type: enum
+      enum_name: rates_source_type
+  - name: notes
+    type:
+      type: string
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: rate_sources_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: rate_index_rates
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: rate_id
+    type:
+      type: string
+  - name: source_id
+    type:
+      type: string
+  - name: user_id
+    type:
+      type: string
+  - name: rate
+    type:
+      type: float64
+  - name: notes
+    type:
+      type: string
+  - name: start_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: rate_index_rates_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: report_amounts
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: opening_balance
+    type:
+      type: "[]byte"
+  - name: closing_balance
+    type:
+      type: "[]byte"
+  - name: credits
+    type:
+      type: "[]byte"
+  - name: debits
+    type:
+      type: "[]byte"
+  - name: net_change
+    type:
+      type: "[]byte"
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: report_amounts_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: report_entries
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: amounts
+    type:
+      type: int32
+  - name: foreign_amounts
+    type:
+      type: int32
+  - name: gl_account
+    type:
+      type: int32
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: report_entries_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+  foreign_keys:
+  - name: report_entries_amounts_fkey
+    column:
+    - name: amounts
+      type:
+        type: int32
+    ref_table: report_amounts
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+  - name: report_entries_foreign_amounts_fkey
+    column:
+    - name: foreign_amounts
+      type:
+        type: int32
+    ref_table: report_amounts
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+  - name: report_entries_gl_account_fkey
+    column:
+    - name: gl_account
+      type:
+        type: int32
+    ref_table: ledger_accounts
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: reports
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: report_id
+    type:
+      type: string
+  - name: status
+    type:
+      type: enum
+      enum_name: status
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: reports_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: report_items_entries
+  columns:
+  - name: report_id
+    type:
+      type: int32
+    is_primary: true
+  - name: report_entry_id
+    type:
+      type: int32
+    is_primary: true
+  primary_keys:
+  - name: report_id
+    type:
+      type: int32
+    is_primary: true
+  - name: report_entry_id
+    type:
+      type: int32
+    is_primary: true
+  indexes:
+  - name: report_items_entries_pkey
+    fields:
+    - name: report_id
+      type:
+        type: int32
+      is_primary: true
+    - name: report_entry_id
+      type:
+        type: int32
+      is_primary: true
+    is_unique: true
+    is_primary: true
+  - name: report_items_entries_lookup_idx
+    fields:
+    - name: report_id
+      type:
+        type: int32
+      is_primary: true
+  foreign_keys:
+  - name: report_items_entries_left_fkey
+    column:
+    - name: report_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: reports
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+  - name: report_items_entries_right_fkey
+    column:
+    - name: report_entry_id
+      type:
+        type: int32
+      is_primary: true
+    ref_table: report_entries
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: revolving_accounts
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: account_id
+    type:
+      type: string
+  - name: client_id
+    type:
+      type: string
+  - name: holder_type
+    type:
+      type: enum
+      enum_name: entity
+  - name: notes
+    type:
+      type: string
+  - name: status
+    type:
+      type: enum
+      enum_name: status
+  - name: sub_status
+    type:
+      type: enum
+      enum_name: status
+  - name: max_credit
+    type:
+      type: "[]byte"
+  - name: available_credit
+    type:
+      type: "[]byte"
+  - name: consumed_credit
+    type:
+      type: "[]byte"
+  - name: exposure_limit_type
+    type:
+      type: enum
+      enum_name: revolving_exposure_limit
+  - name: approve_time
+    type:
+      type: time
+  - name: start_time
+    type:
+      type: time
+  - name: close_time
+    type:
+      type: time
+  - name: expire_time
+    type:
+      type: time
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: revolving_accounts_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: role_client_roles
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: role_id
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  - name: client_type
+    type:
+      type: enum
+      enum_name: entity
+  - name: description
+    type:
+      type: string
+  - name: require_id
+    type:
+      type: bool
+  - name: can_guarantee
+    type:
+      type: bool
+  - name: can_open_accounts
+    type:
+      type: bool
+  - name: use_default_address
+    type:
+      type: bool
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: role_client_roles_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: role_permissions
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: admin
+    type:
+      type: bool
+  - name: api
+    type:
+      type: bool
+  - name: all_branches
+    type:
+      type: bool
+  - name: branches
+    type:
+      type: string
+      array: true
+  - name: credit_officer
+    type:
+      type: bool
+  - name: manage_other_entities
+    type:
+      type: bool
+  - name: web
+    type:
+      type: bool
+  - name: delivery
+    type:
+      type: bool
+  - name: support
+    type:
+      type: bool
+  - name: teller
+    type:
+      type: bool
+  - name: permissions
+    type:
+      type: enum
+      array: true
+      enum_name: permission
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: role_permissions_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: role_user_roles
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: role_id
+    type:
+      type: string
+  - name: name
+    type:
+      type: string
+  - name: access
+    type:
+      type: int32
+  - name: notes
+    type:
+      type: string
+  - name: creation_date
+    type:
+      type: time
+  - name: modified_date
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: role_user_roles_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+  foreign_keys:
+  - name: role_user_roles_access_fkey
+    column:
+    - name: access
+      type:
+        type: int32
+    ref_table: role_permissions
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: tasks
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: task_id
+    type:
+      type: string
+  - name: title
+    type:
+      type: string
+  - name: status
+    type:
+      type: enum
+      enum_name: tasks_status
+  - name: description
+    type:
+      type: string
+  - name: assignee_id
+    type:
+      type: string
+  - name: assigner_full_name
+    type:
+      type: string
+  - name: assigner_id
+    type:
+      type: string
+  - name: linked_id
+    type:
+      type: string
+  - name: linked_type
+    type:
+      type: enum
+      enum_name: tasks_linked_type
+  - name: template_id
+    type:
+      type: string
+  - name: due_time
+    type:
+      type: time
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: tasks_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+- name: transaction_deposit_transactions
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: transaction_id
+    type:
+      type: string
+  - name: user_id
+    type:
+      type: string
+  - name: total_change
+    type:
+      type: "[]byte"
+  - name: affected_amounts
+    type:
+      type: "[]byte"
+  - name: adjustment_transaction_id
+    type:
+      type: string
+  - name: block_id
+    type:
+      type: string
+  - name: branch_id
+    type:
+      type: string
+  - name: centre_id
+    type:
+      type: string
+  - name: card_transaction_id
+    type:
+      type: int32
+  - name: parent_account_id
+    type:
+      type: string
+  - name: fees
+    type:
+      type: "[]byte"
+  - name: interest_accrued_amounts
+    type:
+      type: "[]byte"
+  - name: migration_event_id
+    type:
+      type: string
+  - name: notes
+    type:
+      type: string
+  - name: original_transaction_id
+    type:
+      type: string
+  - name: payment
+    type:
+      type: "[]byte"
+  - name: order_id
+    type:
+      type: string
+  - name: tax_rate
+    type:
+      type: float64
+  - name: terms
+    type:
+      type: "[]byte"
+  - name: till_id
+    type:
+      type: string
+  - name: channel_id
+    type:
+      type: string
+  - name: transfer_details
+    type:
+      type: "[]byte"
+  - name: type
+    type:
+      type: enum
+      enum_name: transactions_deposit_type
+  - name: create_time
+    type:
+      type: time
+  - name: book_time
+    type:
+      type: time
+  - name: value_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: transaction_deposit_transactions_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+  foreign_keys:
+  - name: transaction_deposit_transactions_card_transaction_id_fkey
+    column:
+    - name: card_transaction_id
+      type:
+        type: int32
+    ref_table: card_transactions
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: transaction_loan_transactions
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: transaction_id
+    type:
+      type: string
+  - name: user_id
+    type:
+      type: string
+  - name: type
+    type:
+      type: enum
+      enum_name: transactions_loan_type
+  - name: account_balances
+    type:
+      type: "[]byte"
+  - name: adjustment_transaction_id
+    type:
+      type: string
+  - name: affected_amounts
+    type:
+      type: "[]byte"
+  - name: amount
+    type:
+      type: "[]byte"
+  - name: card_transaction_id
+    type:
+      type: int32
+  - name: branch_id
+    type:
+      type: string
+  - name: centre_id
+    type:
+      type: string
+  - name: custom_payment_amounts
+    type:
+      type: "[]byte"
+  - name: fees
+    type:
+      type: "[]byte"
+  - name: installment_id
+    type:
+      type: string
+  - name: migration_event_id
+    type:
+      type: string
+  - name: notes
+    type:
+      type: string
+  - name: original_amount
+    type:
+      type: "[]byte"
+  - name: original_transaction_id
+    type:
+      type: string
+  - name: parent_account_id
+    type:
+      type: string
+  - name: parent_loan_transaction_id
+    type:
+      type: string
+  - name: recalculation_method
+    type:
+      type: enum
+      enum_name: transactions_calculation_method
+  - name: taxes
+    type:
+      type: "[]byte"
+  - name: terms
+    type:
+      type: "[]byte"
+  - name: till_id
+    type:
+      type: string
+  - name: channel_id
+    type:
+      type: string
+  - name: transfer_details
+    type:
+      type: "[]byte"
+  - name: create_time
+    type:
+      type: time
+  - name: book_time
+    type:
+      type: time
+  - name: value_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: transaction_loan_transactions_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+  foreign_keys:
+  - name: transaction_loan_transactions_card_transaction_id_fkey
+    column:
+    - name: card_transaction_id
+      type:
+        type: int32
+    ref_table: card_transactions
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+- name: users
+  columns:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  - name: user_id
+    type:
+      type: string
+  - name: username
+    type:
+      type: string
+  - name: password
+    type:
+      type: string
+  - name: email
+    type:
+      type: string
+  - name: title
+    type:
+      type: string
+  - name: first_name
+    type:
+      type: string
+  - name: last_name
+    type:
+      type: string
+  - name: role_id
+    type:
+      type: string
+  - name: access
+    type:
+      type: int32
+  - name: assigned_branch_id
+    type:
+      type: string
+  - name: mobile_phone
+    type:
+      type: string
+  - name: home_phone
+    type:
+      type: string
+  - name: language
+    type:
+      type: string
+  - name: notes
+    type:
+      type: string
+  - name: transaction_limits
+    type:
+      type: "[]byte"
+  - name: two_factor_authentication
+    type:
+      type: bool
+  - name: state
+    type:
+      type: enum
+      enum_name: users_state
+  - name: create_time
+    type:
+      type: time
+  - name: update_time
+    type:
+      type: time
+  - name: login_time
+    type:
+      type: time
+  primary_keys:
+  - name: id
+    type:
+      type: int32
+    is_primary: true
+    is_sequence: true
+  indexes:
+  - name: users_pkey
+    fields:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true
+    is_unique: true
+    is_primary: true
+  - name: users_user_id_idx
+    fields:
+    - name: user_id
+      type:
+        type: string
+    is_unique: true
+  foreign_keys:
+  - name: users_access_fkey
+    column:
+    - name: access
+      type:
+        type: int32
+    ref_table: role_permissions
+    ref_column:
+    - name: id
+      type:
+        type: int32
+      is_primary: true
+      is_sequence: true

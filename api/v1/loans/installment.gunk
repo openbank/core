@@ -1,0 +1,100 @@
+package loans
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// InstallmentState is the state of repayment for the installment.
+type InstallmentState int
+
+const (
+	InstallmentPending InstallmentState = iota
+	InstallmentLate
+	InstallmentPaid
+	InstallmentPartiallyPaid
+	InstallmentGrace
+)
+
+// InstallmentAmount is the amounts that an installment expects.
+//
+// +gunk xo.Ignore(true)
+type InstallmentAmount struct {
+	// Expected is the total expected amount, including the amount due and
+	// paid.
+	Expected core.Amount `pb:"1" json:"expected"`
+	// Due is the amount remaining to be paid.
+	Due core.Amount `pb:"2" json:"due"`
+	// Paid is the amount that has been paid.
+	Paid core.Amount `pb:"3" json:"paid"`
+	// Reduced is the amount of the installment that has been reduced.
+	Reduced core.Amount `pb:"4" json:"reduced"`
+}
+
+// InstallmentFee is the fee applied to an installment.
+//
+// +gunk xo.Ignore(true)
+type InstallmentFee struct {
+	// FeeID is the ID of the fee applied.
+	FeeID string `pb:"1" json:"fee_id"`
+	// Name is the name of the fee applied.
+	Name string `pb:"2" json:"name"`
+	// Amount is the status of repayment on the fee.
+	Amount InstallmentAmount `pb:"3" json:"amount"`
+	// Tax is the status of repayment on the tax applied to the amount.
+	Tax InstallmentAmount `pb:"4" json:"tax"`
+}
+
+// InstallmentAllocation is an installment allocation element.
+//
+// +gunk xo.Ignore(true)
+type InstallmentAllocation struct {
+	// Amount is the status of repayment on the element.
+	Amount InstallmentAmount `pb:"1" json:"amount"`
+	// Tax is the status of repayment on the tax applied to the amount.
+	Tax InstallmentAmount `pb:"2" json:"tax"`
+}
+
+// Installment is a single installment used in loan repayment.
+type Installment struct {
+	// InstallmentID is the ID of the installment.
+	//
+	// +gunk xo.Unique
+	InstallmentID string `pb:"1" json:"installment_id"`
+	// Fees is the amount of fees applied to the installment.
+	Fees []InstallmentFee `pb:"2" json:"fees"`
+	// Interest is the amount of interest applied to the installment.
+	Interest InstallmentAllocation `pb:"3" json:"interest"`
+	// IsPaymentHoliday is a flag for offering payment holiday in the
+	// installment. Whether the payment holiday is offered for the installment.
+	IsPaymentHoliday bool `pb:"4" json:"is_payment_holiday"`
+	// PayTime is the time the installment was last paid.
+	//
+	// +gunk xo.Nullable(true)
+	PayTime time.Time `pb:"5" json:"pay_time"`
+	// Order is the index of the installment generated for a loan starting from
+	// 1, sorted chronologically.
+	Order string `pb:"6" json:"order"`
+	// ParentAccountID is the ID of the parent account.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "loans.Account",
+	//         FieldName:  "AccountID",
+	// }
+	ParentAccountID string `pb:"7" json:"parent_account_id"`
+	// Penalty is the amount of penalty that can be charged to the loan account.
+	Penalty InstallmentAllocation `pb:"8" json:"penalty"`
+	// Principal is the original amount of loan that is disbursed.
+	Principal InstallmentAllocation `pb:"9" json:"principal"`
+	// DueTime is the time the installment must be repaid.
+	DueTime time.Time `pb:"10" json:"due_time"`
+	// RepayTime is the time the installment was paid.
+	RepayTime time.Time `pb:"11" json:"repay_time"`
+	// State is the state of the installment.
+	State InstallmentState `pb:"12" json:"state"`
+}

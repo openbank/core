@@ -1,0 +1,163 @@
+// Package reports allows creating and retrieving Accounting Reports.
+//
+// +gunk proto.Package("openbank.core.v1.reports")
+// +gunk java.Package("openbank.core.v1.reports")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Accounting Reports",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package reports
+
+import (
+	core "bnk.to/core/api/v1"
+	ledgers "bnk.to/core/api/v1/ledgers"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// ReportAmounts is the amounts on the accounting report.
+//
+// +gunk xo.Ignore(true)
+type ReportAmounts struct {
+	// OpeningBalance is the opening balance of the GL Account.
+	OpeningBalance core.Amount `pb:"1" json:"opening_balance"`
+	// ClosingBalance is the closing balance of the GL Account.
+	ClosingBalance core.Amount `pb:"2" json:"closing_balance"`
+	// Credits is the amount of credit in the GL Account.
+	Credits core.Amount `pb:"3" json:"credits"`
+	// Debits is the amount of debit in the GL Account.
+	Debits core.Amount `pb:"4" json:"debits"`
+	// NetChange is the net change of the GL Account.
+	NetChange core.Amount `pb:"5" json:"net_change"`
+}
+
+// Entry is an entry in the GL account report.
+//
+// +gunk xo.Ignore(true)
+type Entry struct {
+	// Amounts is the amount of money in the organization's native currency.
+	Amounts ReportAmounts `pb:"1" json:"amounts"`
+	// ForeignAmounts is the amount of money in foreign currency.
+	ForeignAmounts ReportAmounts `pb:"2" json:"foreign_amounts"`
+	// GLAccount is the account that was debited or credited.
+	GLAccount ledgers.Account `pb:"3" json:"gl_account"`
+}
+
+// Report is the generated accounting report.
+type Report struct {
+	// ReportID is the unique ID for the report.
+	//
+	// +gunk xo.Unique
+	ReportID string `pb:"1" json:"report_id"`
+	// Items is the list of items in the report.
+	Items []Entry `pb:"2" json:"items"`
+	// Status is the current status of the report.
+	Status core.Status `pb:"3" json:"status"`
+}
+
+// BalanceType is the type of balance.
+type BalanceType int
+
+// Available balance types.
+const (
+	OpeningBalance BalanceType = iota
+	NetChange
+	ClosingBalance
+)
+
+// NewReportRequest is the details of the new accounting report to generate.
+//
+// +gunk xo.Ignore(true)
+type NewReportRequest struct {
+	// BalanceTypes is the types of balance to include in the report.
+	BalanceTypes []BalanceType `pb:"1" json:"balance_types"`
+	// BranchID is the ID of the branch to filter GL Journal Entries by.
+	BranchID string `pb:"2" json:"branch_id"`
+	// CurrencyCode is the code of the currency to filter GL Accounts by.
+	CurrencyCode string `pb:"3" json:"currency_code"`
+	// AccountTypes is the list of GL Account types to filter by.
+	AccountTypes []ledgers.AccountType `pb:"4" json:"account_types"`
+	// StartTime is the starting time of GL Journal Entries to filter by
+	// (inclusive).
+	StartTime time.Time `pb:"5" json:"start_time"`
+	// EndTime is the ending time of GL Journal Entries to filter by
+	// (inclusive).
+	EndTime time.Time `pb:"6" json:"end_time"`
+}
+
+// CreateReportRequest is a request to create a report.
+type CreateReportRequest struct {
+	// Body is the details on the report to generate.
+	Body NewReportRequest `pb:"1" json:"body"`
+}
+
+// ListReportsRequest is a request to list reports.
+type ListReportsRequest struct {
+	// PageToken is the token of the page to retrieve.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of results to return per page.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order the results by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the results.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListReportsResponse is the response to list reports.
+type ListReportsResponse struct {
+	// Total is the total number of reports matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of reports remaining in the list, including the
+	// reports in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Reports is the list of reports.
+	Reports []Report `pb:"3" json:"reports"`
+	// NextPageToken is the token of the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetReportRequest is a request to retrieve a report.
+type GetReportRequest struct {
+	// ReportID is the ID of the report.
+	ReportID string `pb:"1" json:"report_id"`
+}
+
+// ReportsService is a service for creating and retrieving accounting reports.
+type ReportsService interface {
+	// CreateReport creates an accounting report.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/reports",
+	//         Body:   "Body",
+	// }
+	CreateReport(CreateReportRequest) Report
+
+	// ListReports lists the reports.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/reports",
+	// }
+	ListReports(ListReportsRequest) ListReportsResponse
+
+	// GetReport retrieves an accounting report.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/reports/{ReportID}",
+	// }
+	GetReport(GetReportRequest) Report
+}

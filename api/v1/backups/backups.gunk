@@ -1,0 +1,121 @@
+// Package backup allows creating and retrieving backups.
+//
+// +gunk proto.Package("openbank.core.v1.backups")
+// +gunk java.Package("openbank.core.v1.backups")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Backups",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package backups
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// Backup is a database backup.
+type Backup struct {
+	// BackupID is the ID of the backup.
+	//
+	// +gunk xo.Unique
+	BackupID string `pb:"1" json:"backup_id"`
+	// Status is the status of the backup.
+	Status core.Status `pb:"2" json:"status"`
+	// CreateTime is the time the backup was triggered.
+	CreateTime time.Time `pb:"3" json:"create_time"`
+	// CompleteTime is the time of completion of the backup, if it has
+	// completed.
+	CompleteTime time.Time `pb:"4" json:"complete_time"`
+}
+
+// CreateBackupRequest is the request to create a database backup.
+type CreateBackupRequest struct {
+	// CallbackURL is the URL to send a webhook to when the backup is ready.
+	CallbackURL string `pb:"1" json:"callback_url"`
+}
+
+// ListBackupsRequest is the request to list backups.
+type ListBackupsRequest struct {
+	// PageToken is the token of the page to return.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of backups to return.
+	PageSize int32 `pb:"2" json:"page_size"`
+	// OrderBy is the field to order the backups by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the backups.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListBackupsResponse is the response for listing backups.
+type ListBackupsResponse struct {
+	// Total is the total number of backups matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of backups remaining in the list, including the
+	// backups in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Backups is the list of backups retrieved.
+	Backups []Backup `pb:"3" json:"backups"`
+	// NextPageToken is the token of the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetBackupRequest is the request to retrieve a database backup.
+type GetBackupRequest struct {
+	// BackupID is the ID of the backup to retrieve.
+	BackupID string `pb:"1" json:"backup_id"`
+}
+
+// DownloadBackupRequest is the request to download a database backup.
+type DownloadBackupRequest struct {
+	// BackupID is the ID of the backup to download. As a special case, the
+	// backup ID of "latest" will download the latest backup.
+	BackupID string `pb:"1" json:"backup_id"`
+}
+
+// BackupService is the service for triggering and retrieving database backups.
+type BackupService interface {
+	// CreateBackup triggers a new database backup.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/backup",
+	// }
+	CreateBackup(CreateBackupRequest) Backup
+
+	// ListBackups lists backups.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/backup",
+	// }
+	ListBackups(ListBackupsRequest) ListBackupsResponse
+
+	// GetBackup retrieves the specified database backup.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/backup/{BackupID}",
+	// }
+	GetBackup(GetBackupRequest) Backup
+
+	// DownloadBackup downloads the specified database backup.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/backup/{BackupID}/download",
+	// }
+	DownloadBackup(DownloadBackupRequest) core.File
+}

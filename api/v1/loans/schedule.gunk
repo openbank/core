@@ -1,0 +1,19 @@
+package loans
+
+import (
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+)
+
+// Schedule is a schedule for a loan account.
+//
+// +gunk xo.Ignore(true)
+type Schedule struct {
+	// CurrencyCode is the code of the currency all transactions use.
+	CurrencyCode string `pb:"1" json:"currency_code"`
+	// Transactions is the list of transactions for the loan account.
+	Transactions []Installment `pb:"2" json:"transactions"`
+}

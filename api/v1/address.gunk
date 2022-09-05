@@ -1,0 +1,46 @@
+package core
+
+import (
+	"github.com/gunk/opt/xo"
+)
+
+// ContactInfo is the contact information of an entity.
+type ContactInfo struct {
+	// FullName is the full name of the entity.
+	FullName string `pb:"1" json:"full_name"`
+	// Addresses is the list of the addresses for the entity.
+	Addresses []Address `pb:"2" json:"addresses"`
+	// Telephones is a list of telephone numbers for the entity.
+	Telephones []string `pb:"3" json:"telephones"`
+	// Emails is a list of email addresses for the entity.
+	Emails []string `pb:"4" json:"emails"`
+	// Language is the preferred language for contacting the entity.
+	Language string `pb:"5" json:"language"`
+}
+
+// Address is the address of an entity.
+//
+// +gunk xo.Ignore(true)
+type Address struct {
+	// Extended is the extended address of the entity such as apartment or suite
+	// number.
+	//
+	// +gunk xo.Nullable(true)
+	Extended string `pb:"1" json:"extended"`
+	// Street is the street address of the entity.
+	Street string `pb:"2" json:"street"`
+	// City is the city of the address.
+	City string `pb:"3" json:"city"`
+	// Region is the region of the address.
+	Region string `pb:"4" json:"region"`
+	// PostCode is the postal code for the address.
+	PostCode string `pb:"5" json:"post_code"`
+	// Country is the full name of the country of the location.
+	Country string `pb:"6" json:"country"`
+	// Latitude is the GPS latitude in the signed degree format (DD.dddddd),
+	// eg. -12.345678 and 3.141593.
+	Latitude string `pb:"7" json:"latitude"`
+	// Longitude is the GPS longitude in the signed degree format (DDD.dddddd),
+	// eg. -123.456789 and 31.415927.
+	Longitude string `pb:"8" json:"longitude"`
+}

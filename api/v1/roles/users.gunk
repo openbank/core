@@ -1,0 +1,156 @@
+package roles
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// Permission is the list of permissions a role grants.
+//
+// +gunk xo.Ignore(true)
+type Permission struct {
+	// Admin is whether they user has admin access.
+	// If true, all entities and settings are accessible.
+	Admin bool `pb:"1" json:"admin"`
+	// API is whether user has access to the core banking API.
+	API bool `pb:"2" json:"api"`
+	// AllBranches is whether the user permissions apply to all branches.
+	AllBranches bool `pb:"3" json:"all_branches"`
+	// Branches is a list of branches the user has access to. Always empty when
+	// AllBranches is true.
+	Branches []string `pb:"4" json:"branches"`
+	// CreditOfficer is whether the user is a credit officer.
+	CreditOfficer bool `pb:"5" json:"credit_officer"`
+	// ManageOtherEntities is whether the user can manage entities
+	// assigned to other officers.
+	ManageOtherEntities bool `pb:"6" json:"manage_other_entities"`
+	// Web is true if the user has access to the online web interface.
+	Web bool `pb:"7" json:"web"`
+	// Delivery is if the user is part of the delivery team.
+	Delivery bool `pb:"8" json:"delivery"`
+	// Support is if the user has access to technical support.
+	Support bool `pb:"9" json:"support"`
+	// Teller is if the user is a teller, giving access to the teller module.
+	Teller bool `pb:"10" json:"teller"`
+	// Permissions is a list of permissions granted to the user.
+	Permissions []core.Permission `pb:"11" json:"permissions"`
+}
+
+// UserRole is the role of a user.
+type UserRole struct {
+	// RoleID is the ID of the role.
+	//
+	// +gunk xo.Unique
+	RoleID string `pb:"1" json:"role_id"`
+	// Name is the name of the role.
+	Name string `pb:"2" json:"name"`
+	// Access is the access permissions assigned to the role.
+	Access Permission `pb:"3" json:"access"`
+	// Notes is human-readable notes about the role.
+	Notes string `pb:"4" json:"notes"`
+	// CreateTime is the time the role was created.
+	CreateTime time.Time `pb:"5" json:"create_time"`
+	// UpdateTime is the time the role was last modified.
+	UpdateTime time.Time `pb:"6" json:"update_time"`
+}
+
+// CreateUserRoleRequest is the request to create a role.
+type CreateUserRoleRequest struct {
+	// Body is the user role to be created.
+	Body UserRole `pb:"1" json:"body"`
+}
+
+// ListUserRolesRequest is the request to list roles.
+type ListUserRolesRequest struct {
+	// PageToken is the token to use for pagination.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of results to return per page.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order the results by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the results.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListUserRolesResponse is the response for listing roles.
+type ListUserRolesResponse struct {
+	// Total is the total number of user roles matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of user roles remaining in the list, including
+	// the user roles in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Roles is the list of roles.
+	Roles []UserRole `pb:"3" json:"roles"`
+	// NextPageToken is the token to use for pagination.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetUserRoleRequest is the request to retrieve the specified role.
+type GetUserRoleRequest struct {
+	// RoleID is the ID of the role to retrieve.
+	RoleID string `pb:"1" json:"role_id"`
+}
+
+// UpdateUserRoleRequest is the request to update a role.
+type UpdateUserRoleRequest struct {
+	// RoleID is the ID of the role to update.
+	RoleID string `pb:"1" json:"role_id"`
+	// Body is the new value of the user role.
+	Body UserRole `pb:"2" json:"body"`
+}
+
+// DeleteUserRoleRequest is the request to delete a role.
+type DeleteUserRoleRequest struct {
+	// RoleID is the ID of the role to delete.
+	RoleID string `pb:"1" json:"role_id"`
+}
+
+// UserRolesService is a service that manages user roles.
+type UserRolesService interface {
+	// CreateUserRole creates a new user role.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/roles/users",
+	//         Body:   "Body",
+	// }
+	CreateUserRole(CreateUserRoleRequest) UserRole
+
+	// ListUserRoles lists user roles.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/roles/users",
+	// }
+	ListUserRoles(ListUserRolesRequest) ListUserRolesResponse
+
+	// GetUserRole retrieves a user role.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/roles/users/{RoleID}",
+	// }
+	GetUserRole(GetUserRoleRequest) UserRole
+
+	// UpdateUserRole updates an existing user role.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/roles/users/{RoleID}",
+	//         Body:   "Body",
+	// }
+	UpdateUserRole(UpdateUserRoleRequest) UserRole
+
+	// DeleteUserRole deletes a role via the role ID.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/roles/users/{RoleID}",
+	// }
+	DeleteUserRole(DeleteUserRoleRequest)
+}

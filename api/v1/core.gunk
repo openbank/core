@@ -1,0 +1,21 @@
+// +gunk proto.Package("openbank.core.v1")
+// +gunk java.Package("openbank.core.v1")
+// +gunk java.MultipleFiles(true)
+// +gunk xo.SkipPrefix(true)
+package core
+
+import (
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+)
+
+// File is a binary file.
+//
+// +gunk xo.Ignore(true)
+type File struct {
+	// Content is the raw content of the file encoded in base64.
+	//
+	// TODO: Use a more efficient encoding.
+	Content []byte `pb:"1" json:"content"`
+}

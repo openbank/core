@@ -1,0 +1,62 @@
+package org
+
+import (
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/xo"
+)
+
+// TransferRule is a custom rule overriding the default general ledger code for
+// inter-branch transactions. This rule will be applied if the transaction is
+// being done between the two branches specified in the rule.
+//
+// +gunk xo.Ignore(true)
+type TransferRule struct {
+	// RuleID is the ID of the transfer rule.
+	RuleID string `pb:"1" json:"rule_id"`
+	// GLCode is the ID for the account to assign the inter-branch transactions
+	// to.
+	GLCode string `pb:"2" json:"gl_code"`
+	// BranchIDs is a list of branch IDs that the rule applies to.
+	BranchIDs []string `pb:"3" json:"branch_ids"`
+}
+
+// AccountingConfig is the accounting rules configuration.
+//
+// +gunk xo.Ignore(true)
+type AccountingConfig struct {
+	// DefaultGLCode is the default GL code for processing inter-branch
+	// transactions. The GL account is used to balance the accounts at the
+	// branch level.
+	DefaultGLCode string `pb:"1" json:"default_gl_code"`
+	// CustomRules is inter-branch GL Account rules.
+	CustomRules []TransferRule `pb:"2" json:"custom_rules"`
+	// ClosureInterval is the number of days between the execution of automated
+	// accounting closures. A value of 0 means automated closures do not occur.
+	ClosureInterval int `pb:"3" json:"closure_interval"`
+}
+
+// UpdateConfigRequest is the update rules request.
+type UpdateConfigRequest struct {
+	// Body is the accounting rules configuration.
+	Body AccountingConfig `pb:"1" json:"body"`
+}
+
+// AccountingService is the service for configuring account rules.
+type AccountingService interface {
+	// GetConfig gets the current accounting rules configuration.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/organization/accounting",
+	// }
+	GetConfig() AccountingConfig
+
+	// UpdateConfig updates the accounting configuration.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/organization/accounting",
+	//         Body:   "Body",
+	// }
+	UpdateConfig(UpdateConfigRequest) AccountingConfig
+}

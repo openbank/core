@@ -1,0 +1,273 @@
+package deposits
+
+import (
+	core "bnk.to/core/api/v1"
+	products "bnk.to/core/api/v1/products"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// AccountState is the state of a deposit account.
+type AccountState int
+
+const (
+	PendingApproval AccountState = iota
+	Approved
+	Active
+	ActiveInArrears
+	Matured
+	Locked
+	Dormant
+	Closed
+	ClosedWrittenOff
+	Withdrawn
+	ClosedRejected
+)
+
+// AccountType is the type of a deposit account.
+type AccountType int
+
+const (
+	CurrentAccount AccountType = iota
+	RegularSavings
+	FixedDeposit
+	SavingsPlan
+	InvestorAccount
+)
+
+// AccruedAmounts is the accrued amounts of a deposit account.
+//
+// +gunk xo.Ignore(true)
+type AccruedAmounts struct {
+	// Interest is the amount of positive interest that has been accrued in the
+	// account.
+	Interest core.Amount `pb:"1" json:"interest"`
+	// NegativeInterest is the amount of negative interest that has been accrued
+	// in the account.
+	NegativeInterest core.Amount `pb:"2" json:"negative_interest"`
+	// OverdraftInterest is the amount of overdraft interest that has been
+	// accrued in the account.
+	OverdraftInterest core.Amount `pb:"3" json:"overdraft_interest"`
+	// TechnicalOverdraftInterest is the amount of technical overdraft interest
+	// that has been accrued in the account.
+	TechnicalOverdraftInterest core.Amount `pb:"4" json:"technical_overdraft_interest"`
+}
+
+// Balances is the balances of a deposit account.
+//
+// +gunk xo.Ignore(true)
+type Balances struct {
+	// Total is the current balance of the account.
+	Total core.Amount `pb:"1" json:"total"`
+	// Available is the available balance of the account.
+	Available core.Amount `pb:"2" json:"available"`
+	// Locked is the amount of balance that is locked and cannot be modified.
+	Locked core.Amount `pb:"3" json:"locked"`
+	// Blocked is the sum of all blocked balances of the account.
+	Blocked core.Amount `pb:"4" json:"blocked"`
+	// FeesDue is the amount of fees due to be paid on the account.
+	FeesDue core.Amount `pb:"5" json:"fees_due"`
+	// ForwardAvailable is the sum of all authorization hold that have credit
+	// referencing this account.
+	ForwardAvailable core.Amount `pb:"6" json:"forward_available"`
+	// Hold is the sum of all authorization hold that have debit referencing
+	// this account.
+	Hold core.Amount `pb:"7" json:"hold"`
+	// OverdraftAmount is the amount of money that has been taken out as
+	// overdraft.
+	OverdraftAmount core.Amount `pb:"8" json:"overdraft_amount"`
+	// OverdraftInterestDue is the amount of interest due to be paid on the
+	// account.
+	OverdraftInterestDue core.Amount `pb:"9" json:"overdraft_interest_due"`
+	// TechnicalOverdraftAmount is the amount of money that has been taken out
+	// as unplanned overdraft.
+	TechnicalOverdraftAmount core.Amount `pb:"10" json:"technical_overdraft_amount"`
+	// TechnicalOverdraftInterestDue is the amount of interest due to be paid
+	// on the account as a result of technical overdraft.
+	TechnicalOverdraftInterestDue core.Amount `pb:"11" json:"technical_overdraft_interest_due"`
+}
+
+// InternalControls is the internal controls of a deposit account.
+//
+// +gunk xo.Ignore(true)
+type InternalControls struct {
+	// MaxDepositBalance is the maximum deposit balance of the account.
+	MaxDepositBalance core.Amount `pb:"1" json:"max_deposit_balance"`
+	// MaxWithdrawalAmount is the maximum amount that can be involved in a
+	// withdrawal.
+	MaxWithdrawalAmount core.Amount `pb:"2" json:"max_withdrawal_amount"`
+	// RecommendedDepositAmount is the recommended deposit amount for the
+	// account.
+	RecommendedDepositAmount core.Amount `pb:"3" json:"recommended_deposit_amount"`
+	// TargetAmount is the target amount for the account.
+	TargetAmount core.Amount `pb:"4" json:"target_amount"`
+}
+
+// InterestRateType is the type of interest rates on a deposit account.
+type InterestRateType int
+
+const (
+	FixedRate InterestRateType = iota
+	IndexRate
+)
+
+// OverdraftRateSettings is the settings for overdraft rates on a deposit
+// account.
+//
+// +gunk xo.Ignore(true)
+type OverdraftRateSettings struct {
+	// Frequency is the amount of time between interest charges to the account.
+	Frequency time.Duration `pb:"1" json:"frequency"`
+	// PaymentDates is the list of all dates interest is paid to the account.
+	PaymentDates []time.Time `pb:"2" json:"payment_dates"`
+	// Terms is the terms for interest rate computation.
+	Terms products.InterestRateTerms `pb:"3" json:"terms"`
+	// Tiers is a list of tiers of interest rates.
+	Tiers []products.InterestRateTier `pb:"4" json:"tiers"`
+	// InterestRate is the interest rate for the account.
+	InterestRate float64 `pb:"5" json:"interest_rate"`
+	// ReviewFrequency is the frequency of interest rate review.
+	ReviewFrequency time.Duration `pb:"6" json:"review_frequency"`
+	// RateType is the method of calculation of interest.
+	RateType InterestRateType `pb:"7" json:"rate_type"`
+	// SpreadRate is the rate based on interest accrued and applied for
+	// accounts with an interest rate type of IndexRate.
+	SpreadRate float64 `pb:"8" json:"spread_rate"`
+}
+
+// OverdraftSettings is the overdraft settings for a deposit account.
+//
+// +gunk xo.Ignore(true)
+type OverdraftSettings struct {
+	// Allow is a flag for enabling overdraft settings.
+	Allow bool `pb:"1" json:"allow"`
+	// ExpireTime is the expiration time of the overdraft.
+	ExpireTime time.Time `pb:"2" json:"expire_time"`
+	// Limit is the maximum amount of overdraft allowed.
+	Limit core.Amount `pb:"3" json:"limit"`
+}
+
+// Account is a deposit account where a customer holds his savings.
+type Account struct {
+	// AccountID is the ID of the account.
+	//
+	// +gunk xo.Unique
+	AccountID string `pb:"1" json:"account_id"`
+	// Name is the name of the account.
+	Name string `pb:"2" json:"name"`
+	// Notes is extra notes on the account.
+	Notes string `pb:"3" json:"notes"`
+	// HolderID is the ID of the entity that holds the account.
+	// TODO: Which table does this have a reference to.
+	HolderID string `pb:"4" json:"holder_id"`
+	// HolderType is the type of the entity that holds the account.
+	HolderType core.Entity `pb:"5" json:"holder_type"`
+	// State is the state of the account.
+	State AccountState `pb:"6" json:"state"`
+	// Type is the type of the deposit account.
+	Type AccountType `pb:"7" json:"type"`
+	// AccruedAmounts is details related to a deposit account's accrued amounts.
+	AccruedAmounts AccruedAmounts `pb:"8" json:"accrued_amounts"`
+	// AssignedBranchID is the ID of the branch the account is assigned to.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "branches.Branch",
+	//         FieldName:  "BranchID",
+	// }
+	AssignedBranchID string `pb:"9" json:"assigned_branch_id"`
+	// AssignedCentreID is the ID of the centre the account is assigned to.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "centres.Centre",
+	//         FieldName:  "CentreID",
+	// }
+	AssignedCentreID string `pb:"10" json:"assigned_centre_id"`
+	// AssignedUserID is the ID of the user the account is assigned to.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "users.User",
+	//         FieldName:  "UserID",
+	// }
+	AssignedUserID string `pb:"11" json:"assigned_user_id"`
+	// Balances is the account's balances.
+	Balances Balances `pb:"12" json:"balances"`
+	// RevolvingAccountID is the ID of the revolving account the account is
+	// register to.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "revolving.Account",
+	//         FieldName:  "AccountID",
+	// }
+	RevolvingAccountID string `pb:"13" json:"revolving_account_id"`
+	// CurrencyCode is the currency code of the account.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "currencies.Currency",
+	//         FieldName:  "Code",
+	// }
+	CurrencyCode string `pb:"14" json:"currency_code"`
+	// InterestSettings is the account's interest settings.
+	InterestSettings products.DepositInterestSettings `pb:"15" json:"interest_settings"`
+	// InternalControls is internal controls related to the account.
+	InternalControls InternalControls `pb:"16" json:"internal_controls"`
+	// SettlementAccountIDs is the IDs of the list of settlement accounts the account is
+	// linked to.
+	SettlementAccountIDs []string `pb:"17" json:"settlement_account_ids"`
+	// MigrationEventID is the ID of the migration event the account is
+	// imported from.
+	// TODO: Which table does this have a reference to.
+	MigrationEventID string `pb:"18" json:"migration_event_id"`
+	// OverdraftRateSettings is the account's overdraft interest rate settings.
+	OverdraftRateSettings OverdraftRateSettings `pb:"19" json:"overdraft_rate_settings"`
+	// OverdraftSettings is the account's overdraft settings.
+	OverdraftSettings OverdraftSettings `pb:"20" json:"overdraft_settings"`
+	// ProductID is the ID of the product the account is created from.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "products.DepositProduct",
+	//         FieldName:  "ProductID",
+	// }
+	ProductID string `pb:"21" json:"product_id"`
+	// WithholdingTaxSourceID is the ID of the withholding tax source.
+	//
+	// +gunk xo.Nullable(true)
+	// +gunk xo.Ref{
+	//         TypeSuffix: "rates.Source",
+	//         FieldName:  "SourceID",
+	// }
+	WithholdingTaxSourceID string `pb:"22" json:"withholding_tax_source_id"`
+	// CreateTime is the time the account was created.
+	CreateTime time.Time `pb:"23" json:"create_time"`
+	// ApproveTime is the time the account was approved.
+	ApproveTime time.Time `pb:"24" json:"approve_time"`
+	// ActivateTime is the time the account was activated.
+	ActivateTime time.Time `pb:"25" json:"activate_time"`
+	// UpdateTime is the time the account was last updated.
+	UpdateTime time.Time `pb:"26" json:"update_time"`
+	// CloseTime is the time the account was closed.
+	CloseTime time.Time `pb:"27" json:"close_time"`
+	// AppraiseTime is the time the account was last evaluated for interest
+	// calculations/maturity.
+	AppraiseTime time.Time `pb:"28" json:"appraise_time"`
+	// InterestCalculateTime is the time the account last had its interest
+	// calculated.
+	InterestCalculateTime time.Time `pb:"29" json:"interest_calculate_time"`
+	// InterestStoreTime is the time the account last had its interest applied
+	// (stored to balance).
+	InterestStoreTime time.Time `pb:"30" json:"interest_store_time"`
+	// OverdraftInterestReviewTime is the time the account was last reviewed for
+	// overdraft interest.
+	OverdraftInterestReviewTime time.Time `pb:"31" json:"overdraft_interest_review_time"`
+	// ArrearsSetTime is the time the account was set to In Arrears state, or
+	// null if the account is not In Arrears state.
+	ArrearsSetTime time.Time `pb:"32" json:"arrears_set_time"`
+	// LockTime is the time the account was locked.
+	LockTime time.Time `pb:"33" json:"lock_time"`
+	// MatureTime is the time the account matures for fixed or compulsory
+	// savings plans.
+	MatureTime time.Time `pb:"34" json:"mature_time"`
+}

@@ -1,0 +1,297 @@
+package org
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// AssignmentConstraint is a requirement for a field to be present in users or
+// groups.
+type AssignmentConstraint int
+
+const (
+	ConstraintBranch AssignmentConstraint = iota
+	ConstraintCentre
+	ConstraintCreditOfficer
+	ConstraintGroup
+)
+
+// AppComponent is a component that can be enabled and disabled independently.
+type AppComponent int
+
+const (
+	ComponentLoans AppComponent = iota
+	ComponentDeposits
+	ComponentBranches
+	ComponentCentres
+	ComponentClients
+	ComponentGroups
+	ComponentAccounting
+	ComponentCreditOfficers
+)
+
+// DashboardComponent is a component that can be shown on the dashboard.
+type DashboardComponent int
+
+const (
+	DashboardLatestActivity DashboardComponent = iota
+	DashboardTasks
+	DashboardFavoriteViews
+	DashboardIndicators
+	DashboardCurrentTills
+	DashboardClients
+	DashboardUpcomingRepayments
+	DashboardNone
+)
+
+// DecimalSeparator is the character used to separate integral and fractional
+// values in the organization.
+type DecimalSeparator int
+
+const (
+	Comma DecimalSeparator = iota
+	Point
+)
+
+// Defaults is a set of defaults for different aspects in the organization.
+type Defaults struct {
+	// ClientRoleID is the ID of the role that a client should be assigned to by
+	// default.
+	//
+	// +gunk xo.Nullable(true)
+	// +gunk xo.Ref{
+	//         TypeSuffix: "roles.ClientRole",
+	//         FieldName:  "RoleID",
+	// }
+	ClientRoleID string `pb:"1" json:"client_role_id"`
+	// ClientState is the default state the client starts in.
+	ClientState core.State `pb:"2" json:"client_state"`
+	// GroupRoleID is the ID of the role that a group should be assigned to by
+	// default.
+	//
+	// +gunk xo.Nullable(true)
+	// +gunk xo.Ref{
+	//         TypeSuffix: "groups.Role",
+	//         FieldName:  "RoleID",
+	// }
+	GroupRoleID string `pb:"3" json:"group_role_id"`
+	// LineOfCreditState is the default state for a line of credit.
+	LineOfCreditState core.State `pb:"4" json:"line_of_credit_state"`
+	// TransactionChannelID is the ID of the default transaction channel to use.
+	//
+	// +gunk xo.Nullable(true)
+	// +gunk xo.Ref{
+	//         TypeSuffix: "org.Channel",
+	//         FieldName:  "ChannelID",
+	// }
+	TransactionChannelID string `pb:"5" json:"transaction_channel_id"`
+}
+
+// DuplicateItemType is the type of items to use to check for duplicates.
+type DuplicateItemType int
+
+const (
+	FieldLoans DuplicateItemType = iota
+	FieldSavings
+	FieldClient
+	FieldClientRole
+	FieldGroup
+	FieldGroupRole
+	FieldTransaction
+	FieldJournalEntry
+	FieldInterestAccrualBreakdown
+	FieldBranch
+	FieldCentre
+	FieldUser
+	FieldLoanProduct
+	FieldSavingsProduct
+	FieldNotificationMessage
+	FieldNotificationTemplate
+	FieldRepayment
+	FieldRepaymentCollection
+	FieldActivity
+	FieldLineOfCredit
+	FieldIdentificationDocument
+	FieldAttachment
+	FieldCurrency
+	FieldProduct
+	FieldRevenue
+	FieldExpense
+	FieldOutstandingPortfolioAccounts
+	FieldOutstandingPortfolioAmounts
+	FieldCreatedAccounts
+	FieldWrittenOffLoans
+	FieldDisbursedLoans
+	FieldLoanGroup
+	FieldTranche
+	FieldDisbursementDetails
+	FieldTransactionDetails
+	FieldTransactionChannel
+	FieldCustomPredefinedFee
+	FieldCustomFieldSelection
+	FieldPredefinedFee
+	FieldLoanTransaction
+	FieldSavingsTransaction
+	FieldCardTransactionReversal
+	FieldComposedTransactions
+	FieldUnionTransactions
+	FieldInvestorFund
+	FieldPrincipalPaymentSettings
+	FieldLoanAccountGuaranty
+	FieldTask
+	FieldDocumentTemplate
+	FieldIndexRate
+	FieldIndexRateSource
+	FieldInterestProductSettings
+	FieldMccExpiration
+	FieldProductArrearsSettings
+	FieldDocumentIDAndType
+	FieldHomePhone
+	FieldMobilePhone
+	FieldEmail
+	FieldFullName
+	FieldLastNameDOB
+)
+
+// ConstraintAction is the action that should be done if a constraint is
+// violated.
+type ConstraintAction int
+
+const (
+	None ConstraintAction = iota
+	Warning
+	Error
+)
+
+// EndOfDayMode is the mode end-of-day operations are ran. In auto mode, end of
+// day tasks are ran automatically. In manual mode, end of day tasks must be
+// triggered manually.
+type EndOfDayMode int
+
+const (
+	EndOfDayAuto EndOfDayMode = iota
+	EndOfDayManual
+)
+
+// ExposureType is the hard limit on amount of loan any user can have at any
+// point in time.
+type ExposureType int
+
+const (
+	ExposureUnlimited ExposureType = iota
+	ExposureSumOfLoans
+	ExposureSumOfLoansMinusSavings
+)
+
+// GroupSizeLimitType is the type of group size limit that is enforced.
+type GroupSizeLimitType int
+
+const (
+	LimitHard GroupSizeLimitType = iota
+	LimitWarning
+	LimitNone
+)
+
+// Setup is the global configuration of the organization.
+type Setup struct {
+	// AccountingCutOffTime is the time accounting is cut off everyday.
+	AccountingCutOffTime time.Time `pb:"1" json:"accounting_cut_off_time"`
+	// ArrearsDaysBeforeWriteOff is the number of days required before an
+	// account can be written off.
+	ArrearsDaysBeforeWriteOff int `pb:"2" json:"arrears_days_before_write_off"`
+	// AssignmentConstraints is a list of assignments required for Clients and
+	// Groups.
+	AssignmentConstraints []AssignmentConstraint `pb:"3" json:"assignment_constraints"`
+	// AutomatedAccountingClosuresInterval is the interval between the execution
+	// of automated accounting closures.
+	// Automated closures will not be performed if the interval is zero.
+	AutomatedAccountingClosuresInterval time.Duration `pb:"4" json:"automated_accounting_closures_interval"`
+	// ClientIDFormat is the format used to generate client IDs.
+	ClientIDFormat string `pb:"5" json:"client_id_format"`
+	// GroupIDFormat is the format used to generate group IDs.
+	GroupIDFormat string `pb:"6" json:"group_id_format"`
+	// LineOfCreditIDFormat is the format used to generate line of credit IDs.
+	LineOfCreditIDFormat string `pb:"7" json:"line_of_credit_id_format"`
+	// DateFormats is the format of date and time used in the user interface.
+	DateFormats map[string]string `pb:"8" json:"date_formats"`
+	// EnabledComponents is the list of all enabled components.
+	EnabledComponents []AppComponent `pb:"9" json:"enabled_components"`
+	// DashboardComponents is the list of components in the dashboard.
+	DashboardComponents []DashboardComponent `pb:"10" json:"dashboard_components"`
+	// DecimalSeparator is the symbol that marks the border between integer and
+	// fraction part of a decimal number.
+	DecimalSeparator DecimalSeparator `pb:"11" json:"decimal_separator"`
+	// Defaults is the default values and settings for the organization.
+	Defaults Defaults `pb:"12" json:"defaults"`
+	// ClientChecks is a list of client-side constraints to enforce.
+	ClientChecks []DuplicateItemType `pb:"13" json:"client_checks"`
+	// ClientConstraintAction is the action to be taken when the duplicate
+	// client validation fails.
+	ClientConstraintAction ConstraintAction `pb:"14" json:"client_constraint_action"`
+	// EndOfDayMode is the method end-of-day processing is done.
+	EndOfDayMode EndOfDayMode `pb:"15" json:"end_of_day_mode"`
+	// ExposureAmount is the hard cap on maximum amount of loans a client can
+	// have.
+	ExposureAmount core.Amount `pb:"16" json:"exposure_amount"`
+	// ExposureType is the type of hard cap enforced.
+	ExposureType ExposureType `pb:"17" json:"exposure_type"`
+	// MinGroupSizeLimit is the minimum size of a group.
+	MinGroupSizeLimit int `pb:"18" json:"min_group_size_limit"`
+	// MaxGroupSizeLimit is the maximum size of a group.
+	MaxGroupSizeLimit int `pb:"19" json:"max_group_size_limit"`
+	// GroupSizeLimitType is the type of group size limit enforced.
+	GroupSizeLimitType GroupSizeLimitType `pb:"20" json:"group_size_limit_type"`
+	// InterBranchTransferGLAccountID is the ID of the GL account to use for
+	// inter-branch transfers.
+	InterBranchTransferGLAccountID string `pb:"21" json:"inter_branch_transfer_gl_account_id"`
+	// MaxAllowedIDDocumentAttachments is the maximum number of ID document
+	// allowed.
+	MaxAllowedIDDocumentAttachments int `pb:"22" json:"max_allowed_id_document_attachments"`
+	// MaxAllowedJournalEntryDocumentAttachments is the maximum number of
+	// attachments allowed in a journal entry.
+	MaxAllowedJournalEntryDocumentAttachments int `pb:"23" json:"max_allowed_journal_entry_document_attachments"`
+	// MaxAllowedUndoClosurePeriod is the maximum number of days that users are
+	// allowed to undo closing obligations for a loan account.
+	MaxAllowedUndoClosurePeriod int `pb:"24" json:"max_allowed_undo_closure_period"`
+	// MaxClientGroups is the maximum number of groups a client can belong to.
+	MaxClientGroups int `pb:"25" json:"max_client_groups"`
+	// MaxLoans is the maximum number of loans.
+	MaxLoans int `pb:"26" json:"max_loans"`
+	// AllowOtherIDDocuments is a flag to enable other types of IDs.
+	AllowOtherIDDocuments bool `pb:"27" json:"allow_other_id_documents"`
+	// OverdraftInterestDate is the date used when computing overdraft
+	// interests.
+	OverdraftInterestDate time.Time `pb:"28" json:"overdraft_interest_date"`
+	// MinDisbursalApprovalRequired is the number of users required to approve a disbursal.
+	MinDisbursalApprovalRequired int `pb:"29" json:"min_disbursal_approval_required"`
+	// MinLoanApprovalRequired is the number of users required to create and approve a loan account.
+	MinLoanApprovalRequired int `pb:"30" json:"min_loan_approval_required"`
+}
+
+// UpdateSetupRequest is the request to update the setup of the system.
+type UpdateSetupRequest struct {
+	// Body is the setup to update to.
+	Body Setup `pb:"1" json:"body"`
+}
+
+// SetupService is the service for managing the general setup.
+type SetupService interface {
+	// GetSetup retrieves the general setup.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/organization/setup",
+	// }
+	GetSetup() Setup
+
+	// UpdateSetup updates the general setup.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/organization/setup",
+	//         Body:   "Body",
+	// }
+	UpdateSetup(UpdateSetupRequest) Setup
+}

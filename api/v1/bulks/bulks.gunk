@@ -1,0 +1,82 @@
+// Package bulks provides functionality to query bulk transactions.
+//
+// +gunk proto.Package("openbank.core.v1.bulks")
+// +gunk java.Package("openbank.core.v1.bulks")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Bulks",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package bulks
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+)
+
+// ProcessSuccess is a process that has completed successfully.
+//
+// +gunk xo.Ignore(true)
+type ProcessSuccess struct {
+	// ProcessID is the ID of the process.
+	ProcessID string `pb:"1" json:"process_id"`
+	// ResourceID is the ID of the newly created resource.
+	ResourceID string `pb:"2" json:"resource_id"`
+	// IndexInRequest is the index of the process in the request payload.
+	IndexInRequest int `pb:"3" json:"index_in_request"`
+}
+
+// ProcessError is an error that occurred during bulk processing.
+//
+// +gunk xo.Ignore(true)
+type ProcessError struct {
+	// ProcessID is the ID of the process that triggered the error.
+	ProcessID string `pb:"1" json:"process_id"`
+	// Code is a numeric value associated to the type of error that.
+	Code int `pb:"2" json:"code"`
+	// Reason is the human-readable description of the error. Programs should
+	// not parse this field as it is not guaranteed to be stable.
+	Reason string `pb:"3" json:"reason"`
+	// Source is the cause of the error.
+	Source string `pb:"4" json:"source"`
+	// IndexInRequest is the index of the process in the request payload.
+	IndexInRequest int `pb:"5" json:"index_in_request"`
+}
+
+// GetBulksRequest is the get bulks status request.
+type GetBulksRequest struct {
+	// BulksID is the identifier of the bulk process.
+	BulksID string `pb:"1" json:"bulks_id"`
+}
+
+// GetBulksResponse is the get bulks status response.
+type GetBulksResponse struct {
+	// Processed is a list of successfully processed items.
+	Processed []ProcessSuccess `pb:"1" json:"processed"`
+	// Errors is a list of errors that occurred during processing.
+	Errors []ProcessError `pb:"2" json:"errors"`
+	// State is the state of the bulk processes.
+	State core.Status `pb:"3" json:"state"`
+}
+
+// BulksService is the service for getting the status of bulk processes.
+type BulksService interface {
+	// GetBulks gets the status for a bulk process.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/bulks/{BulksID}",
+	// }
+	GetBulks(GetBulksRequest) GetBulksResponse
+}

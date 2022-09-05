@@ -1,0 +1,360 @@
+package transactions
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// NewDisbursement is the request body to create a transaction of type
+// DISBURSEMENT.
+//
+// +gunk xo.Ignore(true)
+type NewDisbursement struct {
+	// Amount is the value of the transaction.
+	Amount core.Amount `pb:"1" json:"amount"`
+	// ExternalID is the user-provided ID of the transaction, must be globally
+	// unique.
+	ExternalID string `pb:"2" json:"external_id"`
+	// Fees is the list of fees associated with the transaction.
+	Fees []DisbursementFee `pb:"3" json:"fees"`
+	// Notes is extra user-readable details about the current transaction.
+	Notes string `pb:"4" json:"notes"`
+	// OriginalCurrencyCode is the code of the currency the payment is made in.
+	OriginalCurrencyCode string `pb:"5" json:"original_currency_code"`
+	// ChannelID is the ID of the transaction channel.
+	ChannelID string `pb:"6" json:"channel_id"`
+	// LinkedAccountID is the ID of the account linked to the transactions.
+	LinkedAccountID string `pb:"7" json:"linked_account_id"`
+	// BookTime is the time when the transaction is logged into accounting.
+	BookTime time.Time `pb:"8" json:"book_time"`
+	// ValueTime is the time where the transaction should be applied.
+	ValueTime time.Time `pb:"9" json:"value_time"`
+	// FirstRepayTime is the time of the first repayment for the loan
+	// account.
+	FirstRepayTime time.Time `pb:"10" json:"first_repay_time"`
+}
+
+// CreateDisbursementRequest is a request to create a transaction of type
+// DISBURSEMENT.
+type CreateDisbursementRequest struct {
+	// AccountID is the ID of the loan account.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the new transaction.
+	Body NewDisbursement `pb:"2" json:"body"`
+}
+
+// NewLoanFee is the request body to create a loan transaction of type
+// FEE_APPLIED.
+//
+// +gunk xo.Ignore(true)
+type NewLoanFee struct {
+	// TransactionID is the ID of the transaction.
+	TransactionID string `pb:"1" json:"transaction_id"`
+	// FeeID is the ID of the fee that was predefined that this transaction is
+	// based on.
+	FeeID string `pb:"2" json:"fee_id"`
+	// Amount is the value of the transaction.
+	Amount core.Amount `pb:"3" json:"amount"`
+	// InstallmentNumber is the number of the installment where the fee will be
+	// applied.
+	InstallmentNumber int `pb:"4" json:"installment_number"`
+	// Notes is extra user-readable details about the current transaction.
+	Notes string `pb:"5" json:"notes"`
+	// BookTime is the time when the transaction is logged into accounting.
+	BookTime time.Time `pb:"6" json:"book_time"`
+	// ValueTime is the time when the transaction should be applied.
+	ValueTime time.Time `pb:"7" json:"value_time"`
+}
+
+// CreateLoanFeeRequest is a request to create a transaction of type
+// FEE_APPLIED.
+type CreateLoanFeeRequest struct {
+	// AccountID is the ID of the loan account.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the new transaction.
+	Body NewLoanFee `pb:"2" json:"body"`
+}
+
+// NewPayment is the request body to create a transaction of type
+// PAYMENT_MADE.
+//
+// +gunk xo.Ignore(true)
+type NewPayment struct {
+	// Amount is the value of the transaction.
+	Amount core.Amount `pb:"1" json:"amount"`
+	// ExternalID is the user-provided ID of the transaction, must be globally
+	// unique.
+	ExternalID string `pb:"2" json:"external_id"`
+	// Notes is extra user-readable details about the current transaction.
+	Notes string `pb:"3" json:"notes"`
+	// OriginalCurrencyCode is the code of the currency the payment is made in.
+	OriginalCurrencyCode string `pb:"4" json:"original_currency_code"`
+	// FeeID is the ID of the fee that was predefined that this transaction is
+	// based on.
+	FeeID string `pb:"5" json:"fee_id"`
+	// BookTime is the time when the transaction is logged into accounting.
+	BookTime time.Time `pb:"6" json:"book_time"`
+	// ValueTime is the time where the transaction should be applied.
+	ValueTime time.Time `pb:"7" json:"value_time"`
+}
+
+// CreatePaymentRequest is a request to create a transaction of type
+// PAYMENT_MADE.
+type CreatePaymentRequest struct {
+	// AccountID is the ID of the loan account.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the new transaction.
+	Body NewPayment `pb:"2" json:"body"`
+}
+
+// NewRedrawRepayment is the request body to create a transaction of type
+// REDRAW_PAYMENT.
+//
+// +gunk xo.Ignore(true)
+type NewRedrawRepayment struct {
+	// Amount is the value of the transaction.
+	Amount core.Amount `pb:"1" json:"amount"`
+	// Notes is extra user-readable details about the current transaction.
+	Notes string `pb:"2" json:"notes"`
+	// BookTime is the time when the transaction is logged into accounting.
+	BookTime time.Time `pb:"3" json:"book_time"`
+	// ValueTime is the time where the transaction should be applied.
+	ValueTime time.Time `pb:"4" json:"value_time"`
+}
+
+// CreateRedrawPaymentRequest is a request to create a transaction of type
+// REDRAW_PAYMENT.
+type CreateRedrawPaymentRequest struct {
+	// AccountID is the ID of the loan account.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the new transaction.
+	Body NewRedrawRepayment `pb:"2" json:"body"`
+}
+
+// NewRepayment is the request body to create a
+// transaction of type REPAYMENT.
+//
+// +gunk xo.Ignore(true)
+type NewRepayment struct {
+	// Amount is the value of the transaction.
+	Amount core.Amount `pb:"1" json:"amount"`
+	// Notes is extra user-readable details about the current transaction.
+	Notes string `pb:"2" json:"notes"`
+	// CustomPaymentAmounts is a list of payments the user has made.
+	CustomPaymentAmounts []CustomPaymentAmount `pb:"3" json:"custom_payment_amounts"`
+	// ExternalID is the user-provided ID of the transaction, must be globally
+	// unique.
+	ExternalID string `pb:"4" json:"external_id"`
+	// InstallmentID is the ID of the installment associated with this transaction.
+	InstallmentID string `pb:"5" json:"installment_id"`
+	// OriginalCurrencyCode is the code of the currency the payment is made in.
+	OriginalCurrencyCode string `pb:"6" json:"original_currency_code"`
+	// CalculationMethod is the method of prepayment recalculation.
+	CalculationMethod CalculationMethod `pb:"7" json:"calculation_method"`
+	// ChannelID is the ID of the transaction channel.
+	ChannelID string `pb:"8" json:"channel_id"`
+	// BookTime is the time when the transaction is logged into accounting.
+	BookTime time.Time `pb:"9" json:"book_time"`
+	// ValueTime is the time where the transaction should be applied.
+	ValueTime time.Time `pb:"10" json:"value_time"`
+}
+
+// CreateRepaymentRequest is a request to create a transaction of type
+// REPAYMENT.
+type CreateRepaymentRequest struct {
+	// AccountID is the ID of the loan account.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the new transaction.
+	Body NewRepayment `pb:"2" json:"body"`
+}
+
+// NewWithdrawalRedraw is the request body to create a transaction of type
+// WITHDRAWAL_REDRAW.
+//
+// +gunk xo.Ignore(true)
+type NewWithdrawalRedraw struct {
+	// Amount is the value of the transaction.
+	Amount core.Amount `pb:"1" json:"amount"`
+	// ExternalID is the user-provided ID of the transaction, must be globally
+	// unique.
+	ExternalID string `pb:"2" json:"external_id"`
+	// Notes is extra user-readable details about the current transaction.
+	Notes string `pb:"3" json:"notes"`
+	// OriginalCurrencyCode is the code of the currency the payment is made in.
+	OriginalCurrencyCode string `pb:"4" json:"original_currency_code"`
+	// ChannelID is the ID of the transaction channel.
+	ChannelID string `pb:"5" json:"channel_id"`
+	// BookTime is the time when the transaction is logged into accounting.
+	BookTime time.Time `pb:"6" json:"book_time"`
+	// ValueTime is the time where the transaction should be applied.
+	ValueTime time.Time `pb:"7" json:"value_time"`
+}
+
+// CreateWithdrawalRedrawRequest is a request to create a transaction of type
+// WITHDRAWAL_REDRAW.
+type CreateWithdrawalRedrawRequest struct {
+	// AccountID is the ID of the loan account.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the new transaction.
+	Body NewWithdrawalRedraw `pb:"2" json:"body"`
+}
+
+// ListLoanTransactionsRequest is a request to retrieve a list of loan
+// transactions.
+type ListLoanTransactionsRequest struct {
+	// AccountID is the ID of the account to retrieve the transactions for.
+	AccountID string `pb:"1" json:"account_id"`
+	// PageToken is the page token to use for the next page.
+	PageToken string `pb:"2" json:"page_token"`
+	// PageSize is the number of accounts to return.
+	PageSize int `pb:"3" json:"page_size"`
+	// Filter is the filter to apply to the list.
+	Filter string `pb:"4" json:"filter"`
+	// OrderBy is the field to order the list by.
+	OrderBy string `pb:"5" json:"order_by"`
+}
+
+// ListLoanTransactionsResponse is the response to retrieving a list of loan
+// transactions.
+type ListLoanTransactionsResponse struct {
+	// Total is the total number of loan transactions matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of loan transactions remaining in the list,
+	// including the loan transactions in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Transactions is the list of loan transactions retrieved.
+	Transactions []LoanTransaction `pb:"3" json:"transactions"`
+	// NextPageToken is the page token for the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetLoanTransactionRequest is a request to retrieve a list of loan
+// transactions.
+type GetLoanTransactionRequest struct {
+	// AccountID is the ID of the account to retrieve the transaction for.
+	AccountID string `pb:"1" json:"account_id"`
+	// TransactionID is the id of loan transaction to retrieve.
+	TransactionID string `pb:"2" json:"transaction_id"`
+}
+
+// NewLoanAdjustment is the request body to adjust a loan.
+//
+// +gunk xo.Ignore(true)
+type NewLoanAdjustment struct {
+	// BookTime is the time when the adjustment transaction is logged into
+	// accounting. Available only for REPAYMENT, PAYMENT_MADE and FEE.
+	BookTime time.Time `pb:"1" json:"book_time"`
+	// Installments is the new list of installments to be added.
+	Installments []NewInstallment `pb:"2" json:"installments"`
+	// Reason is a user-provided string that explains why a loan was adjusted.
+	Reason string `pb:"3" json:"reason"`
+}
+
+// AdjustLoanRequest is a request to adjust a loan.
+type AdjustLoanRequest struct {
+	// AccountID is the ID of the account to adjust the transaction for.
+	AccountID string `pb:"1" json:"account_id"`
+	// TransactionID is the ID of the transaction to adjust.
+	TransactionID string `pb:"2" json:"transaction_id"`
+	// Body is the details for the adjustment.
+	Body NewLoanAdjustment `pb:"3" json:"body"`
+}
+
+// LoanTransactionsService is the service that manages loan transactions.
+type LoanTransactionsService interface {
+	// CreateDisbursement creates a disbursement on a loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/loans/{AccountID}:disburse",
+	//         Body:   "Body",
+	// }
+	CreateDisbursement(CreateDisbursementRequest) LoanTransaction
+
+	// CreateFee creates a transaction that applies a fee on a loan
+	// account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/loans/{AccountID}:applyFee",
+	//         Body:   "Body",
+	// }
+	CreateFee(CreateLoanFeeRequest) LoanTransaction
+
+	// CreatePayment creates a transaction where the user has made a
+	// payment.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/loans/{AccountID}:payment",
+	//         Body:   "Body",
+	// }
+	CreatePayment(CreatePaymentRequest) LoanTransaction
+
+	// CreateRedrawPayment creates a transaction where the user redraws a
+	// payment.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/loans/{AccountID}:redrawPayment",
+	//         Body:   "Body",
+	// }
+	CreateRedrawPayment(CreateRedrawPaymentRequest) LoanTransaction
+
+	// CreateRepayment creates a transaction where the user repays an
+	// installment.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/loans/{AccountID}:repayment",
+	//         Body:   "Body",
+	// }
+	CreateRepayment(CreateRepaymentRequest) LoanTransaction
+
+	// CreateWithdrawal creates a transaction where the user withdraws their
+	// balance.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/loans/{AccountID}:withdraw",
+	//         Body:   "Body",
+	// }
+	CreateWithdrawal(CreateWithdrawalRequest) LoanTransaction
+
+	// CreateWithdrawalRedraw creates a transaction where the user withdraws
+	// from their redraw balance.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/loans/{AccountID}:redrawWithdrawal",
+	//         Body:   "Body",
+	// }
+	CreateWithdrawalRedraw(CreateWithdrawalRedrawRequest) LoanTransaction
+
+	// ListLoanTransactions lists loan transactions.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/loans/{AccountID}/transactions",
+	// }
+	ListLoanTransactions(ListLoanTransactionsRequest) ListLoanTransactionsResponse
+
+	// GetLoanTransaction retrieves a loan transaction.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/loans/{AccountID}/transactions/{TransactionID}",
+	// }
+	GetLoanTransaction(GetLoanTransactionRequest) LoanTransaction
+
+	// Adjust adjusts a loan transaction.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/loans/{AccountID}/transactions/{TransactionID}:adjust",
+	//         Body:   "Body",
+	// }
+	Adjust(AdjustLoanRequest) LoanTransaction
+}

@@ -1,0 +1,466 @@
+// Package groups defines services for creating and managing groups.
+//
+// +gunk proto.Package("openbank.core.v1.groups")
+// +gunk java.Package("openbank.core.v1.groups")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Groups",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package groups
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// Role is the role of a group member within the group (i.e. Money
+// Collector). One member may have multiple roles within a group.
+type Role struct {
+	// RoleID is the ID for the group role.
+	//
+	// +gunk xo.Unique
+	RoleID string `pb:"1" json:"role_id"`
+	// Name is the name of the group role.
+	Name string `pb:"2" json:"name"`
+}
+
+// Member is a person that is a member of a group.
+//
+// +gunk xo.HasMany{
+//         Name:       "Roles",
+//         TypeSuffix: "groups.Role",
+// }
+type Member struct {
+	// ClientID is the ID of the client associated with the member.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "clients.Client",
+	//         FieldName:  "ClientID",
+	// }
+	ClientID string `pb:"1" json:"client_id"`
+	// RoleIDs is the list of roles that the member contains.
+	//
+	// +gunk xo.Ignore(true)
+	RoleIDs []string `pb:"2" json:"role_ids"`
+}
+
+// Group is a type of client that represents a group of at least two members.
+//
+// +gunk xo.HasMany{
+//         Name:       "Members",
+//         TypeSuffix: "groups.Member",
+// }
+// +gunk xo.HasMany{
+//         Name:       "Roles",
+//         TypeSuffix: "groups.Role",
+// }
+type Group struct {
+	// GroupID is the unique ID of the group.
+	//
+	// +gunk xo.Unique
+	GroupID string `pb:"1" json:"group_id"`
+	// Info is the contact information of the group.
+	Info core.ContactInfo `pb:"2" json:"info"`
+	// BranchID is the ID of the branch this group is assigned to.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "branches.Branch",
+	//         FieldName:  "BranchID",
+	// }
+	BranchID string `pb:"3" json:"branch_id"`
+	// CentreID is the ID of the centre this group is assigned to.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "centres.Centre",
+	//         FieldName:  "CentreID",
+	// }
+	CentreID string `pb:"4" json:"centre_id"`
+	// OwnerID is the ID of the user that owns this group.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "users.User",
+	//         FieldName:  "UserID",
+	// }
+	OwnerID string `pb:"5" json:"owner_id"`
+	// LoanCycle is the number of paid and closed (with 'obligations met')
+	// accounts for this group. When reverting a closing operation, this is
+	// reduced.
+	LoanCycle int `pb:"6" json:"loan_cycle"`
+	// MigrationEventID is the ID of the migration event associated with this group.
+	// TODO: Which table does this have a reference to.
+	MigrationEventID string `pb:"7" json:"migration_event_id"`
+	// Notes are extra notes associated with this group.
+	//
+	// FIXME(chan.xu): This seems to be redundant due to the comments package.
+	Notes string `pb:"8" json:"notes"`
+	// CreateTime is the time the group was created.
+	CreateTime time.Time `pb:"9" json:"create_time"`
+	// UpdateTime is the time the group was last updated.
+	UpdateTime time.Time `pb:"10" json:"update_time"`
+}
+
+// CreateGroupRequest is the request to create a group.
+type CreateGroupRequest struct {
+	// Body is the group to be created.
+	Body Group `pb:"1" json:"body"`
+}
+
+// ListGroupsRequest is the request to list groups.
+type ListGroupsRequest struct {
+	// PageToken is the token to use for pagination.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of groups to return.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order the groups by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the list of groups.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListGroupsResponse is the response for listing groups.
+type ListGroupsResponse struct {
+	// Total is the total number of groups matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of groups remaining in the list, including the
+	// groups in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Groups is the list of groups.
+	Groups []Group `pb:"3" json:"groups"`
+	// NextPageToken is the token to use for pagination.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetGroupRequest is the request to retrieve groups.
+type GetGroupRequest struct {
+	// GroupID is the ID of the group to retrieve.
+	GroupID string `pb:"1" json:"group_id"`
+}
+
+// UpdateGroupRequest is the request to update the specified group.
+type UpdateGroupRequest struct {
+	// GroupID is the ID of the group to be updated.
+	GroupID string `pb:"1" json:"group_id"`
+	// Body is the value of the group after updating.
+	Body Group `pb:"2" json:"body"`
+}
+
+// DeleteGroupRequest is the request to delete the specified group.
+type DeleteGroupRequest struct {
+	// GroupID is the ID of the group to be deleted.
+	GroupID string `pb:"1" json:"group_id"`
+}
+
+// AddMemberRequest is the request to add a client to a group.
+type AddMemberRequest struct {
+	// GroupID is the ID of the group.
+	GroupID string `pb:"1" json:"group_id"`
+	// ClientID is the ID of the client to add.
+	ClientID string `pb:"2" json:"client_id"`
+}
+
+// GetMemberRequest is the request to retrieve a group member.
+type GetMemberRequest struct {
+	// GroupID is the ID of the group.
+	GroupID string `pb:"1" json:"group_id"`
+	// ClientID is the ID of the client.
+	ClientID string `pb:"2" json:"client_id"`
+}
+
+// ListMembersRequest is the request to retrieve group members.
+type ListMembersRequest struct {
+	// GroupID is the id of the group to retrieve members for.
+	GroupID string `pb:"1" json:"group_id"`
+	// PageToken is the token to use for pagination.
+	PageToken string `pb:"2" json:"page_token"`
+	// PageSize is the number of groups to return.
+	PageSize int `pb:"3" json:"page_size"`
+	// OrderBy is the field to order the groups by.
+	OrderBy string `pb:"4" json:"order_by"`
+	// Filter is the filter to apply to the list of groups.
+	Filter string `pb:"5" json:"filter"`
+}
+
+// ListMembersResponse is the response for retrieving group members.
+type ListMembersResponse struct {
+	// Total is the total number of members matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of members remaining in the list, including the
+	// members in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Members is the list of members.
+	Members []Member `pb:"3" json:"members"`
+	// NextPageToken is the token to use for pagination.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// RemoveMemberRequest is the request to add a client to a group.
+type RemoveMemberRequest struct {
+	// GroupID is the ID of the group.
+	GroupID string `pb:"1" json:"group_id"`
+	// ClientID is the ID of the client to remove.
+	ClientID string `pb:"2" json:"client_id"`
+}
+
+// CreateRoleRequest is the request to create a new group role.
+type CreateRoleRequest struct {
+	// GroupID is the ID of the group to add the role to.
+	GroupID string `pb:"1" json:"group_id"`
+	// Body is the Role to create.
+	Body Role `pb:"2" json:"body"`
+}
+
+// GetRoleRequest is the request to get a group role.
+type GetRoleRequest struct {
+	// GroupID is the ID of the group the role belongs to.
+	GroupID string `pb:"1" json:"group_id"`
+	// RoleID is the ID of the role to retrieve.
+	RoleID string `pb:"2" json:"role_id"`
+}
+
+// ListGroupRolesRequest is the request to retrieve all the roles that belong to a group.
+type ListGroupRolesRequest struct {
+	// GroupID is the ID of the group to retrieve the roles for.
+	GroupID string `pb:"1" json:"group_id"`
+	// PageToken is the token to use for pagination.
+	PageToken string `pb:"2" json:"page_token"`
+	// PageSize is the number of groups to return.
+	PageSize int `pb:"3" json:"page_size"`
+	// OrderBy is the field to order the groups by.
+	OrderBy string `pb:"4" json:"order_by"`
+	// Filter is the filter to apply to the list of groups.
+	Filter string `pb:"5" json:"filter"`
+}
+
+// ListGroupRolesResponse is the response for retrieving group roles.
+type ListGroupRolesResponse struct {
+	// Total is the total number of roles matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of roles remaining in the list, including the
+	// roles in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Roles is the list of roles.
+	Roles []Role `pb:"3" json:"roles"`
+	// NextPageToken is the token to use for pagination.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// UpdateRoleRequest is the request to update a group role.
+type UpdateRoleRequest struct {
+	// GroupID is the ID of the group the role belongs to.
+	GroupID string `pb:"1" json:"group_id"`
+	// RoleID is the ID of the role to be updated.
+	RoleID string `pb:"2" json:"role_id"`
+	// Body is the value of the group after updating.
+	Body Role `pb:"3" json:"body"`
+}
+
+// DeleteRoleRequest is the request to delete a group role.
+type DeleteRoleRequest struct {
+	// GroupID is the ID of the group to remove the role from.
+	GroupID string `pb:"1" json:"group_id"`
+	// RoleID is the ID of the role to be deleted.
+	RoleID string `pb:"2" json:"role_id"`
+}
+
+// AddMemberRoleRequest is the request to add a role to a member.
+type AddMemberRoleRequest struct {
+	// GroupID is the ID of the group.
+	GroupID string `pb:"1" json:"group_id"`
+	// ClientID is the ID of the client.
+	ClientID string `pb:"2" json:"client_id"`
+	// RoleID is the ID of the role to add to the member.
+	RoleID string `pb:"3" json:"role_id"`
+}
+
+// ListMemberRolesRequest is the request to retrieve the roles of a member.
+type ListMemberRolesRequest struct {
+	// GroupID is the ID of the group.
+	GroupID string `pb:"1" json:"group_id"`
+	// ClientID is the ID of the client.
+	ClientID string `pb:"2" json:"client_id"`
+	// PageToken is the token to use for pagination.
+	PageToken string `pb:"3" json:"page_token"`
+	// PageSize is the number of groups to return.
+	PageSize int `pb:"4" json:"page_size"`
+	// OrderBy is the field to order the groups by.
+	OrderBy string `pb:"5" json:"order_by"`
+	// Filter is the filter to apply to the list of groups.
+	Filter string `pb:"6" json:"filter"`
+}
+
+// ListMemberRolesResponse is the response for retrieving the roles of a member.
+type ListMemberRolesResponse struct {
+	// Total is the total number of roles matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of roles remaining in the list, including the
+	// roles in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Roles is the list of roles.
+	Roles []Role `pb:"3" json:"roles"`
+	// NextPageToken is the token to use for pagination.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// RemoveMemberRoleRequest is the request to remove a role from member.
+type RemoveMemberRoleRequest struct {
+	// GroupID is the ID of the group.
+	GroupID string `pb:"1" json:"group_id"`
+	// ClientID is the ID of the client.
+	ClientID string `pb:"2" json:"client_id"`
+	// RoleID is the ID of the role to remove from the member.
+	RoleID string `pb:"3" json:"role_id"`
+}
+
+// GroupsService is the service for managing groups.
+type GroupsService interface {
+	// CreateGroup creates a new group.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/groups",
+	//         Body:   "Body",
+	// }
+	CreateGroup(CreateGroupRequest) Group
+
+	// ListGroups lists groups.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/groups",
+	// }
+	ListGroups(ListGroupsRequest) ListGroupsResponse
+
+	// GetGroup retrieves a group.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/groups/{GroupID}",
+	// }
+	GetGroup(GetGroupRequest) Group
+
+	// UpdateGroup updates the specified group.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/groups/{GroupID}",
+	//         Body:   "Body",
+	// }
+	UpdateGroup(UpdateGroupRequest) Group
+
+	// DeleteGroup deletes the specified group.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/groups/{GroupID}",
+	// }
+	DeleteGroup(DeleteGroupRequest)
+
+	// AddMember adds the specified groups to a client.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/groups/{GroupID}/members",
+	// }
+	AddMember(AddMemberRequest)
+
+	// ListMembers lists the members in a group.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/groups/{GroupID}/members",
+	// }
+	ListMembers(ListMembersRequest) ListMembersResponse
+
+	// GetMember retrieves the specified member in a group.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/groups/{GroupID}/members/{ClientID}",
+	// }
+	GetMember(GetMemberRequest) Member
+
+	// RemoveMember removes the specified groups from the client.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/groups/{GroupID}/members/{ClientID}",
+	// }
+	RemoveMember(RemoveMemberRequest)
+
+	// CreateRole creates a new group role.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/groups/{GroupID}/roles",
+	// }
+	CreateRole(CreateRoleRequest) Role
+
+	// ListGroupRoles retrieves all of the roles of the specified group.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/groups/{GroupID}/roles",
+	// }
+	ListGroupRoles(ListGroupRolesRequest) ListGroupRolesResponse
+
+	// GetRole retrieves group role.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/groups/{GroupID}/roles/{RoleID}",
+	// }
+	GetRole(GetRoleRequest) Role
+
+	// UpdateRole updates the specified group role.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/groups/{GroupID}/roles/{RoleID}",
+	// }
+	UpdateRole(UpdateRoleRequest) Role
+
+	// DeleteRole deletes the specified group role.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/groups/{GroupID}/roles/{RoleID}",
+	// }
+	DeleteRole(DeleteRoleRequest)
+
+	// AddMemberRole adds a role to a member.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/groups/{GroupID}/members/{ClientID}/roles/{RoleID}",
+	// }
+	AddMemberRole(AddMemberRoleRequest)
+
+	// ListMemberRoles lists the roles for a member.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/groups/{GroupID}/members/{ClientID}/roles",
+	// }
+	ListMemberRoles(ListMemberRolesRequest) ListMemberRolesResponse
+
+	// RemoveMemberRole removes a role from a member.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/groups/{GroupID}/members/{ClientID}/roles/{RoleID}",
+	// }
+	RemoveMemberRole(RemoveMemberRoleRequest)
+}

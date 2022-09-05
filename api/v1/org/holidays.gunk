@@ -1,0 +1,164 @@
+package org
+
+import (
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// Day is a day in the week.
+type Day int
+
+// The days of the week.
+const (
+	Monday Day = iota
+	Tuesday
+	Wednesday
+	Thursday
+	Friday
+	Saturday
+	Sunday
+)
+
+// Holiday is a day where the organization is closed.
+type Holiday struct {
+	// HolidayID is the ID of the holiday.
+	//
+	// +gunk xo.Unique
+	HolidayID string `pb:"1" json:"holiday_id"`
+	// Name is the name of the holiday.
+	Name string `pb:"2" json:"name"`
+	// Date is the date of the holiday.
+	Date time.Time `pb:"3" json:"date"`
+	// IsAnnuallyRecurring is true if the holiday is annual.
+	IsAnnuallyRecurring bool `pb:"4" json:"is_annually_recurring"`
+	// CreateTime is the date the holiday was created.
+	CreateTime time.Time `pb:"5" json:"create_time"`
+}
+
+// CreateHolidayRequest is the request to create a holiday.
+type CreateHolidayRequest struct {
+	// Body is the holiday to create.
+	Body Holiday `pb:"1" json:"body"`
+}
+
+// ListHolidaysRequest is the request to list holidays.
+type ListHolidaysRequest struct {
+	// PageToken is the token to use for pagination.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of items to return per page.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the results.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListHolidaysResponse is the response for listing holidays.
+type ListHolidaysResponse struct {
+	// Total is the total number of holidays matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of holidays remaining in the list, including the
+	// holidays in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Holidays is the list of holidays listed.
+	Holidays []Holiday `pb:"3" json:"holidays"`
+	// NextPageToken is the token to use for the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetHolidayRequest is the request to retrieve holiday.
+type GetHolidayRequest struct {
+	// HolidayID is the ID of the holiday to retrieve.
+	HolidayID string `pb:"1" json:"holiday_id"`
+}
+
+// UpdateHolidayRequest is the request to update a specific holiday.
+type UpdateHolidayRequest struct {
+	// HolidayID is the ID of the holiday to update.
+	HolidayID string `pb:"1" json:"holiday_id"`
+	// Body is the new content of the holiday.
+	Body Holiday `pb:"2" json:"body"`
+}
+
+// DeleteHolidayRequest is the request to delete a holiday.
+type DeleteHolidayRequest struct {
+	// HolidayID is the ID of the holiday to delete.
+	HolidayID string `pb:"1" json:"holiday_id"`
+}
+
+// NonWorkingDays is the configuration for non-working days.
+type NonWorkingDays struct {
+	// NonWorkingDays is the days of the week that are not working days.
+	NonWorkingDays []Day `pb:"1" json:"non_working_days"`
+}
+
+// UpdateNonWorkingDaysRequest is the request to update the list of non-working
+// days.
+type UpdateNonWorkingDaysRequest struct {
+	// Body is the new configuration for non-working days.
+	Body NonWorkingDays `pb:"1" json:"body"`
+}
+
+// HolidaysService is a service to manage holidays in an organization.
+// This includes general holidays and non-working days.
+type HolidaysService interface {
+	// CreateHoliday creates a new holiday.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/organization/holidays/general",
+	//         Body:   "Body",
+	// }
+	CreateHoliday(CreateHolidayRequest) Holiday
+
+	// ListHolidays lists holidays.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/organization/holidays/general",
+	// }
+	ListHolidays(ListHolidaysRequest) ListHolidaysResponse
+
+	// GetHoliday retrieves the specified holiday.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/organization/holidays/general/{HolidayID}",
+	// }
+	GetHoliday(GetHolidayRequest) Holiday
+
+	// UpdateHoliday updates the specified holiday.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/organization/holidays/general/{HolidayID}",
+	//         Body:   "Body",
+	// }
+	UpdateHoliday(UpdateHolidayRequest) Holiday
+
+	// DeleteHoliday deletes the specified holiday.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/organization/holidays/general/{HolidayID}",
+	// }
+	DeleteHoliday(DeleteHolidayRequest)
+
+	// GetNonWorkingDays retrieves the list of non-working days.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/organization/holidays/nonworkingdays",
+	// }
+	GetNonWorkingDays() NonWorkingDays
+
+	// UpdateNonWorkingDays updates the list of non-working days.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/organization/holidays/nonworkingdays",
+	//         Body:   "Body",
+	// }
+	UpdateNonWorkingDays(UpdateNonWorkingDaysRequest) NonWorkingDays
+}

@@ -1,0 +1,175 @@
+package org
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/xo"
+)
+
+// ChannelConstraintCriteria is a criteria for the constraints in a transaction
+// channel.
+type ChannelConstraintCriteria int
+
+const (
+	ChannelConstraintAmount ChannelConstraintCriteria = iota
+	ChannelConstraintType
+	ChannelConstraintProduct
+)
+
+// ChannelConstraintMode is the mode the constraint runs in.
+type ChannelConstraintMode int
+
+const (
+	// MatchAll is a value that prevents the transaction from occurring if all
+	// constraints are violated.
+	MatchAll ChannelConstraintMode = iota
+	// MatchAny is a value that prevents the transaction from occurring if any
+	// constraints are violated.
+	MatchAny
+)
+
+// ChannelConstraint is a constraint for the transaction channel configuration.
+//
+// +gunk xo.Ignore(true)
+type ChannelConstraint struct {
+	// Criteria is the criteria used to apply the constraint.
+	Criteria ChannelConstraintCriteria `pb:"1" json:"criteria"`
+	// Operator is the operator to apply to the criteria.
+	Operator core.Operator `pb:"2" json:"operator"`
+	// Values is a list of values used in filtering.
+	Values []string `pb:"3" json:"values"`
+}
+
+// ChannelConstraints is the configuration for transaction channel constraints.
+//
+// +gunk xo.Ignore(true)
+type ChannelConstraints struct {
+	// Constraints is a list of constraints applied to the channel.
+	Constraints []ChannelConstraint `pb:"1" json:"constraints"`
+	// Filter is the type of filter to apply to the constraints.
+	Filter ChannelConstraintMode `pb:"2" json:"filter"`
+}
+
+// TODO: Migrate AllowedUsers to the new permission system.
+
+// Channel is the a channel for processing transactions.
+type Channel struct {
+	// ChannelID is the ID of the channel.
+	//
+	// +gunk xo.Unique
+	ChannelID string `pb:"1" json:"channel_id"`
+	// GLAccount is the associated GL account with the transaction channel.
+	GLAccount string `pb:"2" json:"gl_account"`
+	// Name is the user-defined name of the transaction channel.
+	Name string `pb:"3" json:"name"`
+	// LoansConstraints is the constraints of loan transactions using the
+	// transaction channel.
+	LoansConstraints ChannelConstraints `pb:"4" json:"loans_constraints"`
+	// DepositConstraints is the constraints of deposit transactions using the
+	// transaction channel.
+	DepositConstraints ChannelConstraints `pb:"5" json:"deposit_constraints"`
+	// State is the current status of the transaction channel.
+	State core.State `pb:"6" json:"state"`
+	// Default is a flag that picks the channel by default in the UI, setting a
+	// channel to default will remove the default flag from all other channels.
+	Default bool `pb:"7" json:"default"`
+	// AllowedUsers is a list of users for the transaction channel. If empty,
+	// the field is visible to all users.
+	AllowedUsers []string `pb:"8" json:"allowed_users"`
+}
+
+// CreateChannelRequest is the request to create a channel.
+type CreateChannelRequest struct {
+	// Body is the channel to create.
+	Body Channel `pb:"1" json:"body"`
+}
+
+// ListChannelsRequest is the request to list channels.
+type ListChannelsRequest struct {
+	// PageToken is the token to use for pagination.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the size of the page.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the results.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListChannelsResponse is the response for listing channels.
+type ListChannelsResponse struct {
+	// Total is the total number of channels matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of channels remaining in the list, including the
+	// channels in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Channels is the list of channels listed.
+	Channels []Channel `pb:"3" json:"channels"`
+	// NextPageToken is the token to use for the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetChannelRequest is the request to retrieve a channel.
+type GetChannelRequest struct {
+	// ChannelID is the ID of the channel to retrieve.
+	ChannelID string `pb:"1" json:"channel_id"`
+}
+
+// UpdateChannelRequest is the request to update the information of a channel.
+type UpdateChannelRequest struct {
+	// ChannelID is the ID of the channel to update.
+	ChannelID string `pb:"1" json:"channel_id"`
+	// Body is the new value of the channel.
+	Body Channel `pb:"2" json:"body"`
+}
+
+// DeleteChannelRequest is the request to delete a transaction channel.
+type DeleteChannelRequest struct {
+	// ChannelID is the ID of the channel to delete.
+	ChannelID string `pb:"1" json:"channel_id"`
+}
+
+// ChannelsService is a service that manages transaction channels.
+type ChannelsService interface {
+	// CreateChannel creates a new transaction channel.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/organization/channels",
+	//         Body:   "Body",
+	// }
+	CreateChannel(CreateChannelRequest) Channel
+
+	// ListChannels lists all transaction channels.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/organization/channels",
+	// }
+	ListChannels(ListChannelsRequest) ListChannelsResponse
+
+	// GetChannel retrieves a transaction channel.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/organization/channels/{ChannelID}",
+	// }
+	GetChannel(GetChannelRequest) Channel
+
+	// UpdateChannel updates an existing transaction channel.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/organization/channels/{ChannelID}",
+	//         Body:   "Body",
+	// }
+	UpdateChannel(UpdateChannelRequest) Channel
+
+	// DeleteChannel deletes a transaction channel by ID.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/organization/channels/{ChannelID}",
+	// }
+	DeleteChannel(DeleteChannelRequest)
+}

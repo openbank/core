@@ -1,0 +1,5 @@
+docs/package-lock.json
+docs/node_modules
+docs/.svelte-kit
+.git
+.gitignore

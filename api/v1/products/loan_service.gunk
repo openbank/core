@@ -1,0 +1,101 @@
+package products
+
+import (
+	"github.com/gunk/opt/http"
+)
+
+// CreateLoanProductRequest is the request to create a new loan product.
+type CreateLoanProductRequest struct {
+	// Body is the loan product to be created.
+	Body LoanProduct `pb:"1" json:"body"`
+}
+
+// ListLoanProductsRequest is the request to list loan products.
+type ListLoanProductsRequest struct {
+	// PageToken is the token for the page of loan products to be returned.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the maximum number of loan products to be returned.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order loan products by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to loan products.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListLoanProductsResponse is the response for listing loan products.
+type ListLoanProductsResponse struct {
+	// Total is the total number of products matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of products remaining in the list, including the
+	// products in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Products is the list of loan products.
+	Products []LoanProduct `pb:"3" json:"products"`
+	// NextPageToken is the token for the next page of loan products.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetLoanProductRequest is the request to retrieve the specified loan product.
+type GetLoanProductRequest struct {
+	// ProductID is the ID of the loan product to be retrieved.
+	ProductID string `pb:"1" json:"product_id"`
+}
+
+// UpdateLoanProductRequest is the request to update a loan product.
+type UpdateLoanProductRequest struct {
+	// ProductID is the ID of the loan product to be updated.
+	ProductID string `pb:"1" json:"product_id"`
+	// Body is the new value of the loan product.
+	Body LoanProduct `pb:"2" json:"body"`
+}
+
+// DeleteLoanProductRequest is the request to delete a loan product.
+type DeleteLoanProductRequest struct {
+	// ProductID is the ID of the loan product to be deleted.
+	ProductID string `pb:"1" json:"product_id"`
+}
+
+// LoanProductsService is the service for managing loan products.
+type LoanProductsService interface {
+	// CreateLoanProduct creates a new loan product.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/products/loan",
+	//         Body:   "Body",
+	// }
+	CreateLoanProduct(CreateLoanProductRequest) LoanProduct
+
+	// ListLoanProducts lists loan products.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/products/loan",
+	// }
+	ListLoanProducts(ListLoanProductsRequest) ListLoanProductsResponse
+
+	// GetLoanProduct retrieves the specified loan product.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/products/loan/{ProductID}",
+	// }
+	GetLoanProduct(GetLoanProductRequest) LoanProduct
+
+	// UpdateLoanProduct updates the specified loan product.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/products/loan/{ProductID}",
+	//         Body:   "Body",
+	// }
+	UpdateLoanProduct(UpdateLoanProductRequest) LoanProduct
+
+	// DeleteLoanProduct deletes the specified loan product.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/products/loan/{ProductID}",
+	// }
+	DeleteLoanProduct(DeleteLoanProductRequest)
+}

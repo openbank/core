@@ -1,0 +1,314 @@
+package transactions
+
+import (
+	core "bnk.to/core/api/v1"
+	deposits "bnk.to/core/api/v1/deposits"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// BulkDepositTransaction is a transaction in a bulk operation.
+//
+// +gunk xo.Ignore(true)
+type BulkDepositTransaction struct {
+	// TransactionID is the ID of the transaction.
+	TransactionID string `pb:"1" json:"transaction_id"`
+	// AccountID is the ID of the account.
+	AccountID string `pb:"2" json:"account_id"`
+	// Amount is the amount to deposit.
+	Amount core.Amount `pb:"3" json:"amount"`
+	// Notes is the extra human-readable notes for the transaction.
+	Notes string `pb:"4" json:"notes"`
+	// Payment is the information of the account debited and credited.
+	Payment deposits.Payment `pb:"5" json:"payment"`
+	// OrderID is the ID of the payment order.
+	OrderID string `pb:"6" json:"order_id"`
+	// SkipValidation is a flag that disables maximum balance checks.
+	SkipValidation bool `pb:"7" json:"skip_validation"`
+	// ChannelID is the ID of the transaction channel.
+	ChannelID string `pb:"8" json:"channel_id"`
+}
+
+// BulkDepositTransactions is a list of bulk deposit transactions.
+//
+// +gunk xo.Ignore(true)
+type BulkDepositTransactions struct {
+	// Transactions is a list of bulk deposit transactions.
+	Transactions []BulkDepositTransaction `pb:"1" json:"transactions"`
+}
+
+// CreateBulkDepositRequest is a request to create a bulk deposit.
+type CreateBulkDepositRequest struct {
+	// Body is the list of deposit transactions to create.
+	Body BulkDepositTransactions `pb:"1" json:"body"`
+}
+
+// NewDepositTransaction is the data of a new deposit transaction.
+//
+// +gunk xo.Ignore(true)
+type NewDepositTransaction struct {
+	// TransactionID is the ID of the transaction.
+	TransactionID string `pb:"1" json:"transaction_id"`
+	// Amount is the amount deposited.
+	Amount core.Amount `pb:"2" json:"amount"`
+	// Notes is the extra human-readable notes for the transaction.
+	Notes string `pb:"3" json:"notes"`
+	// Payment is the information of the account debited and credited.
+	Payment deposits.Payment `pb:"4" json:"payment"`
+	// OrderID is the ID of the payment order.
+	OrderID string `pb:"5" json:"order_id"`
+	// SkipValidation is a flag that disables maximum balance checks.
+	SkipValidation bool `pb:"6" json:"skip_validation"`
+	// ChannelID is the ID of the transaction channel.
+	ChannelID string `pb:"7" json:"channel_id"`
+	// BookTime is the time when the transaction is logged into accounting.
+	BookTime time.Time `pb:"8" json:"book_time"`
+	// ValueTime is the time when the transaction is executed.
+	ValueTime time.Time `pb:"9" json:"value_time"`
+}
+
+// CreateDepositRequest is a request to create a deposit.
+type CreateDepositRequest struct {
+	// AccountID is the ID of the account to create the transaction for.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the deposit transaction to create.
+	Body NewDepositTransaction `pb:"2" json:"body"`
+}
+
+// NewDepositAdjustment is the details of the deposit adjustment to make.
+//
+// +gunk xo.Ignore(true)
+type NewDepositAdjustment struct {
+	// BookTime is the time when the transaction is logged into accounting.
+	BookTime time.Time `pb:"1" json:"book_time"`
+	// Notes is the extra human-readable notes for the adjustment.
+	Notes string `pb:"2" json:"notes"`
+}
+
+// AdjustDepositRequest is the request to adjust a deposit transaction.
+type AdjustDepositRequest struct {
+	// AccountID is the ID of the account to adjust the transaction for.
+	AccountID string `pb:"1" json:"account_id"`
+	// TransactionID is the ID of the transaction to adjust.
+	TransactionID string `pb:"2" json:"transaction_id"`
+	// Body is the details for the adjustment.
+	Body NewDepositAdjustment `pb:"3" json:"body"`
+}
+
+// NewDepositFee is the data of a new fee transaction.
+//
+// +gunk xo.Ignore(true)
+type NewDepositFee struct {
+	// TransactionID is the ID of the transaction.
+	TransactionID string `pb:"1" json:"transaction_id"`
+	// FeeID is the ID of the fee that was predefined that this transaction is
+	// based on.
+	FeeID string `pb:"2" json:"fee_id"`
+	// Amount is the value of the transaction.
+	Amount core.Amount `pb:"3" json:"amount"`
+	// Notes is extra user-readable details about the current transaction.
+	Notes string `pb:"4" json:"notes"`
+	// BookTime is the time when the transaction is logged into accounting.
+	BookTime time.Time `pb:"5" json:"book_time"`
+}
+
+// CreateDepositFeeRequest is the request to create a transaction of type
+// FEE_APPLIED.
+type CreateDepositFeeRequest struct {
+	// AccountID is the ID of the account to create the transaction for.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the fee transaction to create.
+	Body NewDepositFee `pb:"2" json:"body"`
+}
+
+// NewSeizeBlock is the data of a new seize block.
+//
+// +gunk xo.Ignore(true)
+type NewSeizeBlock struct {
+	// SeizeID is the ID of the seize block.
+	SeizeID string `pb:"1" json:"seize_id"`
+	// BlockID is the ID of the block fund to seize.
+	BlockID string `pb:"2" json:"block_id"`
+	// ChannelID is the ID of the transaction channel.
+	ChannelID string `pb:"3" json:"channel_id"`
+	// Amount is the amount to seize.
+	Amount core.Amount `pb:"4" json:"amount"`
+	// Notes is the extra human-readable notes for the seize.
+	Notes string `pb:"5" json:"notes"`
+}
+
+// CreateSeizureRequest is a request to create a new seizure block.
+type CreateSeizureRequest struct {
+	// AccountID is the ID of the account to create the seizure block for.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the new seize block to create.
+	Body NewSeizeBlock `pb:"2" json:"body"`
+}
+
+// NewTransferTransaction is the data of a new transfer transaction.
+//
+// +gunk xo.Ignore(true)
+type NewTransferTransaction struct {
+	// TransactionID is the ID of the transaction.
+	TransactionID string `pb:"1" json:"transaction_id"`
+	// Amount is the amount to transfer.
+	Amount core.Amount `pb:"2" json:"amount"`
+	// Notes is the extra human-readable notes for the transaction.
+	Notes string `pb:"3" json:"notes"`
+	// Payment is the information of the account debited and credited.
+	Payment deposits.Payment `pb:"4" json:"payment"`
+	// OrderID is the ID of the payment order.
+	OrderID string `pb:"5" json:"order_id"`
+	// BookTime is the time when the transaction is logged into accounting.
+	BookTime time.Time `pb:"6" json:"book_time"`
+	// ValueTime is the time when the transaction is executed.
+	ValueTime time.Time `pb:"7" json:"value_time"`
+}
+
+// CreateTransferRequest is a request to create a transfer transaction.
+type CreateTransferRequest struct {
+	// AccountID is the ID of the account to create the transaction for.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the transfer transaction to create.
+	Body NewTransferTransaction `pb:"2" json:"body"`
+}
+
+// GetDocumentRequest is a request to retrieve a document.
+type GetDocumentRequest struct {
+	// AccountID is the ID of the account to retrieve the document for.
+	AccountID string `pb:"1" json:"account_id"`
+	// TransactionID is the ID of the transaction.
+	TransactionID string `pb:"2" json:"transaction_id"`
+	// TemplateID is the ID of the template to use to generate the document.
+	TemplateID string `pb:"3" json:"template_id"`
+}
+
+// ListDepositTransactionsRequest is a request to retrieve a list of deposit
+// transactions.
+type ListDepositTransactionsRequest struct {
+	// AccountID is the ID of the account to retrieve the transactions for.
+	AccountID string `pb:"1" json:"account_id"`
+	// PageToken is the page token to use for the next page.
+	PageToken string `pb:"2" json:"page_token"`
+	// PageSize is the number of accounts to return.
+	PageSize int `pb:"3" json:"page_size"`
+	// Filter is the filter to apply to the list.
+	Filter string `pb:"4" json:"filter"`
+	// OrderBy is the field to order the list by.
+	OrderBy string `pb:"5" json:"order_by"`
+}
+
+// ListDepositTransactionsResponse is the response to retrieving a list of
+// deposit transactions.
+type ListDepositTransactionsResponse struct {
+	// Total is the total number of deposit transactions matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of deposit transactions remaining in the list,
+	// including the deposit transactions in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Transactions is the list of deposit transactions retrieved.
+	Transactions []DepositTransaction `pb:"3" json:"transactions"`
+	// NextPageToken is the page token for the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetDepositTransactionRequest is a request to retrieve a list of deposit
+// transactions.
+type GetDepositTransactionRequest struct {
+	// AccountID is the ID of the account to retrieve the transaction for.
+	AccountID string `pb:"1" json:"account_id"`
+	// TransactionID is the id of deposit transaction to retrieve.
+	TransactionID string `pb:"2" json:"transaction_id"`
+}
+
+// DepositTransactionsService is a service to manage deposits transactions.
+type DepositTransactionsService interface {
+	// CreateBulkDeposit creates multiple deposit transactions.
+	// TODO: Add Response type.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/deposits:bulk",
+	//         Body:   "Body",
+	// }
+	CreateBulkDeposit(CreateBulkDepositRequest)
+
+	// CreateDeposit creates a new deposit transaction for the account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/deposits/{AccountID}:deposit",
+	//         Body:   "Body",
+	// }
+	CreateDeposit(CreateDepositRequest) DepositTransaction
+
+	// CreateFee creates a new fee transaction for the account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/deposits/{AccountID}:applyFee",
+	//         Body:   "Body",
+	// }
+	CreateFee(CreateDepositFeeRequest) DepositTransaction
+
+	// CreateSeizure creates a new seizure block for the account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/deposits/{AccountID}:seize",
+	//         Body:   "Body",
+	// }
+	CreateSeizure(CreateSeizureRequest) DepositTransaction
+
+	// CreateTransfer creates a new transfer transaction for the account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/deposits/{AccountID}:transfer",
+	//         Body:   "Body",
+	// }
+	CreateTransfer(CreateTransferRequest) DepositTransaction
+
+	// CreateWithdrawal creates a new withdrawal transaction for the account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/deposits/{AccountID}:withdraw",
+	//         Body:   "Body",
+	// }
+	CreateWithdrawal(CreateWithdrawalRequest) DepositTransaction
+
+	// ListDepositTransactions lists deposit transactions.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/deposits/{AccountID}/transactions",
+	// }
+	ListDepositTransactions(ListDepositTransactionsRequest) ListDepositTransactionsResponse
+
+	// GetDepositTransaction retrieves a deposit transaction.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/deposits/{AccountID}/transactions/{TransactionID}",
+	// }
+	GetDepositTransaction(GetDepositTransactionRequest) DepositTransaction
+
+	// Adjust adjusts a deposit transaction.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/deposits/{AccountID}/transactions/{TransactionID}:adjust",
+	//         Body:   "Body",
+	// }
+	Adjust(AdjustDepositRequest) DepositTransaction
+
+	// GetDocument retrieves a document for the transaction.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/deposits/{AccountID}/transactions/{TransactionID}/documents/{TemplateID}",
+	// }
+	GetDocument(GetDocumentRequest) core.File
+}

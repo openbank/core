@@ -1,0 +1,10 @@
+/openbank-core
+/openbank-core.exe
+/openbank-core-gw
+/openbank-core-gw.exe
+/openbank-idp
+/openbank-idp.exe
+/api/**/gen
+/specs
+*.txt
+*.log

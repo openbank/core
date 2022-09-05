@@ -1,0 +1,33 @@
+package loans
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+)
+
+// Purchase is a purchase of a loan funding source.
+//
+// +gunk xo.Ignore(true)
+type Purchase struct {
+	// AccountID is the ID for the funding account of the buyer.
+	AccountID string `pb:"1" json:"account_id"`
+	// Amount is the amount of funding source being purchased, as a fraction of
+	// the whole fraction being sold.
+	Amount string `pb:"2" json:"amount"`
+	// Price is the price paid for the amount.
+	Price core.Amount `pb:"3" json:"price"`
+}
+
+// FundingSale is the sale of a funding source in P2P products by an investor to
+// another investor. The funding source ID being sold should be passed as a URL
+// parameter and is therefore omitted in the body.
+//
+// +gunk xo.Ignore(true)
+type FundingSale struct {
+	// Purchases is a list of investors purchasing the funding source.
+	Purchases []Purchase `pb:"1" json:"purchases"`
+}

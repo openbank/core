@@ -1,0 +1,9 @@
+package core
+
+// Entity is a type of a client.
+type Entity int
+
+const (
+	Client Entity = iota
+	Group
+)

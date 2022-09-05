@@ -1,0 +1,36 @@
+package products
+
+import "github.com/gunk/opt/xo"
+
+// InitialAccountState is the initial state of an account when it was created.
+type InitialAccountState int
+
+const (
+	StatePartialApplication InitialAccountState = iota
+	StatePendingApproval
+	StateApproved
+	StateActive
+	StateActiveInArrears
+	StateClosed
+)
+
+// IDGeneratorType is the type of ID generator used to generate IDs for
+// accounts.
+type IDGeneratorType int
+
+const (
+	TypeIncrementalNumber IDGeneratorType = iota
+	TypeRandomPattern
+)
+
+// NewAccountSettings is the settings for a new account.
+//
+// +gunk xo.Ignore(true)
+type NewAccountSettings struct {
+	// InitialState is the initial state of the account when it is created.
+	InitialState InitialAccountState `pb:"1" json:"initial_state"`
+	// IDGeneratorType is the type of ID generator to use for the account.
+	IDGeneratorType IDGeneratorType `pb:"2" json:"id_generator_type"`
+	// IDPattern is the pattern to use for the ID generator.
+	IDPattern string `pb:"3" json:"id_pattern"`
+}

@@ -1,0 +1,323 @@
+// Package clients defines services for working with bank clients.
+//
+// +gunk proto.Package("openbank.core.v1.clients")
+// +gunk java.Package("openbank.core.v1.clients")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Clients",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package clients
+
+import (
+	core "bnk.to/core/api/v1"
+	documents "bnk.to/core/api/v1/documents"
+	groups "bnk.to/core/api/v1/groups"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// Gender is the gender of a client.
+type Gender int
+
+// Possible client genders.
+const (
+	Male Gender = iota
+	Female
+	Other
+)
+
+// PortalSettings is the portal settings for an individual client.
+//
+// +gunk xo.Ignore(true)
+type PortalSettings struct {
+	// State is the state of the client's portal.
+	State core.State `pb:"1" json:"state"`
+	// LastLogin is when the client last logged in.
+	LastLogin string `pb:"2" json:"last_login"`
+}
+
+// Client is a person that uses the services of the bank.
+//
+// +gunk xo.HasMany{
+//         Name:       "Documents",
+//         TypeSuffix: "documents.Document",
+// }
+type Client struct {
+	// ClientID is the ID of the client.
+	//
+	// +gunk xo.Unique
+	ClientID string `pb:"1" json:"client_id"`
+	// Info is the contact information of the client.
+	Info core.ContactInfo `pb:"2" json:"info"`
+	// AssignedBranchID is the ID of the branch the client is assigned to.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "branches.Branch",
+	//         FieldName:  "BranchID",
+	// }
+	AssignedBranchID string `pb:"3" json:"assigned_branch_id"`
+	// AssignedCentreID is the ID of the centre the client is assigned to.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "centres.Centre",
+	//         FieldName:  "CentreID",
+	// }
+	AssignedCentreID string `pb:"4" json:"assigned_centre_id"`
+	// AssignedUserID is the ID of the user the client is assigned to.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "users.User",
+	//         FieldName:  "UserID",
+	// }
+	AssignedUserID string `pb:"5" json:"assigned_user_id"`
+	// Birthday is the birthday of the client.
+	Birthday time.Time `pb:"6" json:"birthday"`
+	// RoleID is the ID of the role assigned to the client.
+	// TODO: Which table does this have a reference to.
+	RoleID string `pb:"7" json:"role_id"`
+	// Gender is the gender of the client.
+	Gender Gender `pb:"8" json:"gender"`
+	// GroupLoanCycle is a number of paid and closed (with 'obligations met')
+	// accounts for the client group.
+	GroupLoanCycle int `pb:"9" json:"group_loan_cycle"`
+	// LoanCycle is the number of paid and closed accounts for the client, when
+	// the opening rotation is reversed.
+	LoanCycle int `pb:"10" json:"loan_cycle"`
+	// PortalSettings is the portal settings for the client.
+	PortalSettings PortalSettings `pb:"11" json:"portal_settings"`
+	// MigrationEventID is the migration event ID for the client.
+	// TODO: Which table does this have a reference to.
+	MigrationEventID string `pb:"12" json:"migration_event_id"`
+	// ProfilePictureID is the ID of the file the profile picture of the client
+	// is stored in.
+	// TODO: Which table does this have a reference to.
+	ProfilePictureID string `pb:"13" json:"profile_picture_id"`
+	// ProfileSignatureID is the ID of the file the user picture signature is
+	// stored in.
+	// TODO: Which table does this have a reference to.
+	ProfileSignatureID string `pb:"14" json:"profile_signature_id"`
+	// State is the current state of the client.
+	State core.State `pb:"15" json:"state"`
+	// Notes is extra human-readable text on the client.
+	Notes string `pb:"16" json:"notes"`
+	// CreateTime is the time when the client was created.
+	CreateTime time.Time `pb:"17" json:"create_time"`
+	// UpdateTime is the time the client was last updated.
+	UpdateTime time.Time `pb:"18" json:"update_time"`
+	// ApproveTime is the time the client was approved.
+	ApproveTime time.Time `pb:"19" json:"approve_time"`
+	// ActivateTime is the time the client was set as active for the first time.
+	ActivateTime time.Time `pb:"20" json:"activate_time"`
+	// CloseTime is the time the client was closed.
+	CloseTime time.Time `pb:"21" json:"close_time"`
+}
+
+// CreateClientRequest is the request to create a client.
+type CreateClientRequest struct {
+	// Body is the client to create.
+	Body Client `pb:"1" json:"body"`
+}
+
+// DeleteClientRequest is the client delete request.
+type DeleteClientRequest struct {
+	// ClientID is the ID of the client to delete.
+	ClientID string `pb:"1" json:"client_id"`
+}
+
+// ListClientsRequest is the request to list clients.
+type ListClientsRequest struct {
+	// Filter is the filter to apply to the search.
+	Filter string `pb:"1" json:"filter"`
+	// OrderBy is the order to apply to the search.
+	OrderBy string `pb:"2" json:"order_by"`
+	// PageSize is the number of clients to return per page.
+	PageSize int `pb:"3" json:"page_size"`
+	// PageToken is the token of the page to return.
+	PageToken string `pb:"4" json:"page_token"`
+}
+
+// ListClientsResponse is the response for listing clients.
+type ListClientsResponse struct {
+	// Total is the total number of clients matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of clients remaining in the list, including the
+	// clients in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Clients is the retrieved clients.
+	Clients []Client `pb:"3" json:"clients"`
+	// NextPageToken is the token used to retrieve the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetClientRequest is the request to retrieve a client.
+type GetClientRequest struct {
+	// ClientID is the ID of the clients to retrieve.
+	ClientID string `pb:"1" json:"client_id"`
+}
+
+// UpdateClientRequest is the update client request.
+type UpdateClientRequest struct {
+	// ClientID is the ID of the client to update.
+	ClientID string `pb:"1" json:"client_id"`
+	// Body is the client to be updated.
+	Body Client `pb:"2" json:"body"`
+}
+
+// AddClientDocumentsRequest is the request to add documents to a client.
+type AddClientDocumentsRequest struct {
+	// ClientID is the ID of the client to update.
+	ClientID string `pb:"1" json:"client_id"`
+	// DocumentIDs is the IDs of the documents to add.
+	DocumentIDs []string `pb:"2" json:"document_ids"`
+}
+
+// RemoveClientDocumentsRequest is the request to remove documents from a client.
+type RemoveClientDocumentsRequest struct {
+	// ClientID is the ID of the client to update.
+	ClientID string `pb:"1" json:"client_id"`
+	// DocumentIDs is the IDs of the documents to remove.
+	DocumentIDs []string `pb:"2" json:"document_ids"`
+}
+
+// ListClientDocumentsRequest is the request to retrieve the documents for a client.
+type ListClientDocumentsRequest struct {
+	// ClientID is the ID of the client to retrieve the documents for.
+	ClientID string `pb:"1" json:"client_id"`
+	// Filter is the filter to apply to the search.
+	Filter string `pb:"2" json:"filter"`
+	// OrderBy is the order to apply to the search.
+	OrderBy string `pb:"3" json:"order_by"`
+	// PageSize is the number of clients to return per page.
+	PageSize int `pb:"4" json:"page_size"`
+	// PageToken is the token of the page to return.
+	PageToken string `pb:"5" json:"page_token"`
+}
+
+// ListClientDocumentsResponse is the request to retrieve the documents for a client.
+type ListClientDocumentsResponse struct {
+	// Total is the total number of documents matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of documents remaining in the list, including the
+	// documents in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Documents is the list of documents for a client.
+	Documents []documents.Document `pb:"3" json:"documents"`
+	// NextPageToken is the token used to retrieve the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// ListClientGroupsRequest is the request to retrieve the groups for a client.
+type ListClientGroupsRequest struct {
+	// ClientID is the ID of the client to retrieve the groups for.
+	ClientID string `pb:"1" json:"client_id"`
+	// Filter is the filter to apply to the search.
+	Filter string `pb:"2" json:"filter"`
+	// OrderBy is the order to apply to the search.
+	OrderBy string `pb:"3" json:"order_by"`
+	// PageSize is the number of clients to return per page.
+	PageSize int `pb:"4" json:"page_size"`
+	// PageToken is the token of the page to return.
+	PageToken string `pb:"5" json:"page_token"`
+}
+
+// ListClientGroupsResponse is the request to retrieve the groups for a client.
+type ListClientGroupsResponse struct {
+	// Total is the total number of groups matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of groups remaining in the list, including the
+	// groups in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Groups is the list of groups the client is a member of.
+	Groups []groups.Group `pb:"3" json:"groups"`
+	// NextPageToken is the token used to retrieve the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// ClientsService is the service for managing clients.
+type ClientsService interface {
+	// CreateClient creates a new client.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/clients",
+	//         Body:   "Body",
+	// }
+	CreateClient(CreateClientRequest) Client
+
+	// ListClients lists clients.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/clients",
+	// }
+	ListClients(ListClientsRequest) ListClientsResponse
+
+	// GetClient returns the clients with the specified ids.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/clients/{ClientID}",
+	// }
+	GetClient(GetClientRequest) Client
+
+	// UpdateClient modifies an existing client.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/clients/{ClientID}",
+	//         Body:   "Body",
+	// }
+	UpdateClient(UpdateClientRequest) Client
+
+	// DeleteClient deletes a client.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/clients/{ClientID}",
+	// }
+	DeleteClient(DeleteClientRequest)
+
+	// AddClientDocuments adds the specified documents to a client.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/clients/{ClientID}/documents/{DocumentIDs}",
+	// }
+	AddClientDocuments(AddClientDocumentsRequest)
+
+	// RemoveClientDocuments removes the specified documents from the client.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/clients/{ClientID}/documents/{DocumentIDs}",
+	// }
+	RemoveClientDocuments(RemoveClientDocumentsRequest)
+
+	// ListClientDocuments lists the documents of a client.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/clients/{ClientID}/documents",
+	// }
+	ListClientDocuments(ListClientDocumentsRequest) ListClientDocumentsResponse
+
+	// ListClientGroups lists the groups of a client.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/clients/{ClientID}/groups",
+	// }
+	ListClientGroups(ListClientGroupsRequest) ListClientGroupsResponse
+}

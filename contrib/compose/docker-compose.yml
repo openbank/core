@@ -1,0 +1,171 @@
+volumes:
+  openbank-core_postgresql:
+
+services:
+  postgresd:
+    container_name: openbank-core_postgresd
+    image: usql/postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - openbank-core_postgresql:/var/lib/postgresql/data
+      - ./create-openbank-core-database.sh:/docker-entrypoint-initdb.d/create-openbank-core-database.sh
+      - ./schema.sql:/core/schema.sql
+    command: ["postgres", "-c", "log_statement=all"]
+    environment:
+      TZ: "${TZ:-Asia/Manila}"
+      PGTZ: "${TZ:-Asia/Manila}"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: postgres
+      CREATE_EXTENSION: uuid-ossp
+    restart: unless-stopped
+
+  hydra-migrate:
+    image: oryd/hydra:v1.11.7
+    command: migrate sql -e --yes
+    environment:
+      - DSN=postgres://hydra_user:secret@postgresd:5432/hydra?max_conns=20&max_idle_conns=4
+    depends_on:
+      - postgresd
+    restart: on-failure
+
+  hydra:
+    container_name: openbank-core_hydra
+    image: oryd/hydra:v1.11.7
+    ports:
+      - "4444:4444"
+      - "4445:4445"
+      - "5555:5555"
+    command: serve all --dangerous-force-http
+    environment:
+      - DSN=postgres://hydra_user:secret@postgresd:5432/hydra?max_conns=20&max_idle_conns=4
+      - URLS_SELF_ISSUER=${URLS_SELF_ISSUER:-http://127.0.0.1:4444}
+      - URLS_CONSENT=${URLS_CONSENT:-http://127.0.0.1:9092/consent}
+      - URLS_LOGIN=${URLS_LOGIN:-http://127.0.0.1:9092/login}
+      - URLS_LOGOUT=${URLS_LOGOUT:-http://127.0.0.1:9092/logout}
+      - SECRETS_SYSTEM=OpenBankDev-DO_NOT_USE_IN_PROD
+      - TTL_ACCESS_TOKEN=10m # shorter for testing expiry
+      - LOG_LEVEL=debug
+      - LOG_LEAK_SENSITIVE_VALUES=true
+      - OAUTH2_SHARE_ERROR_DEBUG=1
+      - SERVE_COOKIES_SAME_SITE_MODE=Lax
+    depends_on:
+      - hydra-migrate
+      - postgresd
+    restart: unless-stopped
+
+  openbank-core:
+    container_name: openbank-core
+    depends_on:
+      - postgresd
+    ports:
+      - "9090:9090"
+    build:
+      context: ../../
+      dockerfile: contrib/compose/Dockerfile.core
+    environment:
+      RUNTIME_ENVIRONMENT: "dev"
+      TZ: "${TZ:-Asia/Manila}"
+      LISTEN: "0.0.0.0:9090"
+      DEBUG: "true"
+      OPENBANK_CORE_DB: "pg://core_user:secret@postgresd:5432/core"
+      OPENBANK_CORE_AUTH: "hydra"
+      OPENBANK_CORE_HYDRA_ADMIN: "http://hydra:4445"
+      # GRPC_GO_LOG_SEVERITY_LEVEL: info
+      # GRPC_GO_LOG_VERBOSITY_LEVEL: '99'
+    labels:
+      traefik.enable: true
+      traefik.http.services.core.loadbalancer.server.port: 9090
+      traefik.http.routers.core.entrypoints: web
+      traefik.http.routers.core.rule: Host(`in.corebank.localhost`)
+    restart: unless-stopped
+
+  openbank-core-gw:
+    container_name: openbank-core-gw
+    build:
+      context: ../../
+      dockerfile: contrib/compose/Dockerfile.core-gw
+    ports:
+      - "9091:9091"
+    environment:
+      RUNTIME_ENVIRONMENT: "dev"
+      TZ: "${TZ:-Asia/Manila}"
+      LISTEN: "0.0.0.0:9091"
+      ENDPOINT: "openbank-core:9090"
+      DOCSPATH: "/docs"
+      SPECPATH: "/v1/swagger.json"
+      DEBUG: "true"
+      # GRPC_GO_LOG_SEVERITY_LEVEL: info
+      # GRPC_GO_LOG_VERBOSITY_LEVEL: '99'
+    labels:
+      traefik.enable: true
+      traefik.http.services.core-gw.loadbalancer.server.port: 9091
+      traefik.http.routers.core-gw.entrypoints: web
+      traefik.http.routers.core-gw.rule: Host(`api.corebank.localhost`)
+    restart: unless-stopped
+
+  openbank-core-docs:
+    container_name: openbank-core-docs
+    build:
+      context: ../../
+      dockerfile: contrib/compose/Dockerfile.docs
+    ports:
+      - "9093:9091"
+    environment:
+      RUNTIME_ENVIRONMENT: "dev"
+      TZ: "${TZ:-Asia/Manila}"
+    labels:
+      traefik.enable: true
+      traefik.http.services.docs.loadbalancer.server.port: 3000
+      traefik.http.routers.docs.entrypoints: web
+      traefik.http.routers.docs.rule: Host(`docs.corebank.localhost`)
+    restart: unless-stopped
+
+  openbank-core-idp:
+    container_name: openbank-core-idp
+    build:
+      context: ../../
+      dockerfile: contrib/compose/Dockerfile.idp
+    ports:
+      - "9092:9092"
+    depends_on:
+      - hydra
+    environment:
+      RUNTIME_ENVIRONMENT: "dev"
+      TZ: "${TZ:-Asia/Manila}"
+      LISTEN: "0.0.0.0:9092"
+      OPENBANK_IDP_HYDRA_ADMIN: "http://hydra:4445"
+      OPENBANK_IDP_DEBUG: "true"
+
+  openbank-core-ui:
+    container_name: openbank-core-ui
+    extends:
+      file: ../../../ui/compose/docker-compose.yml
+      service: openbank-core-ui
+    environment:
+      TZ: "${TZ:-Asia/Manila}"
+      HOST: "0.0.0.0"
+      PORT: "3000"
+    labels:
+      traefik.enable: true
+      traefik.http.services.ui.loadbalancer.server.port: 3000
+      traefik.http.routers.ui.entrypoints: web
+      traefik.http.routers.ui.rule: Host(`corebank.localhost`)
+
+  traefik:
+    image: traefik:v2.5.5
+    command:
+      - --log.level=DEBUG
+      - --api.insecure=true
+      - --entrypoints.web.address=:80
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      traefik.enable: true
+      traefik.http.routers.dash.rule: Host(`dash.localhost`)
+      traefik.http.routers.dash.service: api@internal
+    ports:
+      - "80:80"

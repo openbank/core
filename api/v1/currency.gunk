@@ -1,0 +1,16 @@
+package core
+
+import (
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+)
+
+// Amount is a monetary amount in the specified currency.
+//
+// +gunk xo.Ignore(true)
+type Amount struct {
+	// Cur is the ISO3 currency code of the currency.
+	Cur string `pb:"1" json:"cur"`
+	// Val is the amount of the currency, in the smallest unit of the currency.
+	Val string `pb:"2" json:"val"`
+}

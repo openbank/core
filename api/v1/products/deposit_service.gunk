@@ -1,0 +1,142 @@
+package products
+
+import (
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+)
+
+// CreateDepositProductRequest is the request for creating a deposit product.
+type CreateDepositProductRequest struct {
+	// Body is the deposit product to create.
+	Body DepositProduct `pb:"1" json:"body"`
+}
+
+// ListDepositProductsRequest is the request to list deposit products.
+type ListDepositProductsRequest struct {
+	// PageToken is the page token to use for listing deposit products.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the page size to use for listing deposit products.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the order to order deposit products in.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to filter the deposit products by.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListDepositProductsResponse is the response for listing deposit products.
+type ListDepositProductsResponse struct {
+	// Total is the total number of products matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of products remaining in the list, including the
+	// products in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Products is the list of deposit products.
+	Products []DepositProduct `pb:"3" json:"products"`
+	// NextPageToken is the next page token to use for listing deposit products.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetDepositProductRequest is the request to retrieve a deposit product.
+type GetDepositProductRequest struct {
+	// ProductID is the ID of the deposit product to retrieve.
+	ProductID string `pb:"1" json:"product_id"`
+}
+
+// UpdateDepositProductRequest is the request for updating a deposit product.
+type UpdateDepositProductRequest struct {
+	// ProductID is the ID of the deposit product to update.
+	ProductID string `pb:"1" json:"product_id"`
+	// Body is the new value of the deposit product.
+	Body DepositProduct `pb:"2" json:"body"`
+}
+
+// BatchUpdateAction is the batch update action to perform.
+type BatchUpdateAction int
+
+const (
+	// UpdateInterestSettings schedules an end-of-day job that updates all
+	// existing deposit accounts with latest interest-related fields.
+	UpdateInterestSettings BatchUpdateAction = iota
+)
+
+// NewBatchUpdate is the details on the batch update to trigger.
+//
+// +gunk xo.Ignore(true)
+type NewBatchUpdate struct {
+	// Action is the action to perform.
+	Action BatchUpdateAction `pb:"1" json:"action"`
+}
+
+// UpdateDepositAccountsRequest is the request for updating multiple deposit
+// accounts.
+type UpdateDepositAccountsRequest struct {
+	// ProductID is the ID of the deposit product to trigger account updates
+	// for.
+	ProductID string `pb:"1" json:"product_id"`
+	// Body is the details on the batch update to trigger.
+	Body NewBatchUpdate `pb:"2" json:"body"`
+}
+
+// DeleteDepositProductRequest is the request for deleting a deposit product.
+type DeleteDepositProductRequest struct {
+	// ProductID is the ID of the deposit product to delete.
+	ProductID string `pb:"1" json:"product_id"`
+}
+
+// DepositProductsService is the service for managing deposit products.
+type DepositProductsService interface {
+	// CreateDepositProduct creates a new deposit product.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/products/deposit",
+	//         Body:   "Body",
+	// }
+	CreateDepositProduct(CreateDepositProductRequest) DepositProduct
+
+	// ListDepositProducts lists deposit products.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/products/deposit",
+	// }
+	ListDepositProducts(ListDepositProductsRequest) ListDepositProductsResponse
+
+	// GetDepositProduct retrieves the specified deposit product.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/products/deposit/{ProductID}",
+	// }
+	GetDepositProduct(GetDepositProductRequest) DepositProduct
+
+	// UpdateDepositProduct updates the specified deposit product.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/products/deposit/{ProductID}",
+	//         Body:   "Body",
+	// }
+	UpdateDepositProduct(UpdateDepositProductRequest) DepositProduct
+
+	// UpdateDepositAccounts updates all deposit accounts of the deposit
+	// product.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/products/deposit/{ProductID}:updateAccounts",
+	//         Body:   "Body",
+	// }
+	UpdateDepositAccounts(UpdateDepositAccountsRequest)
+
+	// DeleteDepositProduct deletes the specified deposit product.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/products/deposit/{ProductID}",
+	// }
+	DeleteDepositProduct(DeleteDepositProductRequest)
+}

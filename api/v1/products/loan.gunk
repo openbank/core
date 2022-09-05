@@ -1,0 +1,709 @@
+package products
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// DateCalculationMethod is the method of calculating the arrears date.
+type DateCalculationMethod int
+
+const (
+	DateAccountFirstWentToArrears DateCalculationMethod = iota
+	DateLastLateRepayment
+	DateAccountFirstBreachedMaterialityThreshold
+)
+
+// ToleranceCalculation is the method of calculating the tolerance.
+type ToleranceCalculation int
+
+const (
+	ArrearsTolerancePeriod ToleranceCalculation = iota
+	MonthlyArrearsToleranceDay
+)
+
+// ArrearsSettings is the arrears settings for a loan account.
+//
+// +gunk xo.Ignore(true)
+type ArrearsSettings struct {
+	// DateCalculationMethod is the method the date the account goes into
+	// arrears is determined.
+	DateCalculationMethod DateCalculationMethod `pb:"1" json:"date_calculation_method"`
+	// IncludeNonWorkingDays is a flag indicating whether non-working days
+	// should be included when calculating penaltees and late fees.
+	IncludeNonWorkingDays bool `pb:"2" json:"include_non_working_days"`
+	// ToleranceCalculationMethod is the method of calculating the tolerance.
+	ToleranceCalculationMethod ToleranceCalculation `pb:"3" json:"tolerance_calculation_method"`
+	// MonthlyToleranceDay is the day of the month the tolerance is up until if
+	// ToleranceCalculationMethod is set to MonthlyArrearsToleranceDay.
+	MonthlyToleranceDay int `pb:"4" json:"monthly_tolerance_day"`
+	// TolerancePeriod is the tolerance period if ToleranceCalculationMethod is
+	// set to ArrearsTolerancePeriod.
+	TolerancePeriod time.Duration `pb:"5" json:"tolerance_period"`
+	// ToleranceFloorAmount is the minimum amount of tolerance applied to the
+	// loan account.
+	ToleranceFloorAmount core.Amount `pb:"6" json:"tolerance_floor_amount"`
+	// TolerancePercentageOfOutstandingPrincipal is the percentage of
+	// outstanding principal within tolerance.
+	TolerancePercentageOfOutstandingPrincipal float64 `pb:"7" json:"tolerance_percentage_of_outstanding_principal"`
+}
+
+// SettlementMethod is the method of settling the loan account.
+type SettlementMethod int
+
+const (
+	MethodFullDueAmounts SettlementMethod = iota
+	MethodPartialDueAmounts
+	MethodNoAutomatedTransfers
+)
+
+// LinkedAccountOptions is options for configuring the linked account.
+type LinkedAccountOptions int
+
+const (
+	AutoLinkAccounts LinkedAccountOptions = iota
+	AutoCreateLinkedAccounts
+)
+
+// AccountLinkSettings is the settings for linking deposit accounts to the loan
+// account.
+//
+// +gunk xo.Ignore(true)
+type AccountLinkSettings struct {
+	// Enabled is a flag indicating whether loan accounts created using the loan
+	// product should be linked to deposit accounts.
+	Enabled bool `pb:"1" json:"enabled"`
+	// DepositProductIDs is a list of IDs of deposit products that can be linked
+	// to the loan account. All deposit products may be linked if the field is
+	// null.
+	DepositProductIDs []string `pb:"2" json:"deposit_product_ids"`
+	// Options is a list of options for configuring the linked account.
+	Options []LinkedAccountOptions `pb:"3" json:"options"`
+	// SettlementMethod is the method of settlement for the loan accounts,
+	// including automated transfers from the linked deposit account into the
+	// loan account.
+	SettlementMethod SettlementMethod `pb:"4" json:"settlement_method"`
+}
+
+// CommissionAllocationType is the type of allocation for the commission.
+type CommissionAllocationType int
+
+const (
+	TypePercentageOfLoanFunding CommissionAllocationType = iota
+	TypeFixedInterestCommissions
+)
+
+// FundingSettings is the settings for the funding of a loan account.
+//
+// +gunk xo.Ignore(true)
+type FundingSettings struct {
+	// Investor is a flag that indicates whether the loan account is funded by
+	// investor(s).
+	Investor bool `pb:"1" json:"investor"`
+	// Commission is the minimum and maximum amount of interest commissioned.
+	Commission DecimalInterval `pb:"2" json:"commission"`
+	// CommissionAllocationType is the type of interest commission allocation
+	// used when paying back investors.
+	CommissionAllocationType CommissionAllocationType `pb:"3" json:"commission_allocation_type"`
+	// LockFundsOnApproval is a flag that indicates whether the investor's funds
+	// should be locked when a loan account is approved.
+	LockFundsOnApproval bool `pb:"4" json:"lock_funds_on_approval"`
+	// OrganizationCommission is the minimum and maximum amount of interest
+	// commissioned to the organization.
+	OrganizationCommission DecimalInterval `pb:"5" json:"organization_commission"`
+	// RequiredFunds is the minimum amount of investor funds package.
+	RequiredFunds core.Amount `pb:"6" json:"required_funds"`
+}
+
+// GracePeriodType is the type of grace period available.
+type GracePeriodType int
+
+const (
+	NoGracePeriod GracePeriodType = iota
+	PayInterestOnly
+	InterestForgiveness
+)
+
+// GracePeriodSettings is the settings for the grace period of repayment.
+//
+// +gunk xo.Ignore(true)
+type GracePeriodSettings struct {
+	// GracePeriod is the minimum and maximum duration of the grace period.
+	GracePeriod DurationInterval `pb:"1" json:"grace_period"`
+	// GracePeriodType is the type of repayment required during the grace
+	// period.
+	GracePeriodType GracePeriodType `pb:"2" json:"grace_period_type"`
+}
+
+// LatePaymentsRecalculationMethod is the method of recalculating the late
+// payment.
+type LatePaymentsRecalculationMethod int
+
+const (
+	MethodOverdueInstallmentsIncrease LatePaymentsRecalculationMethod = iota
+	MethodLastInstallmentIncrease
+)
+
+// PaymentType is the type of payment for the loan account.
+type PaymentType int
+
+const (
+	// MethodHorizontal is the method of payment for the loan account where
+	// payments are made on the repayments.
+	MethodHorizontal PaymentType = iota
+	// MethodVertical is the method of payment for the loan account where
+	// payments are made on the loan account.
+	MethodVertical
+)
+
+// RepaymentAllocationOrder is the order in which the repayments are allocated.
+type RepaymentAllocationOrder int
+
+const (
+	OrderPrincipal RepaymentAllocationOrder = iota
+	OrderInterest
+	OrderFee
+	OrderPenalty
+)
+
+// ElementsRecalculationMethod is the method of recalculating the elements.
+type ElementsRecalculationMethod int
+
+const (
+	MethodPrincipalExpectedFixed ElementsRecalculationMethod = iota
+	MethodTotalExpectedFixed
+)
+
+// FuturePaymentsAcceptance is different levels of future payments acceptance.
+type FuturePaymentsAcceptance int
+
+const (
+	NoFuturePayments FuturePaymentsAcceptance = iota
+	AcceptanceAcceptFuturePayments
+	AcceptanceAcceptOverpayments
+)
+
+// PrepaymentRecalculationMethod is the method of recalculating the payment when
+// prepayments are made.
+type PrepaymentRecalculationMethod int
+
+const (
+	NoRecalculation PrepaymentRecalculationMethod = iota
+	RescheduleRemainingRepayments
+	RecalculateScheduleKeepSameNumberOfTerms
+	RecalculateScheduleKeepSamePrincipalAmount
+	RecalculateScheduleKeepSameTotalRepaymentAmount
+	ReduceAmountPerInstallment
+	ReduceNumberOfInstallments
+	ReduceNumberOfInstallmentsNew
+)
+
+// PrincipalPaidInstallmentStatus is the status of repayment of the principal.
+type PrincipalPaidInstallmentStatus int
+
+const (
+	StatusPartiallyPaid PrincipalPaidInstallmentStatus = iota
+	StatusPaid
+	StatusOriginalTotalExpectedPaid
+)
+
+// PrepaymentSettings is the settings for the prepayment of a loan account.
+//
+// +gunk xo.Ignore(true)
+type PrepaymentSettings struct {
+	// AcceptPrepayment is a flag indicating whether pre-payments are accepted
+	// for the product.
+	AcceptPrepayment bool `pb:"1" json:"accept_prepayment"`
+	// AutomaticInterest is a flag indicating whether interest is automatically
+	// applied for the prepayment.
+	AutomaticInterest bool `pb:"2" json:"automatic_interest"`
+	// ElementsRecalculationMethod is the method the declining balance is
+	// handled.
+	ElementsRecalculationMethod ElementsRecalculationMethod `pb:"3" json:"elements_recalculation_method"`
+	// FuturePaymentsAcceptance is the level of acceptance for future payments
+	// (repayments with entry date set in the future).
+	FuturePaymentsAcceptance FuturePaymentsAcceptance `pb:"4" json:"future_payments_acceptance"`
+	// RecalculationMethod is the method of recalculating the payment
+	// when prepayments are made.
+	RecalculationMethod PrepaymentRecalculationMethod `pb:"5" json:"recalculation_method"`
+	// PrincipalPaidInstallmentStatus is the new installment status when the
+	// principal is paid off.
+	PrincipalPaidInstallmentStatus PrincipalPaidInstallmentStatus `pb:"6" json:"principal_paid_installment_status"`
+}
+
+// PrincipalPaymentMethod is the method of payment for the principal.
+type PrincipalPaymentMethod int
+
+const (
+	MethodFlatPayment PrincipalPaymentMethod = iota
+	MethodOutstandingPrincipalPercentage
+	MethodPrincipalPercentageLastDisb
+	MethodTotalBalancePercentage
+	MethodTotalBalanceFlat
+	MethodTotalPrincipalPercentage
+)
+
+// TotalDuePayment is the method of determining the total amount due.
+type TotalDuePayment int
+
+const (
+	PaymentFlat TotalDuePayment = iota
+	PaymentOutstandingPrincipalPercentage
+	PaymentPrincipalPercentageLastDisb
+	PaymentTotalBalancePercentage
+	PaymentTotalBalanceFlat
+	PaymentTotalPrincipalPercentage
+)
+
+// PrincipalPaymentSettings is the settings for the payment of the principal for
+// loans created based on the product.
+//
+// +gunk xo.Ignore(true)
+type PrincipalPaymentSettings struct {
+	// Amount is the minimum, maximum and default amount of principal for
+	// accounts made for this product.
+	Amount DecimalInterval `pb:"1" json:"amount"`
+	// DefaultInterval is the default number of repayments for the principal.
+	DefaultInterval int `pb:"2" json:"default_interval"`
+	// Percentage is the minimum, maximum and default principal payment
+	// percentage for the account made after the product.
+	Percentage DecimalInterval `pb:"3" json:"percentage"`
+	// Ceiling is the maximum amount of principal due a repayment can have.
+	Ceiling core.Amount `pb:"4" json:"ceiling"`
+	// Floor is the minimum amount of principal due a repayment can have.
+	Floor core.Amount `pb:"5" json:"floor"`
+	// PrincipalPaymentMethod is the method of determining principal payment.
+	PrincipalPaymentMethod PrincipalPaymentMethod `pb:"6" json:"principal_payment_method"`
+	// IncludeFeesInFloorAmount is a flag to indicate whether the fees should
+	// be included in the floor amount in a revolving credit account.
+	IncludeFeesInFloorAmount bool `pb:"7" json:"include_fees_in_floor_amount"`
+	// IncludeInterestInFloorAmount is a flag to indicate whether the interest
+	// should be included in the floor amount in a revolving credit account.
+	IncludeInterestInFloorAmount bool `pb:"8" json:"include_interest_in_floor_amount"`
+	// TotalDueAmountFloor is the minimum due amount for revolving credit
+	// accounts.
+	TotalDueAmountFloor core.Amount `pb:"9" json:"total_due_amount_floor"`
+	// TotalDuePayment is the method of determining total amount of payment due
+	// for revolving credit accounts.
+	TotalDuePayment TotalDuePayment `pb:"10" json:"total_due_payment"`
+}
+
+// AmortizationMethod is the method used to generate repayment schedules for
+// loan accounts.
+type AmortizationMethod int
+
+const (
+	MethodStandardPayments AmortizationMethod = iota
+	MethodBalloonPayments
+	MethodOptimizedPayments
+	MethodPaymentPlan
+)
+
+// PaymentSettings is the settings for repayment in loan accounts.
+//
+// +gunk xo.Ignore(true)
+type PaymentSettings struct {
+	// AmortizationMethod is the method used to generate repayment schedules for
+	// the loan account.
+	AmortizationMethod AmortizationMethod `pb:"1" json:"amortization_method"`
+	// LatePaymentsMethod is the method used to recalculate the schedule when a
+	// late payment is made.
+	LatePaymentsMethod LatePaymentsRecalculationMethod `pb:"2" json:"late_payments_method"`
+	// Type is the type of the interest payment.
+	Type PaymentType `pb:"3" json:"type"`
+	// Prepayment is the settings for the prepayment for the product.
+	Prepayment PrepaymentSettings `pb:"4" json:"prepayment"`
+	// PrincipalPayment is the settings for constraints on principal payment.
+	PrincipalPayment PrincipalPaymentSettings `pb:"5" json:"principal_payment"`
+	// AllocationOrder is the order the funds of a repayment is allocated.
+	AllocationOrder []RepaymentAllocationOrder `pb:"6" json:"allocation_order"`
+}
+
+// LoanAmountSettings is the settings for the loan amount limitations of the
+// loan product.
+//
+// +gunk xo.Ignore(true)
+type LoanAmountSettings struct {
+	// LoanAmount is the minimum, maximum and default loan amount.
+	LoanAmount DecimalInterval `pb:"1" json:"loan_amount"`
+	// MaxNumberOfTranches is the maximum number of tranches supported by the
+	// loan product.
+	MaxNumberOfTranches int `pb:"2" json:"max_number_of_tranches"`
+}
+
+// LoanPenaltyCalculationMethod is the method used to calculate loan penalties.
+type LoanPenaltyCalculationMethod int
+
+const (
+	MethodNoRecalculate LoanPenaltyCalculationMethod = iota
+	MethodOverdueBalance
+	MethodOverdueBalanceAndInterest
+	MethodOutstandingPrincipal
+)
+
+// PenaltySettings is the settings for the penalties of the loan product.
+//
+// +gunk xo.Ignore(true)
+type PenaltySettings struct {
+	// CalculationMethod is the method loan penalties are calculated.
+	CalculationMethod LoanPenaltyCalculationMethod `pb:"1" json:"calculation_method"`
+	// GracePeriod is the period to wait before applying the penalty amount.
+	GracePeriod time.Duration `pb:"2" json:"grace_period"`
+	// PenaltyRate is the minimum, maximum and default penalty rate.
+	PenaltyRate DecimalInterval `pb:"3" json:"penalty_rate"`
+}
+
+// RedrawSettings is the settings for redrawing loans.
+//
+// +gunk xo.Ignore(true)
+type RedrawSettings struct {
+	// AllowRedraw is a flag indicating whether redrawing is allowed for
+	// prepayments on the loan account.
+	AllowRedraw bool `pb:"1" json:"allow_redraw"`
+}
+
+// SecuritySettings is the settings for security requirements on the loan
+// product.
+//
+// +gunk xo.Ignore(true)
+type SecuritySettings struct {
+	// EnableCollateral is a flag indicating whether collateral (assets or other
+	// goods) are accepted to reach required securities percentage.
+	EnableCollateral bool `pb:"1" json:"enable_collateral"`
+	// EnableGuarantors is a flag indicating whether guarantors (other clients)
+	// are accepted to reach required securities percentage.
+	EnableGuarantors bool `pb:"2" json:"enable_guarantors"`
+	// RequiredGuaranties is the amount of securities required to approve the
+	// account, in percentage.
+	RequiredGuaranties float64 `pb:"3" json:"required_guaranties"`
+}
+
+// LoanTaxSettings is the settings for the taxes on the loan product.
+//
+// +gunk xo.Ignore(true)
+type LoanTaxSettings struct {
+	// IncludeTax is a flag indicating whether the tax should be included in the
+	// target amount.
+	IncludeTax bool `pb:"1" json:"include_tax"`
+	// TaxSourceID is the ID of the tax source the loan account taxes should be
+	// updated from.
+	TaxSourceID string `pb:"2" json:"tax_source_id"`
+	// EnableFeeTax is a flag indicating whether tax should be applied to fees.
+	EnableFeeTax bool `pb:"3" json:"enable_fee_tax"`
+	// EnableInterestTax is a flag indicating whether tax should be applied to
+	// interests.
+	EnableInterestTax bool `pb:"4" json:"enable_interest_tax"`
+	// EnablePenaltyTax is a flag indicating whether tax should be applied to
+	// penalties.
+	EnablePenaltyTax bool `pb:"5" json:"enable_penalty_tax"`
+}
+
+// RepaymentReschedulingMethod is the method used to reschedule repayments.
+type RepaymentReschedulingMethod int
+
+const (
+	NoRescheduleRepayment RepaymentReschedulingMethod = iota
+	NextWorkingDay
+	PreviousWorkingDay
+	ExtendSchedule
+)
+
+// RepaymentScheduleType is the type of repayment schedule.
+type RepaymentScheduleType int
+
+const (
+	NoRepaymentSchedule RepaymentScheduleType = iota
+	FixedRepaymentSchedule
+	DynamicRepaymentSchedule
+)
+
+// DueDateScheduleMethod is the method used to calculate the due date of a
+// repayment.
+type DueDateScheduleMethod int
+
+const (
+	IntervalDueDates DueDateScheduleMethod = iota
+	IntervalFixedDaysOfMonth
+)
+
+// MonthHandlingMethod is the method used to handle a certain month if the
+// regular strategy on determining repayment date does not work.
+type MonthHandlingMethod int
+
+const (
+	LastDayInMonth MonthHandlingMethod = iota
+	FirstDayOfNextMonth
+)
+
+// RepaymentScheduleEditOptions is the options for editing the repayment
+// schedule.
+type RepaymentScheduleEditOptions int
+
+const (
+	AdjustPaymentDates RepaymentScheduleEditOptions = iota
+	AdjustPrincipalPaymentSchedule
+	AdjustInterestPaymentSchedule
+	AdjustFeePaymentSchedule
+	AdjustPenaltyPaymentSchedule
+	AdjustNumberOfInstallments
+	AdjustPaymentHolidays
+)
+
+// BillingCycleSettings is the billing cycle settings for revolving
+// credit products.
+//
+// +gunk xo.Ignore(true)
+type BillingCycleSettings struct {
+	// Enabled is a flag indicating whether the billing cycle is enabled.
+	Enabled bool `pb:"1" json:"enabled"`
+	// StartDays is the start days of a billing cycle in the month.
+	StartDays []int `pb:"2" json:"start_days"`
+}
+
+// PreviewScheduleSettings is the settings for previewing schedules for loan
+// products.
+//
+// +gunk xo.Ignore(true)
+type PreviewScheduleSettings struct {
+	// Enabled is a flag indicating whether the preview schedule is enabled.
+	Enabled bool `pb:"1" json:"enabled"`
+	// PreviewCount is the number of previewed installments.
+	PreviewCount int `pb:"2" json:"preview_count"`
+}
+
+// RepaymentCurrencyRounding is the method the repayment currency is rounded.
+type RepaymentCurrencyRounding int
+
+const (
+	NoCurrencyRounding RepaymentCurrencyRounding = iota
+	RoundToNearestWholeUnit
+	RoundUpToNearestWholeUnit
+)
+
+// RepaymentElementsRounding is the method the repayment elements are rounded.
+type RepaymentElementsRounding int
+
+const (
+	NoRepaymentRounding RepaymentElementsRounding = iota
+	RoundAll
+	RoundPaymentDue
+)
+
+// RepaymentScheduleRounding is the method the repayment schedule is rounded.
+type RepaymentScheduleRounding int
+
+const (
+	NoScheduleRounding RepaymentScheduleRounding = iota
+	RoundRemainderIntoLastRepayment
+	RoundPrincipalAndInterestRemainderIntoLastRepayment
+)
+
+// RoundingSettings is the rounding settings used in loan computation.
+//
+// +gunk xo.Ignore(true)
+type RoundingSettings struct {
+	// RepaymentCurrency is the method the repayment currency is rounded.
+	RepaymentCurrency RepaymentCurrencyRounding `pb:"1" json:"repayment_currency"`
+	// RepaymentElements is the method each element from the schedule are
+	// rounded.
+	RepaymentElements RepaymentElementsRounding `pb:"2" json:"repayment_elements"`
+	// RepaymentSchedule is the method repayment schedules are rounded.
+	RepaymentSchedule RepaymentScheduleRounding `pb:"3" json:"repayment_schedule"`
+}
+
+// LoanScheduleSettings is the settings for schedules in loan products.
+//
+// +gunk xo.Ignore(true)
+type LoanScheduleSettings struct {
+	// Type is the type of the loan schedule.
+	Type RepaymentScheduleType `pb:"1" json:"type"`
+	// BillingCycle is the billing cycle settings for revolving credit products.
+	BillingCycle BillingCycleSettings `pb:"2" json:"billing_cycle"`
+	// RepaymentCount is the number of installments.
+	RepaymentCount int `pb:"3" json:"repayment_count"`
+	// ScheduleDueDatesMethod is the method used to determine the repayment due
+	// dates.
+	ScheduleDueDatesMethod DueDateScheduleMethod `pb:"4" json:"schedule_due_dates_method"`
+	// FixedDaysOfMonth is the list of days in the month where the repayments
+	// are due.
+	FixedDaysOfMonth []int `pb:"5" json:"fixed_days_of_month"`
+	// Period is the period between loan repayments.
+	Period time.Duration `pb:"6" json:"period"`
+	// InstallmentCount is the minimum, maximum and default number of
+	// installments.
+	InstallmentCount IntegerInterval `pb:"7" json:"installment_count"`
+	// FirstDueDateOffset is the minimum, maximum and default number of days to
+	// add to the first installment date.
+	FirstDueDateOffset IntegerInterval `pb:"8" json:"first_due_date_offset"`
+	// PreviewSchedule is the settings for previewing schedules.
+	PreviewSchedule PreviewScheduleSettings `pb:"9" json:"preview_schedule"`
+	// ReschedulingMethod is the method used when rescheduling repayments.
+	ReschedulingMethod RepaymentReschedulingMethod `pb:"10" json:"rescheduling_method"`
+	// EditOptions is a list of properties that can be edited after creation.
+	EditOptions []RepaymentScheduleEditOptions `pb:"11" json:"edit_options"`
+	// Rounding is the rounding settings used in loan computation.
+	Rounding RoundingSettings `pb:"12" json:"rounding"`
+	// ShortMonthHandlingMethod is the method used in handling short months if a
+	// fixed day of month above 28 is specified.
+	ShortMonthHandlingMethod MonthHandlingMethod `pb:"13" json:"short_month_handling_method"`
+}
+
+// LoanSettings is the settings for a loan product.
+//
+// +gunk xo.Ignore(true)
+type LoanSettings struct {
+	// AccountLink is the settings for linking a deposit account to the loan
+	// account.
+	AccountLink AccountLinkSettings `pb:"1" json:"account_link"`
+	// Accounting is the settings for the loan account's accounting.
+	Accounting AccountingSettings `pb:"2" json:"accounting"`
+	// Arrears is the settings for the loan account's arrears.
+	Arrears ArrearsSettings `pb:"3" json:"arrears"`
+	// Availability is the settings for the loan product's availability.
+	// The product availability settings.
+	Availability AvailabilitySettings `pb:"4" json:"availability"`
+	// RevolvingAccount is the settings for the loan account's revolving
+	// account.
+	RevolvingAccount RevolvingAccountSettings `pb:"5" json:"revolving_account"`
+	// Fees is the settings for the loan account's fees.
+	Fees FeeSettings `pb:"6" json:"fees"`
+	// Funding is the settings for the loan account's funding.
+	Funding FundingSettings `pb:"7" json:"funding"`
+	// GracePeriod is the settings for the loan account's grace period.
+	GracePeriod GracePeriodSettings `pb:"8" json:"grace_period"`
+	// Interest is the settings for the loan account's interest.
+	Interest LoanInterestSettings `pb:"9" json:"interest"`
+	// LoanAmount is the settings for the loan account's loan amount.
+	LoanAmount LoanAmountSettings `pb:"10" json:"loan_amount"`
+	// NewAccount is the settings for new loan accounts.
+	NewAccount NewAccountSettings `pb:"11" json:"new_account"`
+	// Offset is the settings for the loan account's offset.
+	Offset OffsetSettings `pb:"12" json:"offset"`
+	// Payment is the settings for the loan account's payment.
+	Payment PaymentSettings `pb:"13" json:"payment"`
+	// Penalty is the settings for the loan account's penalty.
+	Penalty PenaltySettings `pb:"14" json:"penalty"`
+	// Redraw is the settings for the loan account's redraw.
+	Redraw RedrawSettings `pb:"15" json:"redraw"`
+	// Schedule is the settings for the loan account's schedule.
+	Schedule LoanScheduleSettings `pb:"16" json:"schedule"`
+	// Security is the settings for the loan account's security.
+	Security SecuritySettings `pb:"17" json:"security"`
+	// Tax is the settings for the loan account's tax.
+	Tax LoanTaxSettings `pb:"18" json:"tax"`
+}
+
+// LoanCategory is the category of a loan product.
+type LoanCategory int
+
+const (
+	CategoryPersonalLending LoanCategory = iota
+	CategoryPurchaseFinancing
+	CategoryRetailMortgages
+	CategorySmeLending
+	CategoryCommercial
+	CategoryUncategorized
+)
+
+// LoanType is the type of the loan product.
+type LoanType int
+
+const (
+	TypeFixedTermLoan LoanType = iota
+	TypeDynamicTermLoan
+	TypeInterestFreeLoan
+	TypeTranchedLoan
+	TypeRevolvingCredit
+)
+
+// CappingConstraintType is the type of capping for charges.
+type CappingConstraintType int
+
+const (
+	SoftCap CappingConstraintType = iota
+	HardCap
+)
+
+// PrincipalCapMethod is the method the principal is used when determining
+// capping value.
+type PrincipalCapMethod int
+
+const (
+	OutstandingPrincipalPercentage PrincipalCapMethod = iota
+	OriginalPrincipalPercentage
+)
+
+// LockSettings are settings for when the loan account is locked.
+//
+// +gunk xo.Ignore(true)
+type LockSettings struct {
+	// CappingConstraintType is the type of capping for charges.
+	CappingConstraintType CappingConstraintType `pb:"1" json:"capping_constraint_type"`
+	// PrincipalCapMethod is the method the principal is used when determining
+	// capping value.
+	PrincipalCapMethod PrincipalCapMethod `pb:"2" json:"principal_cap_method"`
+	// CappingPercentage is the percentage of principal that cannot be exceeded
+	// by interest, fees and penalty balances.
+	CappingPercentage float64 `pb:"3" json:"capping_percentage"`
+	// LockPeriod is the duration the account is locked for if it stays in
+	// arrears.
+	LockPeriod time.Duration `pb:"4" json:"lock_period"`
+}
+
+// LoanInternalControls is the internal controls for loan accounts.
+//
+// +gunk xo.Ignore(true)
+type LoanInternalControls struct {
+	// DormancyPeriod is the amount of time after the account is fully paid to
+	// auto-close it.
+	DormancyPeriod time.Duration `pb:"1" json:"dormancy_period"`
+	// MultiUserApproval is a flag that indicates whether multiple users are
+	// required to create and approve the loan account following the four eyes
+	// principle.
+	MultiUserApproval bool `pb:"2" json:"multi_user_approval"`
+	// LockSettings is the settings applied when the account is locked.
+	LockSettings LockSettings `pb:"3" json:"lock_settings"`
+}
+
+// LoanProduct is a product where the bank provides a loan account to its
+// clients.
+type LoanProduct struct {
+	// ProductID is the ID of the product.
+	//
+	// +gunk xo.Unique
+	ProductID string `pb:"1" json:"product_id"`
+	// Name is the name of the loan product.
+	Name string `pb:"2" json:"name"`
+	// Type is the type of the loan product.
+	Type LoanType `pb:"3" json:"type"`
+	// Active is a flag that indicates whether the loan product is active.
+	Active bool `pb:"4" json:"active"`
+	// Notes is the notes of the loan product.
+	Notes string `pb:"5" json:"notes"`
+	// AllowCustomRepaymentAllocation is a flag that indicates whether the loan
+	// product allows a payment to be customly allocated, ignoring the default
+	// repayment allocation order.
+	AllowCustomRepaymentAllocation bool `pb:"6" json:"allow_custom_repayment_allocation"`
+	// Category is the category of the loan product.
+	Category LoanCategory `pb:"7" json:"category"`
+	// CurrencyCode is the code of the currency used for the loan product.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "currencies.Currency",
+	//         FieldName:  "Code",
+	// }
+	CurrencyCode string `pb:"8" json:"currency_code"`
+	// InternalControls are the constraints and automated actions and that will
+	// be applied on accounts of the product.
+	InternalControls LoanInternalControls `pb:"9" json:"internal_controls"`
+	// TemplateIDs is the list of IDs of templates for documents related to the
+	// product.
+	TemplateIDs []string `pb:"10" json:"template_ids"`
+	// Settings is the settings applied to the loan product.
+	Settings LoanSettings `pb:"11" json:"settings"`
+	// CreateTime is the time the loan product was created.
+	CreateTime time.Time `pb:"12" json:"create_time"`
+	// UpdateTime is the time the loan product was last updated.
+	UpdateTime time.Time `pb:"13" json:"update_time"`
+}

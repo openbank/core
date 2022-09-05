@@ -1,0 +1,143 @@
+package products
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// MaturitySettings is the maturity settings for a deposit product.
+//
+// +gunk xo.Ignore(true)
+type MaturitySettings struct {
+	// DefaultPeriod is the default maturity period for the product.
+	DefaultPeriod time.Duration `pb:"1" json:"default_period"`
+	// MaxPeriod is the maximum maturity period for the product.
+	MaxPeriod time.Duration `pb:"2" json:"max_period"`
+	// MinPeriod is the minimum maturity period for the product.
+	MinPeriod time.Duration `pb:"3" json:"min_period"`
+}
+
+// OverdraftSettings is the overdraft settings for a deposit account.
+//
+// +gunk xo.Ignore(true)
+type OverdraftSettings struct {
+	// Enabled is true if the account can be overdrafted.
+	Enabled bool `pb:"1" json:"enabled"`
+	// AllowTechnicalOverdraft is a flag to enable technical overdraft for
+	// accounts of the product.
+	AllowTechnicalOverdraft bool `pb:"2" json:"allow_technical_overdraft"`
+	// MaxOverdraftLimit is the maximum amount of money that may be taken out
+	// of the account to go negative.
+	MaxOverdraftLimit core.Amount `pb:"3" json:"max_overdraft_limit"`
+}
+
+// DepositTaxSettings is the tax settings for a deposit account.
+//
+// +gunk xo.Ignore(true)
+type DepositTaxSettings struct {
+	// WithholdingTaxEnabled is true if withholding tax is enabled for accounts
+	// of the product.
+	WithholdingTaxEnabled bool `pb:"1" json:"withholding_tax_enabled"`
+}
+
+// DepositSettings is the settings for a deposit product.
+//
+// +gunk xo.Ignore(true)
+type DepositSettings struct {
+	// Accounting is the accounting settings for the product.
+	Accounting AccountingSettings `pb:"1" json:"accounting"`
+	// Availability is the availability settings for the product.
+	Availability AvailabilitySettings `pb:"2" json:"availability"`
+	// RevolvingAccount is the revolving accounts settings for the product.
+	RevolvingAccount RevolvingAccountSettings `pb:"3" json:"revolving_account"`
+	// Fees is the fee settings for the product.
+	Fees FeeSettings `pb:"4" json:"fees"`
+	// Interest is the interest settings for the product.
+	Interest DepositInterestSettings `pb:"5" json:"interest"`
+	// Maturity is the maturity settings for the product.
+	Maturity MaturitySettings `pb:"6" json:"maturity"`
+	// NewAccount is the settings for new accounts of the product.
+	NewAccount NewAccountSettings `pb:"7" json:"new_account"`
+	// Offset is the offset settings for the product.
+	Offset OffsetSettings `pb:"8" json:"offset"`
+	// OverdraftInterest is the overdraft interest settings for the product.
+	OverdraftInterest DepositInterestSettings `pb:"9" json:"overdraft_interest"`
+	// Overdraft is the overdraft settings for the product.
+	Overdraft OverdraftSettings `pb:"10" json:"overdraft"`
+	// Tax is the tax settings for the product.
+	Tax DepositTaxSettings `pb:"11" json:"tax"`
+}
+
+// DepositProductType is the type of a deposit product.
+type DepositProductType int
+
+const (
+	TypeCurrentAccount DepositProductType = iota
+	TypeRegularSavings
+	TypeFixedDeposit
+	TypeSavingsPlan
+	TypeInvestorAccount
+)
+
+// DepositCategory is the category of a deposit product.
+type DepositCategory int
+
+const (
+	DepositCategoryPersonalDeposit DepositCategory = iota
+	DepositCategoryBusinessDeposit
+	DepositCategoryDailyBankingAccounts
+	DepositCategoryBusinessBankingAccounts
+	DepositCategoryStoredValueAccounts
+	DepositCategoryUncategorized
+)
+
+// DepositControls is the controls for a deposit product.
+//
+// +gunk xo.Ignore(true)
+type DepositControls struct {
+	// DormancyPeriodDays is the number of days after which a dormant account
+	// will be automatically closed.
+	DormancyPeriodDays int `pb:"1" json:"dormancy_period_days"`
+	// MaxWithdrawalAmount is the maximum amount that can be withdrawn from the
+	// account per withdrawal.
+	MaxWithdrawalAmount core.Amount `pb:"2" json:"max_withdrawal_amount"`
+	// OpeningBalance is the constraint on the opening balance for accounts of
+	// the product.
+	OpeningBalance DecimalInterval `pb:"3" json:"opening_balance"`
+	// RecommendedDepositAmount is the recommended deposit amount for accounts
+	// of the product.
+	RecommendedDepositAmount core.Amount `pb:"4" json:"recommended_deposit_amount"`
+}
+
+// DepositProduct is the terms and constraints representing a deposit product.
+type DepositProduct struct {
+	// ProductID is the ID of the deposit product.
+	//
+	// +gunk xo.Unique
+	ProductID string `pb:"1" json:"product_id"`
+	// Name is the name of the deposit product.
+	Name string `pb:"2" json:"name"`
+	// Notes is the description of the product.
+	Notes string `pb:"3" json:"notes"`
+	// Category is the category of the deposit product.
+	Category DepositCategory `pb:"4" json:"category"`
+	// Currencies is a list of currencies that can be used by accounts of this
+	// product.
+	Currencies []string `pb:"5" json:"currencies"`
+	// Controls is the controls for the deposit product.
+	Controls DepositControls `pb:"6" json:"controls"`
+	// Settings is the settings for the product.
+	Settings DepositSettings `pb:"7" json:"settings"`
+	// Active is true if the product is active.
+	Active bool `pb:"8" json:"active"`
+	// TemplateIDs is the list of template IDs of documents associated with the
+	// product.
+	TemplateIDs []string `pb:"9" json:"template_ids"`
+	// Type is the type of the product.
+	Type DepositProductType `pb:"10" json:"type"`
+	// CreateTime is the time the product was created.
+	CreateTime time.Time `pb:"11" json:"create_time"`
+	// UpdateTime is the time the product was last updated.
+	UpdateTime time.Time `pb:"12" json:"update_time"`
+}

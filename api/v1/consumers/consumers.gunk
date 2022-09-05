@@ -1,0 +1,297 @@
+// Package consumers allows retrieving managing api consumers.
+//
+// +gunk proto.Package("openbank.core.v1.consumers")
+// +gunk java.Package("openbank.core.v1.consumers")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Consumers",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package consumers
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// ConsumerType is the type of API consumer.
+type ConsumerType int
+
+const (
+	TypeStreamingAPI ConsumerType = iota
+	TypeAuditTrail
+	TypePayments
+)
+
+// Access is permissions and access rights for a consumer.
+//
+// +gunk xo.Ignore(true)
+type Access struct {
+	// Admin is a flag granting full access to the API.
+	Admin bool `pb:"1" json:"admin"`
+	// API is a flag granting access to the API.
+	API bool `pb:"2" json:"api"`
+	// AllBranches is a flag granting the user permission to access all
+	// branches.
+	AllBranches bool `pb:"3" json:"all_branches"`
+	// Branches is a list of branches the user is allowed to access.
+	Branches []string `pb:"4" json:"branches"`
+	// CreditOfficer is a flag granting credit officer access and enabling
+	// clients and groups to be assigned to the user.
+	CreditOfficer bool `pb:"5" json:"credit_officer"`
+	// ManageOtherOfficers is a flag granting the user permission to manage
+	// other officers.
+	ManageOtherOfficers bool `pb:"6" json:"manage_other_officers"`
+	// Permissions is a list of permissions granted to the consumer.
+	Permissions []core.Permission `pb:"7" json:"permissions"`
+}
+
+// Consumer is an API consumer of the core banking UI, granting limited access
+// to the API.
+type Consumer struct {
+	// ConsumerID is the ID of the API consumer.
+	//
+	// +gunk xo.Unique
+	ConsumerID string `pb:"1" json:"consumer_id"`
+	// Name is the name of the API consumer.
+	Name string `pb:"2" json:"name"`
+	// Type is the type of the API consumer.
+	Type ConsumerType `pb:"3" json:"type"`
+	// BranchID is the ID of the branch assigned to the API consumer.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "branches.Branch",
+	//         FieldName:  "BranchID",
+	// }
+	BranchID string `pb:"4" json:"branch_id"`
+	// Access is the access permissions of the API consumer.
+	Access Access `pb:"5" json:"access"`
+	// RoleID is the ID of the role of the API consumer.
+	// TODO: Which table does this have a reference to. (Is UserRole correct?).
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "roles.UserRole",
+	//         FieldName:  "RoleID",
+	// }
+	RoleID string `pb:"6" json:"role_id"`
+	// TransactionLimits is the transaction limits for the consumer if the user
+	// is allowed to make transactions.
+	TransactionLimits map[string]int `pb:"7" json:"transaction_limits"`
+	// CreateTime is the time the API consumer was created.
+	CreateTime time.Time `pb:"8" json:"create_time"`
+	// UpdateTime is the time the API consumer was last updated.
+	UpdateTime time.Time `pb:"9" json:"update_time"`
+}
+
+// APIKey is the key that can be used to access the core banking API, by an API
+// consumer.
+//
+// +gunk xo.Ignore(true)
+type APIKey struct {
+	// KeyID is the ID of the API key.
+	KeyID string `pb:"1" json:"key_id"`
+	// Key is the API key.
+	Key string `pb:"2" json:"key"`
+	// ExpireTime is the time the key expires.
+	ExpireTime time.Time `pb:"3" json:"expire_time"`
+}
+
+// CreateConsumerRequest is the request to create a new API consumer.
+type CreateConsumerRequest struct {
+	// Body is the API consumer to create.
+	Body Consumer `pb:"1" json:"body"`
+}
+
+// ListConsumersRequest is the request to list API consumers.
+type ListConsumersRequest struct {
+	// PageToken is the page token to use for the request.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of results to return per page.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order the results by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the results.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListConsumersResponse is the response to list API consumers.
+type ListConsumersResponse struct {
+	// Total is the total number of consumers matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of consumers remaining in the list, including the
+	// consumers in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Consumers is the list of API consumers.
+	Consumers []Consumer `pb:"3" json:"consumers"`
+	// NextPageToken is the page token to use for the next request.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetConsumerRequest is the request to retrieve the specified API consumer.
+type GetConsumerRequest struct {
+	// ConsumerID is the ID of the consumer to retrieve.
+	ConsumerID string `pb:"1" json:"consumer_id"`
+}
+
+// UpdateConsumerRequest is the request to update the specified API consumer.
+type UpdateConsumerRequest struct {
+	// ConsumerID is the ID of the consumer to update.
+	ConsumerID string `pb:"1" json:"consumer_id"`
+	// Body is the content of the new updated consumer.
+	Body Consumer `pb:"2" json:"body"`
+}
+
+// DeleteConsumerRequest is the request to delete an API consumer.
+type DeleteConsumerRequest struct {
+	// ConsumerID is the ID of the API consumer to delete.
+	ConsumerID string `pb:"1" json:"consumer_id"`
+}
+
+// NewAPIKey is the request body for creating an API key.
+//
+// +gunk xo.Ignore(true)
+type NewAPIKey struct {
+	// Expires is when the API key expires.
+	Expires int `pb:"1" json:"expires"`
+}
+
+// CreateAPIKeyRequest is the request to create an API key.
+type CreateAPIKeyRequest struct {
+	// ConsumerID is the ID of the API consumer to create an API key for.
+	ConsumerID string `pb:"1" json:"consumer_id"`
+	// Body is the options for configuring the new API key.
+	Body NewAPIKey `pb:"2" json:"body"`
+}
+
+// ListAPIKeysRequest is the request to list API keys.
+type ListAPIKeysRequest struct {
+	// ConsumerID is the ID of the API consumer to list API keys for.
+	ConsumerID string `pb:"1" json:"consumer_id"`
+	// PageToken is the page token to use for the request.
+	PageToken string `pb:"2" json:"page_token"`
+	// PageSize is the number of results to return per page.
+	PageSize int `pb:"3" json:"page_size"`
+	// OrderBy is the field to order the results by.
+	OrderBy string `pb:"4" json:"order_by"`
+	// Filter is the filter to apply to the results.
+	Filter string `pb:"5" json:"filter"`
+}
+
+// ListAPIKeysResponse is the response to list API keys.
+type ListAPIKeysResponse struct {
+	// Total is the total number of keys matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of keys remaining in the list, including the
+	// keys in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Keys is the list of API keys.
+	Keys []APIKey `pb:"3" json:"keys"`
+	// NextPageToken is the page token to use for the next request.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetAPIKeyRequest is the request to retrieve a specified API key.
+type GetAPIKeyRequest struct {
+	// ConsumerID is the ID of the API consumer.
+	ConsumerID string `pb:"1" json:"consumer_id"`
+	// KeyID is the ID of the API key.
+	KeyID string `pb:"2" json:"key_id"`
+}
+
+// DeleteAPIKeyRequest is the request to delete the specified API key.
+type DeleteAPIKeyRequest struct {
+	// ConsumerID is the ID of the API consumer the key is associated with.
+	ConsumerID string `pb:"1" json:"consumer_id"`
+	// KeyID is the ID of the API key to be deleted.
+	KeyID string `pb:"2" json:"key_id"`
+}
+
+// ConsumersService is the API consumer service.
+type ConsumersService interface {
+	// CreateConsumer creates a new API consumer.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/consumers",
+	//         Body:   "Body",
+	// }
+	CreateConsumer(CreateConsumerRequest) Consumer
+
+	// ListConsumers lists API consumers.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/consumers",
+	// }
+	ListConsumers(ListConsumersRequest) ListConsumersResponse
+
+	// GetConsumer retrieves the specified API consumer.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/consumers/{ConsumerID}",
+	// }
+	GetConsumer(GetConsumerRequest) Consumer
+
+	// UpdateConsumer updates an existing API consumer.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/consumers/{ConsumerID}",
+	//         Body:   "Body",
+	// }
+	UpdateConsumer(UpdateConsumerRequest) Consumer
+
+	// DeleteConsumer deletes an existing API consumer.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/consumers/{ConsumerID}",
+	// }
+	DeleteConsumer(DeleteConsumerRequest)
+
+	// CreateAPIKey creates a new API key.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/consumers/{ConsumerID}/apikeys",
+	//         Body:   "Body",
+	// }
+	CreateAPIKey(CreateAPIKeyRequest) APIKey
+
+	// ListAPIKeys lists API keys.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/consumers/{ConsumerID}/apikeys",
+	// }
+	ListAPIKeys(ListAPIKeysRequest) ListAPIKeysResponse
+
+	// GetAPIKey retrieves the specified API key.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/consumers/{ConsumerID}/apikeys/{KeyID}",
+	// }
+	GetAPIKey(GetAPIKeyRequest) APIKey
+
+	// DeleteAPIKey deletes an API key.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/consumers/{ConsumerID}/apikeys/{KeyID}",
+	// }
+	DeleteAPIKey(DeleteAPIKeyRequest)
+}

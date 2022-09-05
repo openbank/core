@@ -1,0 +1,88 @@
+// Package transactions defines the API for managing transactions.
+//
+// +gunk proto.Package("openbank.core.v1.transactions")
+// +gunk java.Package("openbank.core.v1.transactions")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Transactions",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package transactions
+
+import (
+	"time"
+
+	core "bnk.to/core/api/v1"
+	deposits "bnk.to/core/api/v1/deposits"
+	products "bnk.to/core/api/v1/products"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+)
+
+// TransferDetails are the details of a transfer.
+//
+// +gunk xo.Ignore(true)
+type TransferDetails struct {
+	// DepositID is the ID of the associated deposit transaction.
+	DepositID string `pb:"1" json:"deposit_id"`
+	// LoanID is the ID of the associated loan transaction.
+	LoanID string `pb:"2" json:"loan_id"`
+}
+
+// TransactionFee is an amount applied or paid on an account.
+//
+// +gunk xo.Ignore(true)
+type TransactionFee struct {
+	// FeeID is the ID of the fee.
+	FeeID string `pb:"1" json:"fee_id"`
+	// Name is the name of the fee.
+	Name string `pb:"2" json:"name"`
+	// Amount is the amount of the fee.
+	Amount core.Amount `pb:"3" json:"amount"`
+	// TaxAmount is the tax amount of the fee.
+	TaxAmount core.Amount `pb:"4" json:"tax_amount"`
+	// Trigger is the cause of the creation of the fee.
+	Trigger products.FeeTrigger `pb:"5" json:"trigger"`
+}
+
+// NewWithdrawal is the request body to create a
+// transaction of type WITHDRAWAL.
+//
+// +gunk xo.Ignore(true)
+type NewWithdrawal struct {
+	// Amount is the value of the transaction.
+	Amount core.Amount `pb:"1" json:"amount"`
+	// ExternalID is the user-provided ID of the transaction, must be globally
+	// unique.
+	ExternalID string `pb:"2" json:"external_id"`
+	// Notes is extra user-readable details about the current transaction.
+	Notes string `pb:"3" json:"notes"`
+	// Payment is the details of a payment.
+	Payment deposits.Payment `pb:"4" json:"payment"`
+	// OrderID is the ID of the payment order of the withdrawal transaction.
+	OrderID string `pb:"5" json:"order_id"`
+	// ChannelID is the ID of the payment channel.
+	ChannelID string `pb:"6" json:"channel_id"`
+	// BookTime is the time when the transaction is logged into accounting.
+	BookTime time.Time `pb:"7" json:"book_time"`
+	// ValueTime is the time where the transaction should be applied.
+	ValueTime time.Time `pb:"8" json:"value_time"`
+}
+
+// CreateWithdrawalRequest is a request to create a transaction of
+// type WITHDRAWAL.
+type CreateWithdrawalRequest struct {
+	// AccountID is the ID of the loan account.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the new transaction.
+	Body NewWithdrawal `pb:"2" json:"body"`
+}

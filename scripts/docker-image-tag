@@ -1,0 +1,71 @@
+#!/bin/sh
+
+# WARNING: do not use /bin/bash, as docker:dind doesn't have bash.
+
+# This script gives the full image:tag name for a Docker image following our
+# conventions.
+#
+# It can be run from the root of the repository by Drone, but it can also be run
+# from anywhere as long as git-buildnumber and git are installed.
+#
+# The directory given as an argument must contain a Dockerfile, plus an
+# "image-name" file containing the name of the docker image to be used in the
+# full tag.
+
+DIR=$1
+LATEST=$2
+
+if [ -z "$IMAGE_NAME" ]; then
+	IMAGE_NAME=$DIR
+fi
+
+SUFFIX=""
+if [ $DRONE_BRANCH = "staging-test" ]; then
+	SUFFIX="-test"
+fi
+
+if [ -n "$VERSION" ]; then
+	: # nothing to do
+elif [ -f .version ]; then
+	VERSION=$(cat .version)
+elif command -v git-buildnumber >/dev/null; then
+	VERSION=$(git-buildnumber)
+else
+	echo "need \$VERSION, git-buildnumber, or a .version file"
+	exit 1
+fi
+
+if [ -n "$DRONE_COMMIT_SHA" ]; then
+	: # nothing to do
+elif command -v git >/dev/null; then
+	DRONE_COMMIT_SHA=$(git rev-parse HEAD)
+else
+	echo "need \$DRONE_COMMIT_SHA, or git"
+	exit 1
+fi
+
+SHORT_SHA=$(echo $DRONE_COMMIT_SHA | cut -c-4)
+
+# Note that "image-name" is alongside the Dockerfile.
+
+if [ -n "$IMAGE_NAME" ]; then
+	: # nothing to do
+elif [ -f $DIR/image-name ]; then
+	IMAGE_NAME=$(cat $DIR/image-name)
+else
+	echo "need \$IMAGE_NAME, or a $DIR/image-name file"
+	exit 1
+fi
+
+if [ -n "$IMAGE_REGISTRY" ]; then
+	: # nothing to do
+else
+	# fallback
+	IMAGE_REGISTRY="asia-southeast1-docker.pkg.dev/openbank-core-dev/openbank-dev/images"
+fi
+
+if [ "$LATEST" = true ]; then
+   echo ${IMAGE_REGISTRY}/${IMAGE_NAME}${SUFFIX}:latest
+else
+   echo ${IMAGE_REGISTRY}/${IMAGE_NAME}${SUFFIX}:${VERSION}-${SHORT_SHA}
+fi

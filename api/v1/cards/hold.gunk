@@ -1,0 +1,130 @@
+package cards
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// HoldSource is where the authorization hold is issued from.
+type HoldSource int
+
+// Authorization sources.
+const (
+	CardSource HoldSource = iota
+	AccountSource
+)
+
+// HoldStatus is the status of an authorization hold.
+type HoldStatus int
+
+// Hold statuses.
+const (
+	HoldPending HoldStatus = iota
+	HoldReversed
+	HoldSettled
+	HoldExpired
+)
+
+// Hold is a card authorization hold to a card token.
+type Hold struct {
+	// HoldID is the ID of the authorization hold.
+	//
+	// +gunk xo.Unique
+	HoldID string `pb:"1" json:"hold_id"`
+	// AccountID is the ID of the account linked with the authorization hold.
+	// TODO: Which table does this have a reference to.
+	AccountID string `pb:"2" json:"account_id"`
+	// Advice is true if the request should be accepted without balance
+	// validation.
+	Advice bool `pb:"3" json:"advice"`
+	// Amount is the amount of money to be held.
+	Amount core.Amount `pb:"4" json:"amount"`
+	// OriginalAmount is the original amount of money to be held.
+	OriginalAmount core.Amount `pb:"5" json:"original_amount"`
+	// CardAcceptor is the details of the card acceptor.
+	CardAcceptor Acceptor `pb:"6" json:"card_acceptor"`
+	// ExchangeRate is the exchange rate for the original currency.
+	ExchangeRate float64 `pb:"7" json:"exchange_rate"`
+	// CardID is the ID of the card.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "cards.Card",
+	//         FieldName:  "CardID",
+	// }
+	CardID string `pb:"8" json:"card_id"`
+	// Type is the type of the card for the authorization hold.
+	Type Type `pb:"9" json:"type"`
+	// Source is the monetary source of the authorization hold.
+	Source HoldSource `pb:"10" json:"source"`
+	// Status is the status of the authorization hold.
+	Status HoldStatus `pb:"11" json:"status"`
+	// UserTransactionTime is the time at which the user made the authorization
+	// hold.
+	UserTransactionTime time.Time `pb:"12" json:"user_transaction_time"`
+}
+
+// GetHoldRequest is the request to get an authorization hold.
+type GetHoldRequest struct {
+	// CardID is the ID of the card.
+	CardID string `pb:"1" json:"card_id"`
+	// HoldID is the reference ID of the authorization hold.
+	HoldID string `pb:"2" json:"hold_id"`
+}
+
+// CreateHoldRequest is the create hold request.
+type CreateHoldRequest struct {
+	// CardID is the ID of the card to create a hold for.
+	CardID string `pb:"1" json:"card_id"`
+	// Body is the information for the authorization hold to be created.
+	Body Hold `pb:"2" json:"body"`
+}
+
+// HoldAdjustment is the data to decrease/increase the amount of an
+// authorization hold.
+//
+// +gunk xo.Ignore(true)
+type HoldAdjustment struct {
+	// AdjustmentID is the ID of the decrease/increase request. The ID is not
+	// the same as the hold ID of the authorization hold.
+	AdjustmentID string `pb:"1" json:"adjustment_id"`
+	// Advice is true if the request should be accepted without balance
+	// validation.
+	Advice bool `pb:"2" json:"advice"`
+	// Change is the money to be subtracted/added to the authorization hold
+	// amount. When subtracting, change should be negative.
+	//
+	// If the resulting amount is negative, the authorization hold is reversed.
+	Change core.Amount `pb:"3" json:"change"`
+}
+
+// AdjustHoldRequest is the request to adjust a authorization hold.
+type AdjustHoldRequest struct {
+	// CardID is the ID of the card of authorization.
+	CardID string `pb:"1" json:"card_id"`
+	// HoldID is the reference ID of the authorization hold.
+	HoldID string `pb:"2" json:"hold_id"`
+	// Body is the information to adjust the authorization hold.
+	Body HoldAdjustment `pb:"3" json:"body"`
+}
+
+// UpdateHoldRequest is the request to update an authorization hold.
+type UpdateHoldRequest struct {
+	// CardID is the ID of the card of authorization.
+	CardID string `pb:"1" json:"card_id"`
+	// HoldID is the reference ID of the authorization hold.
+	HoldID string `pb:"2" json:"hold_id"`
+	// Body is the information to update the authorization hold.
+	Body Hold `pb:"3" json:"body"`
+}
+
+// DeleteHoldRequest is the delete hold request.
+type DeleteHoldRequest struct {
+	// HoldID is the hold ID of the authorization hold.
+	HoldID string `pb:"1" json:"hold_id"`
+	// CardID is the reference of the card.
+	CardID string `pb:"2" json:"card_id"`
+}

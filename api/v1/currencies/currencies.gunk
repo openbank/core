@@ -1,0 +1,140 @@
+// Package currencies allows creating and managing currencies and accounting rates.
+//
+// +gunk proto.Package("openbank.core.v1.currencies")
+// +gunk java.Package("openbank.core.v1.currencies")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Accounting Rates",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package currencies
+
+import (
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+)
+
+// Currency is the information for a currency.
+type Currency struct {
+	// Code is the ISO3 currency code of the currency.
+	//
+	// +gunk xo.Unique
+	Code string `pb:"1" json:"code"`
+	// Name is the name of the currency.
+	//
+	// +gunk xo.Unique
+	Name string `pb:"2" json:"name"`
+	// Symbol is the symbol for the currency.
+	Symbol string `pb:"3" json:"symbol"`
+	// Format is the format string for displaying the currency.
+	Format string `pb:"4" json:"format"`
+	// Decimals is the number of decimal places to use for the currency.
+	Decimals int `pb:"5" json:"decimals"`
+}
+
+// CreateCurrencyRequest is the request for creating a currency.
+type CreateCurrencyRequest struct {
+	// Body is the currency to create.
+	Body Currency `pb:"1" json:"body"`
+}
+
+// ListCurrenciesRequest is the request to list currencies.
+type ListCurrenciesRequest struct {
+	// PageToken is the page token for the next page of results.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the maximum number of results to return.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order the results by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the results.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListCurrenciesResponse is the response for listing currencies.
+type ListCurrenciesResponse struct {
+	// Total is the total number of currencies matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of currencies remaining in the list, including
+	// the currencies in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Currencies is the list of currencies.
+	Currencies []Currency `pb:"3" json:"currencies"`
+	// NextPageToken is the page token for the next page of results.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetCurrencyRequest is the request to retrieve currencies.
+type GetCurrencyRequest struct {
+	// Code is the code of the currency to retrieve.
+	Code string `pb:"1" json:"code"`
+}
+
+// UpdateCurrencyRequest is the request for updating the details of a currency.
+// RateService should be used for creating new rates.
+type UpdateCurrencyRequest struct {
+	// Code is the code of the currency to update.
+	Code string `pb:"1" json:"code"`
+	// Body is the new value of the currency.
+	Body Currency `pb:"2" json:"body"`
+}
+
+// DeleteCurrencyRequest is the request for deleting a currency.
+type DeleteCurrencyRequest struct {
+	// Code is the code of the currency to delete.
+	Code string `pb:"1" json:"code"`
+}
+
+// CurrencyService is the service for managing currencies.
+type CurrencyService interface {
+	// CreateCurrency creates the specified currency.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/currencies",
+	//         Body:   "Body",
+	// }
+	CreateCurrency(CreateCurrencyRequest) Currency
+
+	// ListCurrencies lists the currencies.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/currencies",
+	// }
+	ListCurrencies(ListCurrenciesRequest) ListCurrenciesResponse
+
+	// GetCurrency retrieves the specified currency.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/currencies/{Code}",
+	// }
+	GetCurrency(GetCurrencyRequest) Currency
+
+	// UpdateCurrency updates the specified currency.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/currencies/{Code}",
+	//         Body:   "Body",
+	// }
+	UpdateCurrency(UpdateCurrencyRequest) Currency
+
+	// DeleteCurrency deletes the specified currency.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/currencies/{Code}",
+	// }
+	DeleteCurrency(DeleteCurrencyRequest)
+}

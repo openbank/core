@@ -1,0 +1,194 @@
+// Package users allows retrieving user data.
+//
+// +gunk proto.Package("openbank.core.v1.users")
+// +gunk java.Package("openbank.core.v1.users")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Users",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package users
+
+import (
+	roles "bnk.to/core/api/v1/roles"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// State is the state of the user account.
+type State int
+
+// Possible states of an account.
+const (
+	Active State = iota
+	Inactive
+	Locked
+)
+
+// User is a user used for accessing the core banking interface.
+type User struct {
+	// UserID is the ID of the user.
+	//
+	// +gunk xo.Unique
+	UserID string `pb:"1" json:"user_id"`
+	// Username is the username for the user.
+	Username string `pb:"2" json:"username"`
+	// Password is the password of the user. It is input-only and will not be
+	// present when a user is queried.
+	Password string `pb:"3" json:"password"`
+	// Email is the email for the user.
+	Email string `pb:"4" json:"email"`
+	// Title is the user's title.
+	Title string `pb:"5" json:"title"`
+	// FirstName is the user's first name.
+	FirstName string `pb:"6" json:"first_name"`
+	// LastName is the user's last name.
+	LastName string `pb:"7" json:"last_name"`
+	// RoleID is the ID of the role the user is assigned to.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "roles.UserRole",
+	//         FieldName:  "RoleID",
+	// }
+	RoleID string `pb:"8" json:"role_id"`
+	// Access is the access permissions for the user.
+	Access roles.Permission `pb:"9" json:"access"`
+	// AssignedBranchID is the ID of the branch assigned to the user.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "branches.Branch",
+	//         FieldName:  "BranchID",
+	// }
+	AssignedBranchID string `pb:"10" json:"assigned_branch_id"`
+	// MobilePhone is the mobile phone number of the user.
+	MobilePhone string `pb:"11" json:"mobile_phone"`
+	// HomePhone is the home phone number of the user.
+	//
+	// +gunk xo.Nullable(true)
+	HomePhone string `pb:"12" json:"home_phone"`
+	// Language is the preferred language of the user.
+	Language string `pb:"13" json:"language"`
+	// Notes is extra information for the user.
+	Notes string `pb:"14" json:"notes"`
+	// TransactionLimits is the transaction limits for the user.
+	TransactionLimits map[string]int `pb:"15" json:"transaction_limits"`
+	// TwoFactorAuthentication is a flag indicating if the user has enabled
+	// two-factor authentication.
+	TwoFactorAuthentication bool `pb:"16" json:"two_factor_authentication"`
+	// State is the state of the user account.
+	State State `pb:"17" json:"state"`
+	// CreateTime is the time when the user was created.
+	CreateTime time.Time `pb:"18" json:"create_time"`
+	// UpdateTime is the time the user account was last updated. This field
+	// is not updated when LoginTime is updated.
+	UpdateTime time.Time `pb:"19" json:"update_time"`
+	// LoginTime is the time the user last logged in.
+	LoginTime time.Time `pb:"20" json:"login_time"`
+}
+
+// CreateUserRequest is a request to create a new user.
+type CreateUserRequest struct {
+	// Body is the user to be created.
+	Body User `pb:"1" json:"body"`
+}
+
+// ListUsersRequest is a request to list users.
+type ListUsersRequest struct {
+	// PageToken is the token of the page to retrieve.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of items to retrieve per page.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order the results by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the list.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListUsersResponse is a response for listing users.
+type ListUsersResponse struct {
+	// Total is the total number of users matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of users remaining in the list, including the
+	// users in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Users is the list of users retrieved.
+	Users []User `pb:"3" json:"users"`
+	// NextPageToken is the token for the next page of users.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetUserRequest is a request to retrieve a user.
+type GetUserRequest struct {
+	// UserID is the ID of the users to retrieve.
+	UserID string `pb:"1" json:"user_id"`
+}
+
+// UpdateUserRequest is a request to update the information of a user.
+type UpdateUserRequest struct {
+	// UserID is the ID of the user to be updated.
+	UserID string `pb:"1" json:"user_id"`
+	// Body is the new information of the user.
+	Body User `pb:"2" json:"body"`
+}
+
+// DeleteUserRequest is a request to delete the specified user.
+type DeleteUserRequest struct {
+	// UserID is the ID of the user to delete.
+	UserID string `pb:"1" json:"user_id"`
+}
+
+// UsersService is a service to manage users.
+type UsersService interface {
+	// CreateUser creates a new user.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/users",
+	//         Body:   "Body",
+	// }
+	CreateUser(CreateUserRequest) User
+
+	// ListUsers lists users.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/users",
+	// }
+	ListUsers(ListUsersRequest) ListUsersResponse
+
+	// GetUser retrieves the specified user by their ID.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/users/{UserID}",
+	// }
+	GetUser(GetUserRequest) User
+
+	// UpdateUser updates the information of an existing User.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/users/{UserID}",
+	//         Body:   "Body",
+	// }
+	UpdateUser(UpdateUserRequest) User
+
+	// DeleteUser deletes the specified User.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/users/{UserID}",
+	// }
+	DeleteUser(DeleteUserRequest)
+}

@@ -1,0 +1,660 @@
+package loans
+
+import (
+	core "bnk.to/core/api/v1"
+	cards "bnk.to/core/api/v1/cards"
+	transactions "bnk.to/core/api/v1/transactions"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// CreateAccountRequest is the request to create a new account.
+type CreateAccountRequest struct {
+	// Body is the details of the new loan account.
+	Body Account `pb:"1" json:"body"`
+}
+
+// ListAccountsRequest is the request to list accounts.
+type ListAccountsRequest struct {
+	// PageToken is the page token to use for the next page.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of accounts to return.
+	PageSize int `pb:"2" json:"page_size"`
+	// Filter is the filter to apply to the list.
+	Filter string `pb:"3" json:"filter"`
+	// OrderBy is the field to order the list by.
+	OrderBy string `pb:"4" json:"order_by"`
+}
+
+// ListAccountsResponse is the response for listing accounts.
+type ListAccountsResponse struct {
+	// Total is the total number of accounts matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of accounts remaining in the list, including the
+	// accounts in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Accounts is the list of accounts.
+	Accounts []Account `pb:"3" json:"accounts"`
+	// NextPageToken is the page token for the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetAccountRequest is the request to get an account.
+type GetAccountRequest struct {
+	// AccountID is the ID of the account to get.
+	AccountID string `pb:"1" json:"account_id"`
+}
+
+// UpdateAccountRequest is the request to update an account.
+type UpdateAccountRequest struct {
+	// AccountID is the ID of the account to update.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the account to update.
+	Body Account `pb:"2" json:"body"`
+}
+
+// DeleteAccountRequest is the request to delete a loan account.
+type DeleteAccountRequest struct {
+	// AccountID is the ID of the account to delete.
+	AccountID string `pb:"1" json:"account_id"`
+}
+
+// NewAccountLock is the request body to apply a lock on a loan
+// account.
+//
+// +gunk xo.Ignore(true)
+type NewAccountLock struct {
+	// LockedOperations is the list of operations to lock.
+	LockedOperations []LockedOperations `pb:"1" json:"locked_operations"`
+	// Notes is extra user-readable details on the request.
+	Notes string `pb:"2" json:"notes"`
+}
+
+// ApplyAccountLockRequest is a request to apply a lock on a loan account.
+type ApplyAccountLockRequest struct {
+	// AccountID is the ID of the loan account.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the request.
+	Body NewAccountLock `pb:"2" json:"body"`
+}
+
+// ApplyAccountUnlockRequest is a request to remove a lock from a loan account.
+type ApplyAccountUnlockRequest struct {
+	// AccountID is the ID of the loan account.
+	AccountID string `pb:"1" json:"account_id"`
+	// Notes is extra user-readable details on the request.
+	Notes string `pb:"2" json:"notes"`
+}
+
+// CreateCardRequest is the request to create a new card.
+type CreateCardRequest struct {
+	// AccountID is the ID of the account to create the card for.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the new card.
+	Body cards.Card `pb:"2" json:"body"`
+}
+
+// ListCardsRequest is the request to list cards of a loan account.
+type ListCardsRequest struct {
+	// AccountID is the ID of the account to list cards for.
+	AccountID string `pb:"1" json:"account_id"`
+	// PageToken is the page token to use for the next page.
+	PageToken string `pb:"2" json:"page_token"`
+	// PageSize is the number of cards to return.
+	PageSize int `pb:"3" json:"page_size"`
+	// Filter is the filter to apply to the list.
+	Filter string `pb:"4" json:"filter"`
+	// OrderBy is the field to order the list by.
+	OrderBy string `pb:"5" json:"order_by"`
+}
+
+// ListCardsResponse is the response for listing cards.
+type ListCardsResponse struct {
+	// Total is the total number of cards matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of cards remaining in the list, including the
+	// cards in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Cards is the cards that were retrieved.
+	Cards []cards.Card `pb:"3" json:"cards"`
+	// NextPageToken is the page token for the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetCardRequest is the request to retrieve a card.
+type GetCardRequest struct {
+	// AccountID is the ID of the account to get the card for.
+	AccountID string `pb:"1" json:"account_id"`
+	// CardID is the ID of the card to get.
+	CardID string `pb:"2" json:"card_id"`
+}
+
+// DeleteCardRequest is the request to delete a card.
+type DeleteCardRequest struct {
+	// AccountID is the ID of the account to delete the card for.
+	AccountID string `pb:"1" json:"account_id"`
+	// CardID is the ID of the card to get.
+	CardID string `pb:"2" json:"card_id"`
+}
+
+// CreateFundingRequest is the request to create a new funding source.
+type CreateFundingRequest struct {
+	// AccountID is the ID of the account to create the funding source for.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the new funding source.
+	Body InvestorFund `pb:"2" json:"body"`
+}
+
+// ListFundingsRequest is the request to list funding sources of a loan account.
+type ListFundingsRequest struct {
+	// AccountID is the ID of the account to list funding sources for.
+	AccountID string `pb:"1" json:"account_id"`
+	// PageToken is the page token to use for the next page.
+	PageToken string `pb:"2" json:"page_token"`
+	// PageSize is the number of funding sources to return.
+	PageSize int `pb:"3" json:"page_size"`
+	// Filter is the filter to apply to the list.
+	Filter string `pb:"4" json:"filter"`
+	// OrderBy is the field to order the list by.
+	OrderBy string `pb:"5" json:"order_by"`
+}
+
+// ListFundingsResponse is the response for listing funding sources.
+type ListFundingsResponse struct {
+	// Total is the total number of funds matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of funds remaining in the list, including the
+	// funds in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Funds is the funding sources that were retrieved.
+	Funds []InvestorFund `pb:"3" json:"funds"`
+	// NextPageToken is the page token for the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetFundingRequest is the request to retrieve a funding source.
+type GetFundingRequest struct {
+	// AccountID is the ID of the account to retrieve the funding source for.
+	AccountID string `pb:"1" json:"account_id"`
+	// FundID is the ID of the funding source to retrieve.
+	FundID string `pb:"2" json:"fund_id"`
+}
+
+// UpdateFundingRequest is the request to update the specified funding source.
+type UpdateFundingRequest struct {
+	// AccountID is the ID of the account to update the funding sources for.
+	AccountID string `pb:"1" json:"account_id"`
+	// FundID is the ID of the funding source to update.
+	FundID string `pb:"2" json:"fund_id"`
+	// Body is the details of the new funding source.
+	Body InvestorFund `pb:"3" json:"body"`
+}
+
+// DeleteFundingRequest is the request to delete the specified funding
+// source.
+type DeleteFundingRequest struct {
+	// AccountID is the ID of the account to delete the funding sources for.
+	AccountID string `pb:"1" json:"account_id"`
+	// FundID is the ID of the funding sources to delete.
+	FundID string `pb:"2" json:"fund_id"`
+}
+
+// SellFundingRequest is a request to sell a funding request to other investors.
+type SellFundingRequest struct {
+	// AccountID is the ID of the account to delete the funding sources for.
+	AccountID string `pb:"1" json:"account_id"`
+	// FundID is the ID of the funding source.
+	FundID string `pb:"2" json:"fund_id"`
+	// Body is the purchase list of the funding source.
+	Body FundingSale `pb:"3" json:"body"`
+}
+
+// SellFundingResponse is the response for selling a funding request to other
+// investors.
+type SellFundingResponse struct {
+	// Transactions is a list of deposit transactions that were created as a
+	// result of the sale. It includes credit transactions from the buyers and a
+	// debit transaction to the seller.
+	Transactions []transactions.DepositTransaction `pb:"1" json:"transactions"`
+}
+
+// GetInstallmentRequest is the request to retrieve an installment.
+type GetInstallmentRequest struct {
+	// AccountID is the ID of the account to retrieve the installment for.
+	AccountID string `pb:"1" json:"account_id"`
+	// InstallmentID is the ID of the installment to retrieve.
+	InstallmentID string `pb:"2" json:"installment_id"`
+}
+
+// ListInstallmentsRequest is a request to list the installments of a loan
+// account.
+type ListInstallmentsRequest struct {
+	// AccountID is the ID of the account to list installments for.
+	AccountID string `pb:"1" json:"account_id"`
+	// PageToken is the page token to use for the next page.
+	PageToken string `pb:"2" json:"page_token"`
+	// PageSize is the number of installments to return.
+	PageSize int `pb:"3" json:"page_size"`
+	// Filter is the filter to apply to the list.
+	Filter string `pb:"4" json:"filter"`
+	// OrderBy is the field to order the list by.
+	OrderBy string `pb:"5" json:"order_by"`
+}
+
+// ListInstallmentsResponse is the response for listing installments.
+type ListInstallmentsResponse struct {
+	// Total is the total number of installments matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of installments remaining in the list, including
+	// the installments in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Installments is the list of installments that were retrieved.
+	Installments []Installment `pb:"3" json:"installments"`
+	// NextPageToken is the page token for the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// NewInterest is the details of a new interest.
+//
+// +gunk xo.Ignore(true)
+type NewInterest struct {
+	// IsPaymentHolidays is the flag to indicate if the interest is paid on
+	// holidays.
+	IsPaymentHolidays bool `pb:"1" json:"is_payment_holidays"`
+	// HolidayAmount is the amount of Payment Holidays interest to apply.
+	HolidayAmount core.Amount `pb:"2" json:"holiday_amount"`
+	// ValueTime is the time the interest should be applied.
+	ValueTime time.Time `pb:"3" json:"value_time"`
+	// Notes is the notes for applying the interest.
+	Notes string `pb:"4" json:"notes"`
+}
+
+// ApplyInterestRequest is the request to create a new interest.
+type ApplyInterestRequest struct {
+	// AccountID is the ID of the account to create the interest for.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the new interest to apply.
+	Body NewInterest `pb:"2" json:"body"`
+}
+
+// NewRepayment is the details of a new repayment.
+//
+// +gunk xo.Ignore(true)
+type NewRepayment struct {
+	// PaymentID is the ID of the repayment.
+	PaymentID string `pb:"1" json:"payment_id"`
+	// Amount is the amount repaid.
+	Amount PaymentAmounts `pb:"2" json:"amount"`
+	// Transaction is the transaction for the repayment.
+	Transaction Transaction `pb:"3" json:"transaction"`
+	// EntryTime is the time the repayment was made.
+	EntryTime time.Time `pb:"4" json:"entry_time"`
+	// Notes is the notes for the repayment.
+	Notes string `pb:"5" json:"notes"`
+}
+
+// PreviewRepaymentRequest is the request to preview a new repayment.
+type PreviewRepaymentRequest struct {
+	// AccountID is the ID of the account to preview the repayment for.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the new repayment.
+	Body NewRepayment `pb:"2" json:"body"`
+}
+
+// PreviewRepaymentResponse is the response for previewing a repayment. It
+// contains the balances after the repayment is applied.
+type PreviewRepaymentResponse struct {
+	// FeeBalance is the fee balance after the repayment.
+	FeeBalance core.Amount `pb:"1" json:"fee_balance"`
+	// InterestBalance is the interest balance after the repayment.
+	InterestBalance core.Amount `pb:"2" json:"interest_balance"`
+	// PenaltyBalance is the penalty balance after the repayment.
+	PenaltyBalance core.Amount `pb:"3" json:"penalty_balance"`
+	// PrincipalBalance is the principal balance after the repayment.
+	PrincipalBalance core.Amount `pb:"4" json:"principal_balance"`
+	// TotalBalance is the total balance after the repayment.
+	TotalBalance core.Amount `pb:"5" json:"total_balance"`
+}
+
+// GetDocumentRequest is the request to retrieve a document.
+type GetDocumentRequest struct {
+	// AccountID is the ID of the account to retrieve the document for.
+	AccountID string `pb:"1" json:"account_id"`
+	// TemplateID is the ID of the template to generate the document based on.
+	TemplateID string `pb:"2" json:"template_id"`
+	// StartTime is the start time of transactions to generate transaction
+	// history for.
+	StartTime time.Time `pb:"3" json:"start_time"`
+	// EndTime is the end time of transactions to generate transaction history
+	// for.
+	EndTime time.Time `pb:"4" json:"end_time"`
+}
+
+// GetScheduleRequest is the request to retrieve a loan account schedule.
+type GetScheduleRequest struct {
+	// AccountID is the ID of the account to retrieve the schedule for.
+	AccountID string `pb:"1" json:"account_id"`
+}
+
+// PreviewScheduleRequest is the request to retrieve an account
+// schedule preview.
+type PreviewScheduleRequest struct {
+	// Body is the parameters for a schedule to be previewed.
+	Body Account `pb:"1" json:"body"`
+}
+
+// RefinanceRequest is the request to refinance a loan account.
+type RefinanceRequest struct {
+	// AccountID is the ID of the account to refinance.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the refinance action to take.
+	Body RefinanceAccountAction `pb:"2" json:"body"`
+}
+
+// RescheduleRequest is the request to reschedule a loan account.
+type RescheduleRequest struct {
+	// AccountID is the ID of the account to reschedule.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the reschedule action to take.
+	Body RescheduleAccountAction `pb:"2" json:"body"`
+}
+
+// WriteOffRequest is the request to write off a loan account.
+type WriteOffRequest struct {
+	// AccountID is the ID of the account to write off.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the write off.
+	Body ActionDetails `pb:"2" json:"body"`
+}
+
+// UndoRefinanceRequest is the request to undo a refinance action.
+type UndoRefinanceRequest struct {
+	// AccountID is the ID of the account to undo the refinance action for.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the undo refinance action.
+	Body ActionDetails `pb:"2" json:"body"`
+}
+
+// UndoRescheduleRequest is the request to undo a reschedule action.
+type UndoRescheduleRequest struct {
+	// AccountID is the ID of the account to undo the reschedule action for.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the undo reschedule action.
+	Body ActionDetails `pb:"2" json:"body"`
+}
+
+// UndoWriteOffRequest is the request to undo a write off action.
+type UndoWriteOffRequest struct {
+	// AccountID is the ID of the account to undo the write off action for.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the details of the undo write off action.
+	Body ActionDetails `pb:"2" json:"body"`
+}
+
+// LoansService is the service for managing loan accounts.
+type LoansService interface {
+	// CreateAccount creates a new loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/loans",
+	//         Body:   "Body",
+	// }
+	CreateAccount(CreateAccountRequest) Account
+
+	// ListAccounts lists loan accounts.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/loans",
+	// }
+	ListAccounts(ListAccountsRequest) ListAccountsResponse
+
+	// GetAccount retrieves the specified loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/loans/{AccountID}",
+	// }
+	GetAccount(GetAccountRequest) Account
+
+	// UpdateAccount updates the specified loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/accounts/loans/{AccountID}",
+	//         Body:   "Body",
+	// }
+	UpdateAccount(UpdateAccountRequest) Account
+
+	// DeleteAccount deletes the specified loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/accounts/loans/{AccountID}",
+	// }
+	DeleteAccount(DeleteAccountRequest)
+
+	// ApplyAccountLock applies a lock to a loan account's income sources.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/loans/{AccountID}:lock",
+	//         Body:   "Body",
+	// }
+	ApplyAccountLock(ApplyAccountLockRequest)
+
+	// ApplyAccountUnlock removes a lock from a loan account's income sources.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/loans/{AccountID}:unlock",
+	// }
+	ApplyAccountUnlock(ApplyAccountUnlockRequest)
+
+	// CreateCard creates a new card for an existing loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/loans/{AccountID}/cards",
+	//         Body:   "Body",
+	// }
+	CreateCard(CreateCardRequest) cards.Card
+
+	// ListCards lists cards for a loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/loans/{AccountID}/cards",
+	// }
+	ListCards(ListCardsRequest) ListCardsResponse
+
+	// GetCard retrieves the specified card from a loan account.
+	// To retrieve other information on the card, use the cards package under
+	// the Services section.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/loans/{AccountID}/cards/{CardID}",
+	// }
+	GetCard(GetCardRequest) cards.Card
+
+	// DeleteCard deletes the specified card.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/accounts/loans/{AccountID}/cards/{CardID}",
+	// }
+	DeleteCard(DeleteCardRequest)
+
+	// CreateFunding creates a new funding source for an existing loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/loans/{AccountID}/fundings",
+	//         Body:   "Body",
+	// }
+	CreateFunding(CreateFundingRequest) InvestorFund
+
+	// ListFundings lists funding sources for a loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/loans/{AccountID}/fundings",
+	// }
+	ListFundings(ListFundingsRequest) ListFundingsResponse
+
+	// GetFunding retrieves the specified funding source from a loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/loans/{AccountID}/fundings/{FundID}",
+	// }
+	GetFunding(GetFundingRequest) InvestorFund
+
+	// UpdateFunding updates the specified funding source on a loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/accounts/loans/{AccountID}/fundings/{FundID}",
+	//         Body:   "Body",
+	// }
+	UpdateFunding(UpdateFundingRequest) InvestorFund
+
+	// DeleteFunding deletes the specified funding source.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/accounts/loans/{AccountID}/fundings/{FundID}",
+	// }
+	DeleteFunding(DeleteFundingRequest)
+
+	// SellFunding sells the specified funding source to other investors. This
+	// endpoint is used in P2P investor funding transactions for investors to
+	// trade funds for liquidity.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/loans/{AccountID}/fundings/{FundID}:sell",
+	//         Body:   "Body",
+	// }
+	SellFunding(SellFundingRequest) SellFundingResponse
+
+	// GetInstallment retrieves the specified installment from a loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/loans/{AccountID}/installments/{InstallmentID}",
+	// }
+	GetInstallment(GetInstallmentRequest) Installment
+
+	// ListInstallments lists installments for the specified loan account.
+	// The account ID may be set to "-" to indicate all accounts, allowing a
+	// search across all loan accounts.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/loans/{AccountID}/installments",
+	// }
+	ListInstallments(ListInstallmentsRequest) ListInstallmentsResponse
+
+	// ApplyInterest applies interest to an existing loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/loans/{AccountID}:applyInterest",
+	//         Body:   "Body",
+	// }
+	ApplyInterest(ApplyInterestRequest)
+
+	// GetDocument generates a document for a loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/loans/{AccountID}/doc/{TemplateID}",
+	// }
+	GetDocument(GetDocumentRequest) core.File
+
+	// GetSchedule retrieves a loan account schedule.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/loans/{AccountID}/schedule",
+	// }
+	GetSchedule(GetScheduleRequest) Schedule
+
+	// PreviewSchedule retrieves a preview of an account schedule based on the
+	// provided account. This endpoint does not affect the state of the Core
+	// Banking system.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/loans:preview",
+	//         Body:   "Body",
+	// }
+	PreviewSchedule(PreviewScheduleRequest) Schedule
+
+	// PreviewRepayment previews a repayment at a future date.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/loans/{AccountID}:previewRepayment",
+	//         Body:   "Body",
+	// }
+	PreviewRepayment(PreviewRepaymentRequest) PreviewRepaymentResponse
+
+	// Refinance refinances a loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/loans/{AccountID}:refinance",
+	//         Body:   "Body",
+	// }
+	Refinance(RefinanceRequest)
+
+	// Reschedule reschedules a loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/loans/{AccountID}:reschedule",
+	//         Body:   "Body",
+	// }
+	Reschedule(RescheduleRequest)
+
+	// WriteOff writes off a loan account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/loans/{AccountID}:writeOff",
+	//         Body:   "Body",
+	// }
+	WriteOff(WriteOffRequest)
+
+	// UndoRefinance undoes a refinance action.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/loans/{AccountID}:undoRefinance",
+	//         Body:   "Body",
+	// }
+	UndoRefinance(UndoRefinanceRequest)
+
+	// UndoReschedule undoes a reschedule action.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/loans/{AccountID}:undoReschedule",
+	//         Body:   "Body",
+	// }
+	UndoReschedule(UndoRescheduleRequest)
+
+	// UndoWriteOff undoes a write off action.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/loans/{AccountID}:undoWriteOff",
+	//         Body:   "Body",
+	// }
+	UndoWriteOff(UndoWriteOffRequest)
+}

@@ -1,0 +1,176 @@
+// Package revolving allows retrieving, creating, updating and deleting
+// revolving accounts.
+//
+// +gunk proto.Package("openbank.core.v1.revolving")
+// +gunk java.Package("openbank.core.v1.revolving")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Revolving Accounts",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package revolving
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// ExposureLimit is the type of restriction applied to a revolving account.
+type ExposureLimit int
+
+const (
+	ApprovedAmount ExposureLimit = iota
+	OutstandingAmount
+)
+
+// Account is the pre-approved loan limit of a client (individual, group, or
+// company).
+type Account struct {
+	// AccountID is the ID of the revolving account.
+	//
+	// +gunk xo.Unique
+	AccountID string `pb:"1" json:"account_id"`
+	// ClientID is the ID of the client of the account.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "clients.Client",
+	//         FieldName:  "ClientID",
+	// }
+	ClientID string `pb:"2" json:"client_id"`
+	// HolderType is the type of of the client.
+	HolderType core.Entity `pb:"3" json:"holder_type"`
+	// Notes is the description of the account.
+	Notes string `pb:"4" json:"notes"`
+	// Status is the status of the account.
+	Status core.Status `pb:"5" json:"status"`
+	// SubStatus is the sub-status of the account.
+	SubStatus core.Status `pb:"6" json:"sub_status"`
+	// MaxCredit is the maximum credit the client can be exposed to.
+	MaxCredit core.Amount `pb:"7" json:"max_credit"`
+	// AvailableCredit is the remaining amount of credit.
+	AvailableCredit core.Amount `pb:"8" json:"available_credit"`
+	// ConsumedCredit is the amount of credit consumed.
+	ConsumedCredit core.Amount `pb:"9" json:"consumed_credit"`
+	// ExposureLimitType is limit type of the account.
+	ExposureLimitType ExposureLimit `pb:"10" json:"exposure_limit_type"`
+	// ApproveTime is the time the account was approved.
+	ApproveTime time.Time `pb:"11" json:"approve_time"`
+	// StartTime is the time the account was started.
+	StartTime time.Time `pb:"12" json:"start_time"`
+	// CloseTime is the time the account was closed.
+	CloseTime time.Time `pb:"13" json:"close_time"`
+	// ExpireTime is the time the account expires.
+	ExpireTime time.Time `pb:"14" json:"expire_time"`
+	// CreateTime is the time the account was created.
+	CreateTime time.Time `pb:"15" json:"create_time"`
+	// UpdateTime is the time the account was last updated.
+	UpdateTime time.Time `pb:"16" json:"update_time"`
+}
+
+// CreateAccountRequest is the request for creating a revolving account.
+type CreateAccountRequest struct {
+	// Body is the revolving account to create.
+	Body Account `pb:"1" json:"body"`
+}
+
+// ListAccountsRequest is the request to list revolving accounts.
+type ListAccountsRequest struct {
+	// PageToken is the token of the page to retrieve.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the size of the page to retrieve.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListAccountsResponse is the response for listing revolving accounts.
+type ListAccountsResponse struct {
+	// Total is the total number of accounts matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of accounts remaining in the list, including the
+	// accounts in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Accounts is the list of revolving account.
+	Accounts []Account `pb:"3" json:"accounts"`
+	// NextPageToken is the token of the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetAccountRequest is the request to retrieve a revolving account.
+type GetAccountRequest struct {
+	// AccountID is the ID of the revolving account to retrieve.
+	AccountID string `pb:"1" json:"account_id"`
+}
+
+// UpdateAccountRequest is the request to update a revolving account.
+type UpdateAccountRequest struct {
+	// AccountID is the ID of the revolving account to update.
+	AccountID string `pb:"1" json:"account_id"`
+	// Body is the updated revolving account.
+	Body Account `pb:"2" json:"body"`
+}
+
+// DeleteAccountRequest is the request to delete a revolving account.
+type DeleteAccountRequest struct {
+	// AccountID is the ID of the revolving account to delete.
+	AccountID string `pb:"1" json:"account_id"`
+}
+
+// AccountsService is the service for managing revolving accounts.
+type AccountsService interface {
+	// CreateAccount creates a revolving account.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/revolving",
+	//         Body:   "Body",
+	// }
+	CreateAccount(CreateAccountRequest) Account
+
+	// ListAccounts lists revolving accounts.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/revolving",
+	// }
+	ListAccounts(ListAccountsRequest) ListAccountsResponse
+
+	// GetAccount retrieves the specified revolving account.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/revolving/{AccountID}",
+	// }
+	GetAccount(GetAccountRequest) Account
+
+	// UpdateAccount updates a revolving account.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/revolving/{AccountID}",
+	//         Body:   "Body",
+	// }
+	UpdateAccount(UpdateAccountRequest) Account
+
+	// DeleteAccount deletes a revolving account.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/revolving/{AccountID}",
+	// }
+	DeleteAccount(DeleteAccountRequest)
+}

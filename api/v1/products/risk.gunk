@@ -1,0 +1,120 @@
+package products
+
+import (
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/xo"
+)
+
+// RiskLevel is the configured level of risk for loans.
+type RiskLevel struct {
+	// LevelID is the unique identifier for the risk level.
+	//
+	// +gunk xo.Unique
+	LevelID string `pb:"1" json:"level_id"`
+	// Name is the human-readable name of the loan risk level.
+	Name string `pb:"2" json:"name"`
+	// MinimumDays is the minimum number of days the account is at risk for it
+	// to be considered to be in this risk level.
+	MinimumDays int `pb:"3" json:"minimum_days"`
+	// MaximumDays is the maximum number of days the account is at risk for it
+	// to be considered to be in this risk level.
+	MaximumDays int `pb:"4" json:"maximum_days"`
+	// ProvisioningPercent is the percent of loans to be provisioned (set aside
+	// as an allowance for uncollected loans).
+	ProvisioningPercent float64 `pb:"5" json:"provisioning_percent"`
+}
+
+// CreateRiskLevelRequest is the request to create a risk level.
+type CreateRiskLevelRequest struct {
+	// Body is the risk level to be created.
+	Body RiskLevel `pb:"1" json:"body"`
+}
+
+// ListRiskLevelsRequest is the request to list risk levels.
+type ListRiskLevelsRequest struct {
+	// PageToken is the page token to use for the request.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the page size to use for the request.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order the results by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the results.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListRiskLevelsResponse is the response for listing risk levels.
+type ListRiskLevelsResponse struct {
+	// Total is the total number of risk levels matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of risk levels remaining in the list, including
+	// the risk levels in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Levels is the list of risk levels.
+	Levels []RiskLevel `pb:"3" json:"levels"`
+	// NextPageToken is the next page token to use for the request.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetRiskLevelRequest is the request to retrieve the specified risk level.
+type GetRiskLevelRequest struct {
+	// LevelID is the ID of the risk level to retrieve.
+	LevelID string `pb:"1" json:"level_id"`
+}
+
+// UpdateRiskLevelRequest is the request to update the specified risk level.
+type UpdateRiskLevelRequest struct {
+	// LevelID is the ID of the risk level to update.
+	LevelID string `pb:"1" json:"level_id"`
+	// Body is the new content of the risk level.
+	Body RiskLevel `pb:"2" json:"body"`
+}
+
+// DeleteRiskLevelRequest is the request to delete the specified risk level.
+type DeleteRiskLevelRequest struct {
+	// LevelID is the ID of the risk level to delete.
+	LevelID string `pb:"1" json:"level_id"`
+}
+
+// RiskLevelsService is a service that manages the risk levels of loans.
+type RiskLevelsService interface {
+	// CreateRiskLevel creates the provided risk level.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/accounts/loans/riskLevels",
+	//         Body:   "Body",
+	// }
+	CreateRiskLevel(CreateRiskLevelRequest) RiskLevel
+
+	// ListRiskLevels lists the risk levels.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/loans/riskLevels",
+	// }
+	ListRiskLevels(ListRiskLevelsRequest) ListRiskLevelsResponse
+
+	// GetRiskLevel retrieves the specified risk level.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/accounts/loans/riskLevels/{LevelID}",
+	// }
+	GetRiskLevel(GetRiskLevelRequest) RiskLevel
+
+	// UpdateRiskLevel updates the specified risk level.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/accounts/loans/riskLevels/{LevelID}",
+	// }
+	UpdateRiskLevel(UpdateRiskLevelRequest) RiskLevel
+
+	// DeleteRiskLevel deletes the specified risk level.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/accounts/loans/riskLevels/{LevelID}",
+	// }
+	DeleteRiskLevel(DeleteRiskLevelRequest)
+}

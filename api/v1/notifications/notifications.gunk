@@ -1,0 +1,287 @@
+// Package notifications is the internal notification service.
+//
+// +gunk proto.Package("openbank.core.v1.notifications")
+// +gunk java.Package("openbank.core.v1.notifications")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Notifications",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package notifications
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// Event is the event that triggered the notification.
+type Event int
+
+const (
+	EventManual Event = iota
+	EventClientCreated
+	EventClientApproved
+	EventGroupActivity
+	EventGroupCreated
+	EventLoanCreated
+	EventInterestRateChanged
+	EventClientRejected
+	EventClientActivity
+	EventLoanRepayment
+	EventLoanRepaymentReversal
+	EventFeeApplied
+	EventFeeAdjusted
+	EventFeeCharged
+	EventLoanApproval
+	EventLoanAccountClosure
+	EventLoanAccountWriteOff
+	EventLoanAccountRejection
+	EventLoanAccountRescheduled
+	EventLoanAccountRefinanced
+	EventRepaymentReminder
+	EventAccountInArrears
+	EventLoanDisbursement
+	EventLoanDisbursementReversal
+	EventLoanAccountActivity
+	EventLoanAnticipatedDisbursement
+	EventSavingsCreated
+	EventSavingsDeposit
+	EventSavingsDepositReversal
+	EventSavingsApproval
+	EventSavingsAccountActivated
+	EventSavingsAccountClosure
+	EventSavingsAccountRejection
+	EventSavingsWithdrawal
+	EventSavingsWithdrawalReversal
+	EventSavingsAccountActivity
+	EventAccountAuthorizationHoldCreated
+	EventCardsAuthorizationHoldCreated
+	EventCardsAuthorizationHoldSettled
+	EventCardsAuthorizationHoldAmountDecreased
+	EventCardsAuthorizationHoldAmountIncreased
+	EventCardsAuthorizationHoldExpired
+	EventCardsAuthorizationHoldReversed
+	EventPortalActivated
+	EventPortalPasswordReset
+	EventEndOfDayProcessingCompleted
+	EventDataAccessStateChanged
+	EventRevolvingAccountCreated
+	EventRevolvingAccountClosed
+	EventRevolvingAccountApproved
+	EventRevolvingAccountRejected
+	EventRevolvingAccountWithdrawn
+	EventRevolvingAccountDeleted
+	EventRevolvingAccountAdded
+	EventRevolvingAccountRemoved
+	EventRevolvingAccountEdited
+	EventPaymentOrderActivity
+	EventCollectionOrderActivity
+	EventJournalEntryAdded
+	EventJournalEntryAdjusted
+)
+
+// FailureReason is the reason of failure while dispatching the notification.
+type FailureReason int
+
+// Potential failure reasons.
+const (
+	ReasonUnsupportedEncoding FailureReason = iota
+	ReasonEmailServiceNotEnabled
+	ReasonSMSTooLong
+	ReasonSMSServiceNotEnabled
+	ReasonSMSNotSent
+	ReasonSMSServiceError
+	ReasonSMSConnectionException
+	ReasonWebhookNotificationsDisabled
+	ReasonInvalidHTTPResponse
+	ReasonHTTPErrorWhileSending
+	ReasonInvalidJSONBodySyntax
+	ReasonMissingTemplateID
+	ReasonUndefinedDestination
+	ReasonBlacklistedURL
+	ReasonInvalidSMSGatewayCredentials
+	ReasonMissingSMSRecipient
+	ReasonSMSGatewayError
+	ReasonMissingEmailRecipientAddress
+	ReasonOther
+)
+
+// Type is the type of a notification.
+type Type int
+
+const (
+	Email Type = iota
+	SMS
+	Webhook
+	EventStream
+	Task
+)
+
+// Notification is a message that is being sent.
+// TODO: determine better structure for this datatype before setting up proper
+// references and nullability.
+type Notification struct {
+	// NotificationID is the ID of the notification.
+	//
+	// +gunk xo.Unique
+	NotificationID string `pb:"1" json:"notification_id"`
+	// UserID is the ID of the user the message was sent to.
+	UserID string `pb:"2" json:"user_id"`
+	// ClientID is the ID of the client the message was sent to.
+	ClientID string `pb:"3" json:"client_id"`
+	// GroupID is the ID of the group the message was sent to.
+	GroupID string `pb:"4" json:"group_id"`
+	// DepositAccountID is the ID of the deposit account the message is related
+	// to.
+	DepositAccountID string `pb:"5" json:"deposit_account_id"`
+	// LoanAccountID is the ID of the loan account the message is related to.
+	LoanAccountID string `pb:"6" json:"loan_account_id"`
+	// RepaymentID is the ID of the repayment about which the message was sent.
+	RepaymentID string `pb:"7" json:"repayment_id"`
+	// Type is the type of the notification.
+	Type Type `pb:"8" json:"type"`
+	// Event is the event that triggered the notification.
+	Event Event `pb:"9" json:"event"`
+	// Status is the status of the notification.
+	Status core.Status `pb:"10" json:"status"`
+	// TemplateID is the ID of the template used to generate the message.
+	TemplateID string `pb:"11" json:"template_id"`
+	// Destination is the destination of the notification such as the email,
+	// phone number (SMS) or the webhook URL.
+	Destination string `pb:"12" json:"destination"`
+	// SenderID is the ID of the sender.
+	SenderID string `pb:"13" json:"sender_id"`
+	// Subject is the subject of the message.
+	Subject string `pb:"14" json:"subject"`
+	// Body is the message content.
+	Body []byte `pb:"15" json:"body"`
+	// NumRetries is the number of retries to send the message.
+	NumRetries int `pb:"16" json:"num_retries"`
+	// CreateTime is the time the notification was created.
+	CreateTime time.Time `pb:"17" json:"create_time"`
+	// SendTime is the time the notificaiton was sent.
+	SendTime time.Time `pb:"18" json:"send_time"`
+	// FailureReason is the reason the message failed to send.
+	FailureReason FailureReason `pb:"19" json:"failure_reason"`
+	// FailureCause is the cause of the failure.
+	FailureCause string `pb:"20" json:"failure_cause"`
+}
+
+// CreateNotificationRequest is the request to create a notification.
+type CreateNotificationRequest struct {
+	// Body is the notification to create.
+	Body Notification `pb:"1" json:"body"`
+}
+
+// ListNotificationsRequest is the request to list notifications.
+type ListNotificationsRequest struct {
+	// PageToken is the token of the page to return.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of notifications to return.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order notifications by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the notifications.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListNotificationsResponse is the response for listing notifications.
+type ListNotificationsResponse struct {
+	// Total is the total number of notifications matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of notifications remaining in the list, including
+	// the notifications in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Notifications is the list of notifications.
+	Notifications []Notification `pb:"3" json:"notifications"`
+	// NextPageToken is the token of the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetNotificationRequest is the request to retrieve a notification.
+type GetNotificationRequest struct {
+	// NotificationID is the ID of the notification to retrieve.
+	NotificationID string `pb:"1" json:"notification_id"`
+}
+
+// ResendDateFilter is an time interval from which notifications will be resent.
+//
+// +gunk xo.Ignore(true)
+type ResendDateFilter struct {
+	// Types is the types of notifications to resent.
+	Types []Type `pb:"1" json:"types"`
+	// StartTime is the starting time for the filter.
+	StartTime time.Time `pb:"2" json:"start_time"`
+	// EndTime is the ending time for the filter.
+	EndTime time.Time `pb:"3" json:"end_time"`
+}
+
+// ResendByDateRequest is the resend by date request.
+type ResendByDateRequest struct {
+	// Body is a filter that specifies the time interval from which messages will be resent.
+	Body ResendDateFilter `pb:"1" json:"body"`
+}
+
+// ResendNotificationRequest is the request to resend the specified
+// notification.
+type ResendNotificationRequest struct {
+	// NotificationID is the ID of the notification to resend.
+	NotificationID string `pb:"1" json:"notification_id"`
+}
+
+// NotificationsService is the internal notifications service.
+type NotificationsService interface {
+	// CreateNotification sends a new notification.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/notifications",
+	//         Body:   "Body",
+	// }
+	CreateNotification(CreateNotificationRequest) Notification
+
+	// ListNotifications lists notifications.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/notifications",
+	// }
+	ListNotifications(ListNotificationsRequest) ListNotificationsResponse
+
+	// GetNotification retrieves the specified notification.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/notifications/{NotificationID}",
+	// }
+	GetNotification(GetNotificationRequest) Notification
+
+	// ResendByDate resends all notifications within a time range.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/notifications:resendDate",
+	//         Body:   "Body",
+	// }
+	ResendByDate(ResendByDateRequest)
+
+	// ResendNotification resend the specified notification.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/notifications/{NotificationID}:resend",
+	// }
+	ResendNotification(ResendNotificationRequest)
+}

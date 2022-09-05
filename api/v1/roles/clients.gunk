@@ -1,0 +1,134 @@
+package roles
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// ClientRole is the roles of a client or group in the system.
+type ClientRole struct {
+	// RoleID is the ID of the role.
+	//
+	// +gunk xo.Unique
+	RoleID string `pb:"1" json:"role_id"`
+	// Name is the human-readable name of the role.
+	Name string `pb:"2" json:"name"`
+	// ClientType is the type of the entity for which the role was created.
+	ClientType core.Entity `pb:"3" json:"client_type"`
+	// Description is the description for the role.
+	Description string `pb:"4" json:"description"`
+	// RequireID is a flag that mandates identification documents during client
+	// creation.
+	RequireID bool `pb:"5" json:"require_id"`
+	// CanGuarantee is a flag that enables clients under this role to act as
+	// guarantors.
+	CanGuarantee bool `pb:"6" json:"can_guarantee"`
+	// CanOpenAccounts is a flag indicating whether new accounts for this client
+	// type can be created.
+	CanOpenAccounts bool `pb:"7" json:"can_open_accounts"`
+	// UseDefaultAddress is a flag indicating whether the default address
+	// section will be available.
+	UseDefaultAddress bool `pb:"8" json:"use_default_address"`
+	// CreateTime is the time of creation of the role.
+	CreateTime time.Time `pb:"9" json:"create_time"`
+	// UpdateTime is the time the role was last updated.
+	UpdateTime time.Time `pb:"10" json:"update_time"`
+}
+
+// CreateClientRoleRequest is a request to create a client role.
+type CreateClientRoleRequest struct {
+	// Body is the role to create.
+	Body ClientRole `pb:"1" json:"body"`
+}
+
+// ListClientRolesRequest is the request to list roles.
+type ListClientRolesRequest struct {
+	// PageToken is the token to use for pagination.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of results to return per page.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order the results by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the results.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListClientRolesResponse is the response for listing roles.
+type ListClientRolesResponse struct {
+	// Total is the total number of client roles matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of client roles remaining in the list, including
+	// the client roles in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Roles is the list of roles.
+	Roles []ClientRole `pb:"3" json:"roles"`
+	// NextPageToken is the token to use for pagination.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetClientRoleRequest is the request to retrieve a role.
+type GetClientRoleRequest struct {
+	// RoleID is the ID of the client role to retrieve.
+	RoleID string `pb:"1" json:"role_id"`
+}
+
+// UpdateClientRoleRequest is the request for updating a client role.
+type UpdateClientRoleRequest struct {
+	// RoleID is the ID of the client role to update.
+	RoleID string `pb:"1" json:"role_id"`
+	// Body is the new content of the client role.
+	Body ClientRole `pb:"2" json:"body"`
+}
+
+// DeleteClientRoleRequest is the request for deleting a client role.
+type DeleteClientRoleRequest struct {
+	// RoleID is the ID of the client role to delete.
+	RoleID string `pb:"1" json:"role_id"`
+}
+
+// ClientRoleService is the client role configuration service.
+type ClientRoleService interface {
+	// CreateClientRole creates a new client role.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/clients/roles",
+	//         Body:   "Body",
+	// }
+	CreateClientRole(CreateClientRoleRequest) ClientRole
+
+	// ListClientRoles lists client roles.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/clients/roles",
+	// }
+	ListClientRoles(ListClientRolesRequest) ListClientRolesResponse
+
+	// GetClientRole retrieves a client role.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/clients/roles/{RoleID}",
+	// }
+	GetClientRole(GetClientRoleRequest) ClientRole
+
+	// UpdateClientRole updates the configuration of the specified client role.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/clients/roles/{RoleID}",
+	//         Body:   "Body",
+	// }
+	UpdateClientRole(UpdateClientRoleRequest) ClientRole
+
+	// DeleteClientRole deletes the specified client role.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/clients/roles/{RoleID}",
+	// }
+	DeleteClientRole(DeleteClientRoleRequest)
+}

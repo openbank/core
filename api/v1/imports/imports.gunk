@@ -1,0 +1,148 @@
+// Package imports allows creating and managing data imports.
+//
+// +gunk proto.Package("openbank.core.v1.imports")
+// +gunk java.Package("openbank.core.v1.imports")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Data Imports",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package imports
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+)
+
+// Error is an error that occurred while attempting to import data.
+//
+// +gunk xo.Ignore(true)
+type Error struct {
+	// Sheet is the name of the sheet where the error was found.
+	Sheet string `pb:"1" json:"sheet"`
+	// Row is the row number where the error was found.
+	Row int `pb:"2" json:"row"`
+	// Column is the column number where the error was found.
+	Column string `pb:"3" json:"column"`
+	// Message is the description of what error has occurred.
+	Message string `pb:"4" json:"message"`
+}
+
+// Import is a data import from a file.
+type Import struct {
+	// ImportID is the ID of the import.
+	//
+	// +gunk xo.Unique
+	ImportID string `pb:"1" json:"import_id"`
+	// ImporterID is the ID of the user that initiated the import.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "users.User",
+	//         FieldName:  "UserID",
+	// }
+	ImporterID string `pb:"2" json:"importer_id"`
+	// Status is the current status of the import.
+	Status core.Status `pb:"3" json:"status"`
+	// Errors is a list of errors encountered during the import.
+	Errors []Error `pb:"4" json:"errors"`
+	// Progress is the current estimated progress of the import in percentage,
+	// ranging from 0 to 100.
+	// It is present only when the Status is InProgress.
+	Progress float64 `pb:"5" json:"progress"`
+}
+
+// CreateImportRequest is a request to create a new import. The import is
+// initially only staged.
+type CreateImportRequest struct {
+	// Body is the raw data to import.
+	Body core.File `pb:"1" json:"body"`
+}
+
+// ListImportsRequest is a request to list imports.
+type ListImportsRequest struct {
+	// PageToken is the token of the page to return.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of imports to return.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order imports by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the imports.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListImportsResponse is a response for listing responses.
+type ListImportsResponse struct {
+	// Total is the total number of imports matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of imports remaining in the list, including the
+	// imports in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Imports is the list of imports.
+	Imports []Import `pb:"3" json:"imports"`
+	// NextPageToken is the token of the next page.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetImportRequest is a request to retrieve an import request's status.
+type GetImportRequest struct {
+	// ImportID is the ID of the import to retrieve the status for.
+	ImportID string `pb:"1" json:"import_id"`
+}
+
+// UpdateImportRequest is a request to update an import request's status.
+type UpdateImportRequest struct {
+	// ImportID is the ID of the import to update.
+	ImportID string `pb:"1" json:"import_id"`
+	// Body is the new details of the import.
+	Body Import `pb:"2" json:"body"`
+}
+
+// ImportsService is a service for importing data.
+type ImportsService interface {
+	// CreateImport creates a new file to be processed.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/imports",
+	//         Body:   "Body",
+	// }
+	CreateImport(CreateImportRequest) Import
+
+	// ListImports lists imports based on the query.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/imports",
+	// }
+	ListImports(ListImportsRequest) ListImportsResponse
+
+	// GetImport retrieves the status of an import, and any errors that occurred
+	// during the import.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/imports/{ImportID}",
+	// }
+	GetImport(GetImportRequest) Import
+
+	// UpdateImport updates the status of an import, preparing it for importing
+	// or discarding it.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/imports/{ImportID}",
+	//         Body:   "Body",
+	// }
+	UpdateImport(UpdateImportRequest) Import
+}

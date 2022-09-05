@@ -1,0 +1,337 @@
+// Package fields allows retrieving custom fields.
+//
+// +gunk proto.Package("openbank.core.v1.fields")
+// +gunk java.Package("openbank.core.v1.fields")
+// +gunk java.MultipleFiles(true)
+// +gunk openapiv2.Swagger{
+//         Swagger: "2.0",
+//         Info: openapiv2.Info{
+//                 Title:       "Custom Fields",
+//                 Description: "",
+//                 Version:     "v1",
+//         },
+//         Schemes:  []openapiv2.Scheme{openapiv2.HTTPS},
+//         Consumes: []string{"application/json"},
+//         Produces: []string{"application/json"},
+// }
+package fields
+
+import (
+	core "bnk.to/core/api/v1"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// Type is the type of a field.
+type Type int
+
+const (
+	TypeFreeText Type = iota
+	TypeParagraph
+	TypeSelection
+	TypeNumber
+	TypeCheckbox
+	TypeDate
+	TypeClient
+	TypeGroup
+	TypeUser
+)
+
+// AvailableFor is the scope for which the field can be used.
+type AvailableFor int
+
+const (
+	ForClient AvailableFor = iota
+	ForGroup
+	ForCreditArrangement
+	ForLoanAccount
+	ForGuarantor
+	ForAsset
+	ForDepositAccount
+	ForTransactionChannel
+	ForTransactionType
+	ForBranch
+	ForCentre
+	ForUser
+)
+
+// Usage is the usage information for a custom field.
+//
+// +gunk xo.Ignore(true)
+type Usage struct {
+	// Default is whether the field is displayed by default on create/edit page
+	// for this record type.
+	Default bool `pb:"1" json:"default"`
+	// Required is whether the field is required.
+	Required bool `pb:"2" json:"required"`
+}
+
+// ValidationRule is a custom field validation rule.
+//
+// +gunk xo.Ignore(true)
+type ValidationRule struct {
+	// Unique is a flag indicating whether the field value must be unique.
+	Unique bool `pb:"1" json:"unique"`
+	// Patterns is a validation patterns for the field.
+	Patterns []string `pb:"2" json:"patterns"`
+}
+
+// Field is a custom field.
+type Field struct {
+	// FieldID is the ID of the field which uniquely identifies the field's
+	// values.
+	FieldID string `pb:"1" json:"field_id"`
+	// Type is the type of the field.
+	Type Type `pb:"2" json:"type"`
+	// Name is the name for the field.
+	Name string `pb:"3" json:"name"`
+	// Description is the description for the field.
+	Description string `pb:"4" json:"description"`
+	// Options is the list of options for the field.
+	//
+	// Required if the field type is `TypeSelection`.
+	Options []string `pb:"5" json:"options"`
+	// Usage is a list of usage information for the field.
+	Usage Usage `pb:"6" json:"usage"`
+	// ValidationRule is the validation rules for the field.
+	ValidationRule ValidationRule `pb:"7" json:"validation_rule"`
+	// ViewRights is the viewing permissions for the field.
+	// If empty, the field is visible to all users.
+	ViewRights []string `pb:"8" json:"view_rights"`
+	// EditRights is the editing permissions for the field.
+	// If empty, the field is visible to all users.
+	EditRights []string `pb:"9" json:"edit_rights"`
+}
+
+// Set is a set of fields.
+//
+// +gunk xo.HasMany{
+//         Name:       "Fields",
+//         TypeSuffix: "fields.Field",
+// }
+type Set struct {
+	// SetID is the unique user-defined ID.
+	//
+	// +gunk xo.Unique
+	SetID string `pb:"1" json:"set_id"`
+	// Name is the user-provided name of the custom field set.
+	Name string `pb:"2" json:"name"`
+	// Description is the user-provided description of the custom field set.
+	Description string `pb:"3" json:"description"`
+	// AllowDuplicates is true if the same field set may appear in the same
+	// entity multiple times.
+	AllowDuplicates bool `pb:"4" json:"allow_duplicates"`
+	// ValidFor is the associated entity the field can be used in.
+	//
+	// TODO: Maybe the types of entity can be used in place of this custom type.
+	ValidFor AvailableFor `pb:"5" json:"valid_for"`
+	// State is the state of the custom field set.
+	State core.State `pb:"6" json:"state"`
+	// CreateTime is when the field set was created.
+	CreateTime time.Time `pb:"7" json:"create_time"`
+	// UpdateTime is the time when the field set was last updated.
+	UpdateTime time.Time `pb:"8" json:"update_time"`
+}
+
+// CreateSetRequest is the request to create a custom field set.
+type CreateSetRequest struct {
+	// Body is the custom field set to create.
+	Body Set `pb:"1" json:"body"`
+}
+
+// ListSetsRequest is the request to list custom field sets.
+type ListSetsRequest struct {
+	// PageToken is the token when retrieving the next page of results.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of results to return per page.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order the results by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the results.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListSetsResponse is the response for listing custom field sets.
+type ListSetsResponse struct {
+	// Total is the total number of sets matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of sets remaining in the list, including the
+	// sets in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Sets is the list of custom field sets.
+	Sets []Set `pb:"3" json:"sets"`
+	// NextPageToken is the token when retrieving the next page of results.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetSetRequest is the request to retrieve a custom field set.
+type GetSetRequest struct {
+	// SetID is the ID of the field set to retrieve.
+	SetID string `pb:"1" json:"set_id"`
+}
+
+// UpdateSetRequest is the request to update the specified custom field
+// set.
+type UpdateSetRequest struct {
+	// SetID is the ID of the field set to update.
+	SetID string `pb:"1" json:"set_id"`
+	// Body is the new value of the custom field set.
+	Body Set `pb:"2" json:"body"`
+}
+
+// DeleteSetRequest is the request to delete the specified custom field
+// set.
+type DeleteSetRequest struct {
+	// SetID is the ID of the field set to delete.
+	SetID string `pb:"1" json:"set_id"`
+}
+
+// CreateFieldRequest is the request to create a field in a field set.
+type CreateFieldRequest struct {
+	// SetID is the ID of the field set to create the field in.
+	SetID string `pb:"1" json:"set_id"`
+	// Body is the value of the field to create.
+	Body Field `pb:"2" json:"body"`
+}
+
+// ListSetFieldsRequest is the request to retrieve the fields of a field set.
+type ListSetFieldsRequest struct {
+	// SetID is the ID of the field set to retrieve fields from.
+	SetID string `pb:"1" json:"set_id"`
+	// PageToken is the token when retrieving the next page of results.
+	PageToken string `pb:"2" json:"page_token"`
+	// PageSize is the number of results to return per page.
+	PageSize int `pb:"3" json:"page_size"`
+	// OrderBy is the field to order the results by.
+	OrderBy string `pb:"4" json:"order_by"`
+	// Filter is the filter to apply to the results.
+	Filter string `pb:"5" json:"filter"`
+}
+
+// ListSetFieldsResponse is the response for retrieving the fields in a field set.
+type ListSetFieldsResponse struct {
+	// Total is the total number of fields matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of fields remaining in the list, including the
+	// fields in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Fields is the retrieved fields of the field set.
+	Fields []Field `pb:"3" json:"fields"`
+	// NextPageToken is the token when retrieving the next page of results.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetFieldRequest is the request to retrieve the specified field in a field set.
+type GetFieldRequest struct {
+	// SetID is the ID of the field set to retrieve fields from.
+	SetID string `pb:"1" json:"set_id"`
+	// FieldID is the ID of the field to retrieve.
+	FieldID string `pb:"2" json:"field_id"`
+}
+
+// UpdateFieldRequest is the request to update a field in a field set.
+type UpdateFieldRequest struct {
+	// SetID is the ID of the field set to update.
+	SetID string `pb:"1" json:"set_id"`
+	// FieldID is the ID of the field to update.
+	FieldID string `pb:"2" json:"field_id"`
+	// Body is the new value of the field.
+	Body Field `pb:"3" json:"body"`
+}
+
+// DeleteFieldRequest is the request to delete a field from a field set.
+type DeleteFieldRequest struct {
+	// SetID is the ID of the field set.
+	SetID string `pb:"1" json:"set_id"`
+	// FieldID is the ID of the field to delete.
+	FieldID string `pb:"2" json:"field_id"`
+}
+
+// FieldsService is a service for managing custom fields and field sets.
+type FieldsService interface {
+	// CreateSet creates a new custom field set.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/fields",
+	//         Body:   "Body",
+	// }
+	CreateSet(CreateSetRequest) Set
+
+	// ListSets lists custom field sets.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/fields",
+	// }
+	ListSets(ListSetsRequest) ListSetsResponse
+
+	// GetSet retrieves the specified custom field set.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/fields/{SetID}",
+	// }
+	GetSet(GetSetRequest) Set
+
+	// UpdateSet updates the specified custom field set.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/fields/{SetID}",
+	//         Body:   "Body",
+	// }
+	UpdateSet(UpdateSetRequest) Set
+
+	// DeleteSet deletes the specified custom field set.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/fields/{SetID}",
+	// }
+	DeleteSet(DeleteSetRequest)
+
+	// CreateField creates a new field in a field set.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/fields/{SetID}/fields",
+	// }
+	CreateField(CreateFieldRequest) Field
+
+	// ListSetFields lists all of the fields in a field set.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/fields/{SetID}/fields",
+	// }
+	ListSetFields(ListSetFieldsRequest) ListSetFieldsResponse
+
+	// GetField retrieves the specified field in a field set.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/fields/{SetID}/fields/{FieldID}",
+	// }
+	GetField(GetFieldRequest) Field
+
+	// UpdateField updates the specified field in the field set.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/fields/{SetID}/fields/{FieldID}",
+	// }
+	UpdateField(UpdateFieldRequest) Field
+
+	// DeleteField deletes the specified field from the field set.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/fields/{SetID}/fields/{FieldID}",
+	// }
+	DeleteField(DeleteFieldRequest)
+}

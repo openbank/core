@@ -1,0 +1,222 @@
+package transactions
+
+import (
+	core "bnk.to/core/api/v1"
+	cards "bnk.to/core/api/v1/cards"
+	deposits "bnk.to/core/api/v1/deposits"
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// DepositType is the type of the deposit transaction.
+type DepositType int
+
+// Possible DepositType values.
+const (
+	DepositImport DepositType = iota
+	DepositWriteOff
+	DepositWriteOffAdjustment
+	DepositDeposit
+	DepositAdjustment
+	DepositWithdrawal
+	DepositWithdrawalAdjustment
+	DepositCardTransactionReversal
+	DepositCardTransactionReversalAdjustment
+	DepositTransfer
+	DepositTransferAdjustment
+	DepositFeeApplied
+	DepositFeeAdjusted
+	DepositFeesDueReduced
+	DepositInterestApplied
+	DepositInterestAppliedAdjustment
+	DepositFeeReductionAdjustment
+	DepositWithholdingTax
+	DepositWithholdingTaxAdjustment
+	DepositInterestRateChanged
+	DepositOverdraftInterestRateChanged
+	DepositOverdraftLimitChanged
+	DepositBranchChanged
+	DepositLoanFunded
+	DepositLoanFundedAdjustment
+	DepositLoanRepaid
+	DepositLoanRepaidAdjustment
+	DepositLoanFractionBought
+	DepositLoanFractionBoughtAdjustment
+	DepositLoanFractionSold
+	DepositLoanFractionSoldAdjustment
+	DepositSeizedAmount
+)
+
+// AffectedAmounts is the amounts affected by the transaction broken down.
+//
+// +gunk xo.Ignore(true)
+type AffectedAmounts struct {
+	// Fees is the amount of fees in the transaction.
+	Fees core.Amount `pb:"1" json:"fees"`
+	// Fraction is the fraction amount bought from another investor in the case
+	// of LOAN_FRACTION_BOUGHT.
+	Fraction float64 `pb:"2" json:"fraction"`
+	// Funds is the amount of balance change involved in a transaction that
+	// affects an account with positive balance.
+	Funds core.Amount `pb:"3" json:"funds"`
+	// Interest is the amount of interest involved in a transaction that
+	// affects an account with positive balance.
+	Interest core.Amount `pb:"4" json:"interest"`
+	// Overdraft is the amount of money that was added/subtracted from the
+	// account by this transaction as overdraft.
+	Overdraft core.Amount `pb:"5" json:"overdraft"`
+	// OverdraftFees is the amount of fees in the transaction due to an
+	// overdraft.
+	OverdraftFees core.Amount `pb:"6" json:"overdraft_fees"`
+	// OverdraftInterest is the amount of interest in the transaction due to an
+	// overdraft.
+	OverdraftInterest core.Amount `pb:"7" json:"overdraft_interest"`
+	// TechnicalOverdraft is the amount of money that was added/subtracted as
+	// technical overdraft.
+	TechnicalOverdraft core.Amount `pb:"8" json:"technical_overdraft"`
+	// TechnicalOverdraftInterest is the amount of money that was
+	// added/subtracted as technical overdraft interest.
+	TechnicalOverdraftInterest core.Amount `pb:"9" json:"technical_overdraft_interest"`
+}
+
+// InterestAccruedAmounts is the amount of accrued interest for an Interest
+// Applied deposit transaction.
+//
+// +gunk xo.Ignore(true)
+type InterestAccruedAmounts struct {
+	// Accrued is the amount of positive interest accrued since last interest
+	// application/activation date and applied.
+	Accrued core.Amount `pb:"1" json:"accrued"`
+	// NegativeAccrued is the amount of negative interest accrued since last
+	// interest application/activation date and applied.
+	NegativeAccrued core.Amount `pb:"2" json:"negative_accrued"`
+	// OverdraftAccrued is the amount of overdraft interest accrued since last
+	// interest application/activation date and applied.
+	OverdraftAccrued core.Amount `pb:"3" json:"overdraft_accrued"`
+	// TechnicalOverdraftAccrued is the amount of technical overdraft interest
+	// accrued since last interest application/activation date and applied.
+	TechnicalOverdraftAccrued core.Amount `pb:"4" json:"technical_overdraft_accrued"`
+}
+
+// DepositTerm is the terms of the deposit transaction.
+//
+// +gunk xo.Ignore(true)
+type DepositTerm struct {
+	// InterestRate is the interest rate that was set or changed in this
+	// transaction.
+	InterestRate float64 `pb:"1" json:"interest_rate"`
+	// IndexInterestRate is the index interest rate that was set or changed in
+	// this transaction.
+	IndexInterestRate float64 `pb:"2" json:"index_interest_rate"`
+	// OverdraftLimit is the deposit overdraft limit.
+	OverdraftLimit core.Amount `pb:"3" json:"overdraft_limit"`
+}
+
+// DepositTransaction is a transaction performed on a deposit account.
+type DepositTransaction struct {
+	// TransactionID is the ID of the deposit transaction.
+	//
+	// +gunk xo.Unique
+	TransactionID string `pb:"1" json:"transaction_id"`
+	// UserID is the ID of the user performing the transaction.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "users.User",
+	//         FieldName:  "UserID",
+	// }
+	UserID string `pb:"2" json:"user_id"`
+	// TotalChange is the total amount of balance changed in the transaction.
+	TotalChange core.Amount `pb:"3" json:"total_change"`
+	// AffectedAmounts is the amount of money affected by the transaction.
+	AffectedAmounts AffectedAmounts `pb:"4" json:"affected_amounts"`
+	// AdjustmentTransactionID is the ID of the associated adjustment
+	// transaction (if any adjustment was involved).
+	//
+	// +gunk xo.Nullable(true)
+	// +gunk xo.Ref{
+	//         TypeSuffix: "transactions.DepositTransaction",
+	//         FieldName:  "TransactionID",
+	// }
+	AdjustmentTransactionID string `pb:"5" json:"adjustment_transaction_id"`
+	// BlockID is the ID of the block fund associated with the transaction.
+	// TODO: Which table does this have a reference to.
+	BlockID string `pb:"6" json:"block_id"`
+	// BranchID is the ID of the branch the transaction occurred at.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "branches.Branch",
+	//         FieldName:  "BranchID",
+	// }
+	BranchID string `pb:"7" json:"branch_id"`
+	// CentreID is the ID of the centre the transaction occurred at.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "centres.Centre",
+	//         FieldName:  "CentreID",
+	// }
+	CentreID string `pb:"8" json:"centre_id"`
+	// CardTransaction is the details of card transaction associated with the
+	// transaction, if applicable.
+	CardTransaction cards.Transaction `pb:"9" json:"card_transaction"`
+	// ParentAccountID is the ID of the parent deposit account.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "deposits.Account",
+	//         FieldName:  "AccountID",
+	// }
+	ParentAccountID string `pb:"10" json:"parent_account_id"`
+	// Fees are all the fees that have been applied or paid within this
+	// transaction.
+	Fees []TransactionFee `pb:"11" json:"fees"`
+	// InterestAccruedAmounts is the amount of interest accrued for Interest
+	// Applied transactions.
+	InterestAccruedAmounts InterestAccruedAmounts `pb:"12" json:"interest_accrued_amounts"`
+	// MigrationEventID is the ID of the migration event associated with the
+	// deposit account if it's imported.
+	// TODO: Which table does this have a reference to.
+	MigrationEventID string `pb:"13" json:"migration_event_id"`
+	// Notes is the extra human-readable notes for the transaction.
+	Notes string `pb:"14" json:"notes"`
+	// OriginalTransactionID is the ID of the transaction adjusted if this is
+	// an adjustment transaction.
+	//
+	// +gunk xo.Nullable(true)
+	// +gunk xo.Ref{
+	//         TypeSuffix: "transactions.DepositTransaction",
+	//         FieldName:  "TransactionID",
+	// }
+	OriginalTransactionID string `pb:"15" json:"original_transaction_id"`
+	// Payment is the information of the account debited and credited.
+	Payment deposits.Payment `pb:"16" json:"payment"`
+	// OrderID is the ID of the payment order.
+	// TODO: Which table does this have a reference to.
+	OrderID string `pb:"17" json:"order_id"`
+	// TaxRate is the rate of tax applied to the transaction.
+	TaxRate float64 `pb:"18" json:"tax_rate"`
+	// Terms is the terms of the transaction.
+	Terms DepositTerm `pb:"19" json:"terms"`
+	// TillID is the ID of the till associated with this transaction.
+	// TODO: Which table does this have a reference to.
+	TillID string `pb:"20" json:"till_id"`
+	// ChannelID is the ID of the associated transaction channel.
+	//
+	// +gunk xo.Ref{
+	//         TypeSuffix: "org.Channel",
+	//         FieldName:  "ChannelID",
+	// }
+	ChannelID string `pb:"21" json:"channel_id"`
+	// TransferDetails is the details of the transfer.
+	TransferDetails TransferDetails `pb:"22" json:"transfer_details"`
+	// Type is the type of deposit transaction.
+	Type DepositType `pb:"23" json:"type"`
+	// CreateTime is the time of creation of the transaction.
+	CreateTime time.Time `pb:"24" json:"create_time"`
+	// BookTime is the time when the transaction is logged into accounting.
+	BookTime time.Time `pb:"25" json:"book_time"`
+	// ValueTime is the time when the transaction is executed.
+	ValueTime time.Time `pb:"26" json:"value_time"`
+}

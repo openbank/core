@@ -1,0 +1,136 @@
+package cards
+
+import (
+	"github.com/gunk/opt/file/java"
+	"github.com/gunk/opt/http"
+	"github.com/gunk/opt/openapiv2"
+	"github.com/gunk/opt/proto"
+	"github.com/gunk/opt/xo"
+	"time"
+)
+
+// HoldConfig is a configuration for an authorization hold.
+type HoldConfig struct {
+	// MerchantCode is the code of the merchant to create a merchant
+	// authorization hold for.
+	//
+	// +gunk xo.Unique
+	MerchantCode string `pb:"1" json:"merchant_code"`
+	// Duration is the duration before the hold expires.
+	Duration time.Duration `pb:"2" json:"duration"`
+	// Description is the description of the authorization hold.
+	Description string `pb:"3" json:"description"`
+}
+
+// CreateHoldConfigRequest is the request to create a merchant-specific
+// authorization hold.
+type CreateHoldConfigRequest struct {
+	// Body is the value of the new merchant authorization hold.
+	Body HoldConfig `pb:"1" json:"body"`
+}
+
+// ListHoldConfigsRequest is the request to list merchant-specific authorization
+// holds.
+type ListHoldConfigsRequest struct {
+	// PageToken is the token to use for pagination.
+	PageToken string `pb:"1" json:"page_token"`
+	// PageSize is the number of holds to return per page.
+	PageSize int `pb:"2" json:"page_size"`
+	// OrderBy is the field to order holds by.
+	OrderBy string `pb:"3" json:"order_by"`
+	// Filter is the filter to apply to the holds.
+	Filter string `pb:"4" json:"filter"`
+}
+
+// ListHoldConfigsResponse is the response for listing merchant-specific
+// authorization holds.
+type ListHoldConfigsResponse struct {
+	// Total is the total number of configs matching the filter.
+	Total int `pb:"1" json:"total"`
+	// Remaining is the number of configs remaining in the list, including the
+	// configs in the response.
+	Remaining int `pb:"2" json:"remaining"`
+	// Configs is the list of merchant-specific authorization hold
+	// configurations.
+	Configs []HoldConfig `pb:"3" json:"configs"`
+	// NextPageToken is the token to use for pagination.
+	NextPageToken string `pb:"4" json:"next_page_token"`
+}
+
+// GetHoldConfigRequest is the request to retrieve a merchant-specific or
+// default authorization hold.
+type GetHoldConfigRequest struct {
+	// MerchantCode is the code of the merchant to retrieve.
+	MerchantCode string `pb:"1" json:"merchant_code"`
+}
+
+// UpdateHoldConfigRequest is the request to update a merchant-specific or default
+// authorization hold.
+type UpdateHoldConfigRequest struct {
+	// MerchantCode is the code of the merchant to update.
+	MerchantCode string `pb:"1" json:"merchant_code"`
+	// Body is the value of the new authorization hold.
+	Body HoldConfig `pb:"2" json:"body"`
+}
+
+// DeleteHoldConfigRequest is the request to delete a merchant-specific authorization
+// hold.
+type DeleteHoldConfigRequest struct {
+	// MerchantCode is the code of the merchant to delete.
+	MerchantCode string `pb:"1" json:"merchant_code"`
+}
+
+// HoldConfigService is the service for configuring authorization holds.
+type HoldConfigService interface {
+	// CreateHoldConfig creates a new merchant-specific authorization hold.
+	//
+	// +gunk http.Match{
+	//         Method: "POST",
+	//         Path:   "/v1/holds",
+	//         Body:   "Body",
+	// }
+	CreateHoldConfig(CreateHoldConfigRequest) HoldConfig
+
+	// ListHoldConfigs lists merchant-specific authorization holds.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/holds",
+	// }
+	ListHoldConfigs(ListHoldConfigsRequest) ListHoldConfigsResponse
+
+	// GetHoldConfig retrieves the specified merchant-specific authorization
+	// hold. To retrieve the default authorization hold, use "default" as the
+	// merchant code.
+	//
+	// +gunk http.Match{
+	//         Method: "GET",
+	//         Path:   "/v1/holds/{MerchantCode}",
+	// }
+	GetHoldConfig(GetHoldConfigRequest) HoldConfig
+
+	// UpdateHoldConfig updates a merchant-specific authorization hold. To
+	// update the default authorization hold, use "default" as the merchant
+	// code.
+	//
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/holds",
+	//         Body:   "Body",
+	// }
+	// +gunk http.Match{
+	//         Method: "PUT",
+	//         Path:   "/v1/holds/{MerchantCode}",
+	//         Body:   "Body",
+	// }
+	UpdateHoldConfig(UpdateHoldConfigRequest) HoldConfig
+
+	// DeleteHoldConfig deletes the specified merchant-specific authorization
+	// hold.
+	//
+	// +gunk http.Match{
+	//         Method: "DELETE",
+	//         Path:   "/v1/holds/{MerchantCode}",
+	// }
+	DeleteHoldConfig(DeleteHoldConfigRequest)
+}

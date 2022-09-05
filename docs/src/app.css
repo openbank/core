@@ -1,0 +1,73 @@
+@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,700;1,400&family=Ubuntu:ital,wght@0,300;0,400;0,700;1,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	@apply font-heading;
+}
+
+body {
+	@apply bg-gray-100 font-sans;
+}
+
+#content {
+	@apply font-sans font-light;
+	@apply prose xl:max-w-[860px] 2xl:max-w-[1024px];
+
+	@apply prose-h1:text-3xl;
+	@apply prose-h1:font-medium prose-h2:font-medium prose-h3:font-medium;
+	@apply prose-hr:my-4;
+	@apply prose-pre:bg-main-black;
+
+	@apply prose-blockquote:border;
+	@apply prose-blockquote:border-blue-300;
+	@apply prose-blockquote:rounded-lg;
+	@apply prose-blockquote:bg-blue-100;
+	@apply prose-blockquote:text-[14px];
+	@apply prose-blockquote:font-light;
+	@apply prose-blockquote:not-italic;
+
+	@apply prose-code:bg-blue-100;
+	@apply prose-code:text-main-secondary;
+
+	@apply prose-table:my-2;
+}
+
+.btn,
+.btn-lg {
+	@apply cursor-pointer;
+	@apply rounded bg-main-primary font-medium text-white hover:underline;
+}
+
+.btn-sec {
+	@apply border-2 border-main-secondary hover:underline;
+}
+
+.btn {
+	@apply px-3 py-2 text-sm;
+}
+
+.btn-lg {
+	@apply px-4 py-2.5;
+}
+
+[data-accordion] {
+	list-style: none !important;
+	padding-left: 0 !important;
+}
+
+[data-accordion-item] {
+	padding-left: 0 !important;
+}
+
+[data-accordion-item] button {
+	@apply block w-full;
+}
